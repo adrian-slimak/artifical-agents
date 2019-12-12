@@ -15,23 +15,6 @@ namespace MLAgents.Sensor
 
         public abstract string GetName();
 
-        /// <summary>
-        /// Default implementation of Write interface. This creates a temporary array, calls WriteObservation,
-        /// and then writes the results to the WriteAdapter.
-        /// </summary>
-        /// <param name="adapter"></param>
-        public virtual int Write(WriteAdapter adapter)
-        {
-            // TODO reuse buffer for similar agents, don't call GetFloatObservationShape()
-            var numFloats = this.ObservationSize();
-            float[] buffer = new float[numFloats];
-            WriteObservation(buffer);
-
-            adapter.AddRange(buffer);
-
-            return numFloats;
-        }
-
         public void Update() { }
 
         public virtual byte[] GetCompressedObservation()

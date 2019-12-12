@@ -338,7 +338,6 @@ MonoBehaviour:
     vectorActionDescriptions: []
     vectorActionSpaceType: 1
   m_Model: {fileID: 0}
-  m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: prey
 --- !u!4 &582284026
@@ -402,7 +401,7 @@ MonoBehaviour:
       value: 400
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
     type: 3}
-  numberOfPreys: 0
+  numberOfPreys: 10
   PreysHolder: {fileID: 582284023}
 --- !u!4 &1361722398
 Transform:

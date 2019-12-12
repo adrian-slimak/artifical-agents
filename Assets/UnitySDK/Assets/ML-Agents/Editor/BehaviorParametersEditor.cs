@@ -15,8 +15,6 @@ namespace MLAgents
         const float k_TimeBetweenModelReloads = 2f;
         // Time since the last reload of the model
         float m_TimeSinceModelReload;
-        // Whether or not the model needs to be reloaded
-        bool m_RequireReload;
 
         public override void OnInspectorGUI()
         {
@@ -35,47 +33,7 @@ namespace MLAgents
             EditorGUILayout.PropertyField(so.FindProperty("m_BehaviorType"));
             // EditorGUILayout.PropertyField(serializedObject.FindProperty("m_Heuristic"), true);
             EditorGUI.indentLevel--;
-            if (EditorGUI.EndChangeCheck())
-            {
-                m_RequireReload = true;
-            }
-            DisplayFailedModelChecks();
             so.ApplyModifiedProperties();
-        }
-
-        /// <summary>
-        /// Must be called within OnEditorGUI()
-        /// </summary>
-        void DisplayFailedModelChecks()
-        {
-            if (m_RequireReload && m_TimeSinceModelReload > k_TimeBetweenModelReloads)
-            {
-                m_RequireReload = false;
-                m_TimeSinceModelReload = 0;
-            }
-            // Display all failed checks
-            D.logEnabled = false;
-            Model barracudaModel = null;
-            var model = (NNModel)serializedObject.FindProperty("m_Model").objectReferenceValue;
-            var behaviorParameters = (BehaviorParameters)target;
-            var sensorComponents = behaviorParameters.GetComponents<SensorComponent>();
-            var brainParameters = behaviorParameters.brainParameters;
-            if (model != null)
-            {
-                barracudaModel = ModelLoader.Load(model.Value);
-            }
-            if (brainParameters != null)
-            {
-                var failedChecks = InferenceBrain.BarracudaModelParamLoader.CheckModel(
-                    barracudaModel, brainParameters, sensorComponents);
-                foreach (var check in failedChecks)
-                {
-                    if (check != null)
-                    {
-                        EditorGUILayout.HelpBox(check, MessageType.Warning);
-                    }
-                }
-            }
         }
     }
 }

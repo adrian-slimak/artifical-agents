@@ -105,7 +105,7 @@ namespace MLAgents
                     exceptionMessage += " Try removing HTTP_PROXY and HTTPS_PROXY from the" +
                         "environment variables and try again.";
                 }
-                throw new UnityAgentsException(exceptionMessage);
+                throw new Exception(exceptionMessage);
             }
 
             UpdateEnvironmentWithInput(input.RlInput);

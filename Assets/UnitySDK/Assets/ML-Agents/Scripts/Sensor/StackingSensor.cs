@@ -29,7 +29,6 @@ namespace MLAgents.Sensor
         float[][] m_StackedObservations;
 
         int m_CurrentIndex;
-        WriteAdapter m_LocalAdapter = new WriteAdapter();
 
         /// <summary>
         ///
@@ -60,24 +59,6 @@ namespace MLAgents.Sensor
             {
                 m_StackedObservations[i] = new float[m_UnstackedObservationSize];
             }
-        }
-
-        public int Write(WriteAdapter adapter)
-        {
-            // First, call the wrapped sensor's write method. Make sure to use our own adapater, not the passed one.
-            m_LocalAdapter.SetTarget(m_StackedObservations[m_CurrentIndex], 0);
-            m_WrappedSensor.Write(m_LocalAdapter);
-
-            // Now write the saved observations (oldest first)
-            var numWritten = 0;
-            for (var i = 0; i < m_NumStackedObservations; i++)
-            {
-                var obsIndex = (m_CurrentIndex + 1 + i) % m_NumStackedObservations;
-                adapter.AddRange(m_StackedObservations[obsIndex], numWritten);
-                numWritten += m_UnstackedObservationSize;
-            }
-
-            return numWritten;
         }
 
         /// <summary>

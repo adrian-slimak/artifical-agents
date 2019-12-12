@@ -7,7 +7,7 @@ namespace MLAgents.Sensor
     {
         // TODO use float[] instead
         // TOOD allow setting float[]
-        List<float> m_Observations;
+        public List<float> m_Observations;
         int[] m_Shape;
         string m_Name;
 
@@ -21,34 +21,6 @@ namespace MLAgents.Sensor
             m_Observations = new List<float>(observationSize);
             m_Name = name;
             m_Shape = new[] { observationSize };
-        }
-
-        public int Write(WriteAdapter adapter)
-        {
-            var expectedObservations = m_Shape[0];
-            if (m_Observations.Count > expectedObservations)
-            {
-                // Too many observations, truncate
-                Debug.LogWarningFormat(
-                    "More observations ({0}) made than vector observation size ({1}). The observations will be truncated.",
-                    m_Observations.Count, expectedObservations
-                );
-                m_Observations.RemoveRange(expectedObservations, m_Observations.Count - expectedObservations);
-            }
-            else if (m_Observations.Count < expectedObservations)
-            {
-                // Not enough observations; pad with zeros.
-                Debug.LogWarningFormat(
-                    "Fewer observations ({0}) made than vector observation size ({1}). The observations will be padded.",
-                    m_Observations.Count, expectedObservations
-                );
-                for (int i = m_Observations.Count; i < expectedObservations; i++)
-                {
-                    m_Observations.Add(0);
-                }
-            }
-            adapter.AddRange(m_Observations);
-            return expectedObservations;
         }
 
         public void Update()

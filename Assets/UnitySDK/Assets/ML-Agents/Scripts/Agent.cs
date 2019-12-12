@@ -30,21 +30,6 @@ namespace MLAgents
         public bool[] actionMasks;
 
         /// <summary>
-        /// Current agent reward.
-        /// </summary>
-        public float reward;
-
-        /// <summary>
-        /// Whether the agent is done or not.
-        /// </summary>
-        public bool done;
-
-        /// <summary>
-        /// Whether the agent has reached its max step count for this episode.
-        /// </summary>
-        public bool maxStepReached;
-
-        /// <summary>
         /// Unique identifier each agent receives at initialization. It is used
         /// to separate between different agents in the environment.
         /// </summary>
@@ -69,34 +54,6 @@ namespace MLAgents
     [Serializable]
     public class AgentParameters
     {
-        /// <summary>
-        /// The maximum number of steps the agent takes before being done.
-        /// </summary>
-        /// <remarks>
-        /// If set to 0, the agent can only be set to done programmatically (or
-        /// when the Academy is done).
-        /// If set to any positive integer, the agent will be set to done after
-        /// that many steps. Note that setting the max step to a value greater
-        /// than the academy max step value renders it useless.
-        /// </remarks>
-        public int maxStep;
-
-        /// <summary>
-        /// Determines the behaviour of the agent when done.
-        /// </summary>
-        /// <remarks>
-        /// If true, the agent will reset when done and start a new episode.
-        /// Otherwise, the agent will remain done and its behavior will be
-        /// dictated by the AgentOnDone method.
-        /// </remarks>
-        public bool resetOnDone = true;
-
-        /// <summary>
-        /// Whether to enable On Demand Decisions or make a decision at
-        /// every step.
-        /// </summary>
-        public bool onDemandDecision;
-
         /// <summary>
         /// Number of actions between decisions (used when On Demand Decisions
         /// is turned off).
@@ -176,30 +133,11 @@ namespace MLAgents
         /// Current Agent action (message sent from Brain).
         AgentAction m_Action;
 
-        /// Represents the reward the agent accumulated during the current step.
-        /// It is reset to 0 at the beginning of every step.
-        /// Should be set to a positive value when the agent performs a "good"
-        /// action that we wish to reinforce/reward, and set to a negative value
-        /// when the agent performs a "bad" action that we wish to punish/deter.
-        /// Additionally, the magnitude of the reward should not exceed 1.0
-        float m_Reward;
-
-        /// Keeps track of the cumulative reward in this episode.
-        float m_CumulativeReward;
-
         /// Whether or not the agent requests an action.
         bool m_RequestAction;
 
         /// Whether or not the agent requests a decision.
         bool m_RequestDecision;
-
-        /// Whether or not the agent has completed the episode. This may be due
-        /// to either reaching a success or fail state, or reaching the maximum
-        /// number of steps (i.e. timing out).
-        bool m_Done;
-
-        /// Whether or not the agent reached the maximum number of steps.
-        bool m_MaxStepReached;
 
         /// Keeps track of the number of steps taken by the agent in this episode.
         /// Note that this value is different for each agent, and may not overlap
@@ -207,20 +145,9 @@ namespace MLAgents
         /// their own experience.
         int m_StepCount;
 
-        /// Flag to signify that an agent has been reset but the fact that it is
-        /// done has not been communicated (required for On Demand Decisions).
-        bool m_HasAlreadyReset;
-
-        /// Flag to signify that an agent is done and should not reset until
-        /// the fact that it is done has been communicated.
-        bool m_Terminate;
-
         /// Unique identifier each agent receives at initialization. It is used
         /// to separate between different agents in the environment.
         int m_Id;
-
-        /// Keeps track of the actions that are masked at each step.
-        ActionMasker m_ActionMasker;
 
         /// <summary>
         /// List of sensors used to generate observations.
@@ -238,8 +165,6 @@ namespace MLAgents
         /// Internal buffer used for generating float observations.
         /// </summary>
         float[] m_VectorSensorBuffer;
-
-        WriteAdapter m_WriteAdapter = new WriteAdapter();
 
         /// MonoBehaviour function that is called when the attached GameObject
         /// becomes enabled or active.
@@ -262,12 +187,10 @@ namespace MLAgents
 
             if (academy == null)
             {
-                throw new UnityAgentsException(
-                    "No Academy Component could be found in the scene.");
+                throw new Exception("No Academy Component could be found in the scene.");
             }
 
             academy.AgentSetStatus += SetStatus;
-            academy.AgentResetIfDone += ResetIfDone;
             academy.AgentSendState += SendInfo;
             academy.DecideAction += DecideAction;
             academy.AgentAct += AgentStep;
@@ -287,7 +210,6 @@ namespace MLAgents
             if (academy != null)
             {
                 academy.AgentSetStatus -= SetStatus;
-                academy.AgentResetIfDone -= ResetIfDone;
                 academy.AgentSendState -= SendInfo;
                 academy.DecideAction -= DecideAction;
                 academy.AgentAct -= AgentStep;
@@ -296,27 +218,6 @@ namespace MLAgents
             m_Brain?.Dispose();
         }
 
-        /// <summary>
-        /// Updates the Model for the agent. Any model currently assigned to the
-        /// agent will be replaced with the provided one. If the arguments are
-        /// identical to the current parameters of the agent, the model will
-        /// remain unchanged.
-        /// </summary>
-        /// <param name="behaviorName"> The identifier of the behavior. This
-        /// will categorize the agent when training.
-        /// </param>
-        /// <param name="model"> The model to use for inference.</param>
-        /// <param name = "inferenceDevice"> Define on what device the model
-        /// will be run.</param>
-        public void GiveModel(
-            string behaviorName,
-            NNModel model,
-            InferenceDevice inferenceDevice = InferenceDevice.CPU)
-        {
-            m_PolicyFactory.GiveModel(behaviorName, model, inferenceDevice);
-            m_Brain?.Dispose();
-            m_Brain = m_PolicyFactory.GeneratePolicy(Heuristic);
-        }
 
         /// <summary>
         /// Returns the current step counter (within the current epside).
@@ -327,65 +228,6 @@ namespace MLAgents
         public int GetStepCount()
         {
             return m_StepCount;
-        }
-
-        /// <summary>
-        /// Resets the step reward and possibly the episode reward for the agent.
-        /// </summary>
-        public void ResetReward()
-        {
-            m_Reward = 0f;
-            if (m_Done)
-            {
-                m_CumulativeReward = 0f;
-            }
-        }
-
-        /// <summary>
-        /// Overrides the current step reward of the agent and updates the episode
-        /// reward accordingly.
-        /// </summary>
-        /// <param name="reward">The new value of the reward.</param>
-        public void SetReward(float reward)
-        {
-            m_CumulativeReward += (reward - m_Reward);
-            m_Reward = reward;
-        }
-
-        /// <summary>
-        /// Increments the step and episode rewards by the provided value.
-        /// </summary>
-        /// <param name="increment">Incremental reward value.</param>
-        public void AddReward(float increment)
-        {
-            m_Reward += increment;
-            m_CumulativeReward += increment;
-        }
-
-        /// <summary>
-        /// Retrieves the step reward for the Agent.
-        /// </summary>
-        /// <returns>The step reward.</returns>
-        public float GetReward()
-        {
-            return m_Reward;
-        }
-
-        /// <summary>
-        /// Retrieves the episode reward for the Agent.
-        /// </summary>
-        /// <returns>The episode reward.</returns>
-        public float GetCumulativeReward()
-        {
-            return m_CumulativeReward;
-        }
-
-        /// <summary>
-        /// Sets the done flag to true.
-        /// </summary>
-        public void Done()
-        {
-            m_Done = true;
         }
 
         /// <summary>
@@ -405,35 +247,12 @@ namespace MLAgents
             m_RequestAction = true;
         }
 
-        /// <summary>
-        /// Indicates if the agent has reached his maximum number of steps.
-        /// </summary>
-        /// <returns>
-        /// <c>true</c>, if max step reached was reached, <c>false</c> otherwise.
-        /// </returns>
-        public bool IsMaxStepReached()
-        {
-            return m_MaxStepReached;
-        }
-
-        /// <summary>
-        /// Indicates if the agent is done
-        /// </summary>
-        /// <returns>
-        /// <c>true</c>, if the agent is done, <c>false</c> otherwise.
-        /// </returns>
-        public bool IsDone()
-        {
-            return m_Done;
-        }
-
         /// Helper function that resets all the data structures associated with
         /// the agent. Typically used when the agent is being initialized or reset
         /// at the end of an episode.
         void ResetData()
         {
             var param = m_PolicyFactory.brainParameters;
-            m_ActionMasker = new ActionMasker(param);
             // If we haven't initialized vectorActions, initialize to 0. This should only
             // happen during the creation of the Agent. In subsequent episodes, vectorAction
             // should stay the previous action before the Done(), so that it is properly recorded.
@@ -477,7 +296,7 @@ namespace MLAgents
         /// </returns>
         public virtual float[] Heuristic()
         {
-            throw new UnityAgentsException(string.Format(
+            throw new Exception(string.Format(
                     "The Heuristic method was not implemented for the Agent on the " +
                     "{0} GameObject.",
                     gameObject.name));
@@ -489,40 +308,14 @@ namespace MLAgents
         /// </summary>
         public void InitializeSensors()
         {
-            // Get all attached sensor components
-            var attachedSensorComponents = GetComponents<SensorComponent>();
-            sensors.Capacity += attachedSensorComponents.Length;
-            foreach (var component in attachedSensorComponents)
-            {
-                sensors.Add(component.CreateSensor());
-            }
-
             // Support legacy CollectObservations
             var param = m_PolicyFactory.brainParameters;
             if (param.vectorObservationSize > 0)
             {
                 collectObservationsSensor = new VectorSensor(param.vectorObservationSize);
-                if (param.numStackedVectorObservations > 1)
-                {
-                    var stackingSensor = new StackingSensor(collectObservationsSensor, param.numStackedVectorObservations);
-                    sensors.Add(stackingSensor);
-                }
-                else
-                {
-                    sensors.Add(collectObservationsSensor);
-                }
+                sensors.Add(collectObservationsSensor);
             }
 
-            // Sort the Sensors by name to ensure determinism
-            sensors.Sort((x, y) => x.GetName().CompareTo(y.GetName()));
-
-#if DEBUG
-            // Make sure the names are actually unique
-            for (var i = 0; i < sensors.Count - 1; i++)
-            {
-                Debug.Assert(!sensors[i].GetName().Equals(sensors[i + 1].GetName()), "Sensor names must be unique.");
-            }
-#endif
             // Create a buffer for writing vector sensor data too
             int numFloatObservations = 0;
             for (var i = 0; i < sensors.Count; i++)
@@ -548,19 +341,13 @@ namespace MLAgents
 
             m_Info.storedVectorActions = m_Action.vectorActions;
             m_Info.observations.Clear();
-            m_ActionMasker.ResetMask();
             UpdateSensors();
             using (TimerStack.Instance.Scoped("CollectObservations"))
             {
                 CollectObservations();
             }
-            m_Info.actionMasks = m_ActionMasker.GetMask();
 
             // var param = m_PolicyFactory.brainParameters; // look, no brain params!
-
-            m_Info.reward = m_Reward;
-            m_Info.done = m_Done;
-            m_Info.maxStepReached = m_MaxStepReached;
             m_Info.id = m_Id;
 
             m_Brain.RequestDecision(this);
@@ -583,37 +370,19 @@ namespace MLAgents
         /// </summary>
         public void GenerateSensorData()
         {
-            int floatsWritten = 0;
-            // Generate data for all Sensors
-            for (var i = 0; i < sensors.Count; i++)
+            int numFloats = collectObservationsSensor.m_Observations.Count;
+            for (int v = 0; v < numFloats; v++)
             {
-                var sensor = sensors[i];
-                if (sensor.GetCompressionType() == SensorCompressionType.None)
-                {
-                    // only handles 1D
-                    // TODO handle in communicator code instead
-                    m_WriteAdapter.SetTarget(m_VectorSensorBuffer, floatsWritten);
-                    var numFloats = sensor.Write(m_WriteAdapter);
-                    var floatObs = new Observation
-                    {
-                        FloatData = new ArraySegment<float>(m_VectorSensorBuffer, floatsWritten, numFloats),
-                        Shape = sensor.GetFloatObservationShape(),
-                        CompressionType = sensor.GetCompressionType()
-                    };
-                    m_Info.observations.Add(floatObs);
-                    floatsWritten += numFloats;
-                }
-                else
-                {
-                    var compressedObs = new Observation
-                    {
-                        CompressedData = sensor.GetCompressedObservation(),
-                        Shape = sensor.GetFloatObservationShape(),
-                        CompressionType = sensor.GetCompressionType()
-                    };
-                    m_Info.observations.Add(compressedObs);
-                }
+                m_VectorSensorBuffer[v] = collectObservationsSensor.m_Observations[v];
             }
+
+            var floatObs = new Observation
+            {
+                FloatData = new ArraySegment<float>(m_VectorSensorBuffer, 0, numFloats),
+                Shape = collectObservationsSensor.GetFloatObservationShape(),
+                CompressionType = collectObservationsSensor.GetCompressionType()
+            };
+            m_Info.observations.Add(floatObs);
         }
 
         /// <summary>
@@ -650,56 +419,6 @@ namespace MLAgents
         /// </remarks>
         public virtual void CollectObservations()
         {
-        }
-
-        /// <summary>
-        /// Sets an action mask for discrete control agents. When used, the agent will not be
-        /// able to perform the action passed as argument at the next decision. If no branch is
-        /// specified, the default branch will be 0. The actionIndex or actionIndices correspond
-        /// to the action the agent will be unable to perform.
-        /// </summary>
-        /// <param name="actionIndices">The indices of the masked actions on branch 0</param>
-        protected void SetActionMask(IEnumerable<int> actionIndices)
-        {
-            m_ActionMasker.SetActionMask(0, actionIndices);
-        }
-
-        /// <summary>
-        /// Sets an action mask for discrete control agents. When used, the agent will not be
-        /// able to perform the action passed as argument at the next decision. If no branch is
-        /// specified, the default branch will be 0. The actionIndex or actionIndices correspond
-        /// to the action the agent will be unable to perform.
-        /// </summary>
-        /// <param name="actionIndex">The index of the masked action on branch 0</param>
-        protected void SetActionMask(int actionIndex)
-        {
-            m_ActionMasker.SetActionMask(0, new[] { actionIndex });
-        }
-
-        /// <summary>
-        /// Sets an action mask for discrete control agents. When used, the agent will not be
-        /// able to perform the action passed as argument at the next decision. If no branch is
-        /// specified, the default branch will be 0. The actionIndex or actionIndices correspond
-        /// to the action the agent will be unable to perform.
-        /// </summary>
-        /// <param name="branch">The branch for which the actions will be masked</param>
-        /// <param name="actionIndex">The index of the masked action</param>
-        protected void SetActionMask(int branch, int actionIndex)
-        {
-            m_ActionMasker.SetActionMask(branch, new[] { actionIndex });
-        }
-
-        /// <summary>
-        /// Modifies an action mask for discrete control agents. When used, the agent will not be
-        /// able to perform the action passed as argument at the next decision. If no branch is
-        /// specified, the default branch will be 0. The actionIndex or actionIndices correspond
-        /// to the action the agent will be unable to perform.
-        /// </summary>
-        /// <param name="branch">The branch for which the actions will be masked</param>
-        /// <param name="actionIndices">The indices of the masked actions</param>
-        protected void SetActionMask(int branch, IEnumerable<int> actionIndices)
-        {
-            m_ActionMasker.SetActionMask(branch, actionIndices);
         }
 
         /// <summary>
@@ -814,7 +533,6 @@ namespace MLAgents
         /// </summary>
         void ForceReset()
         {
-            m_HasAlreadyReset = false;
             _AgentReset();
         }
 
@@ -877,41 +595,16 @@ namespace MLAgents
         /// <param name="academyStepCounter">Number of current steps in episode</param>
         void SetStatus(int academyStepCounter)
         {
-            MakeRequests(academyStepCounter);
-        }
+            agentParameters.numberOfActionsBetweenDecisions =
+                Mathf.Max(agentParameters.numberOfActionsBetweenDecisions, 1);
 
-        /// Signals the agent that it must reset if its done flag is set to true.
-        void ResetIfDone()
-        {
-            // If an agent is done, then it will also
-            // request for a decision and an action
-            if (IsDone())
+            RequestAction();
+            if (academyStepCounter %
+                agentParameters.numberOfActionsBetweenDecisions == 0)
             {
-                if (agentParameters.resetOnDone)
-                {
-                    if (agentParameters.onDemandDecision)
-                    {
-                        if (!m_HasAlreadyReset)
-                        {
-                            // If event based, the agent can reset as soon
-                            // as it is done
-                            _AgentReset();
-                            m_HasAlreadyReset = true;
-                        }
-                    }
-                    else if (m_RequestDecision)
-                    {
-                        // If not event based, the agent must wait to request a
-                        // decision before resetting to keep multiple agents in sync.
-                        _AgentReset();
-                    }
-                }
-                else
-                {
-                    m_Terminate = true;
-                    RequestDecision();
-                }
+                RequestDecision();
             }
+            
         }
 
         /// <summary>
@@ -922,31 +615,13 @@ namespace MLAgents
             if (m_RequestDecision)
             {
                 SendInfoToBrain();
-                ResetReward();
-                m_Done = false;
-                m_MaxStepReached = false;
                 m_RequestDecision = false;
-
-                m_HasAlreadyReset = false;
             }
         }
 
         /// Used by the brain to make the agent perform a step.
         void AgentStep()
         {
-            if (m_Terminate)
-            {
-                m_Terminate = false;
-                ResetReward();
-                m_Done = false;
-                m_MaxStepReached = false;
-                m_RequestDecision = false;
-                m_RequestAction = false;
-
-                m_HasAlreadyReset = false;
-                OnDisable();
-                AgentOnDone();
-            }
 
             if ((m_RequestAction) && (m_Brain != null))
             {
@@ -954,34 +629,9 @@ namespace MLAgents
                 AgentAction(m_Action.vectorActions);
             }
 
-            if ((m_StepCount >= agentParameters.maxStep)
-                && (agentParameters.maxStep > 0))
-            {
-                m_MaxStepReached = true;
-                Done();
-            }
-
             m_StepCount += 1;
         }
 
-        /// <summary>
-        /// Is called after every step, contains the logic to decide if the agent
-        /// will request a decision at the next step.
-        /// </summary>
-        void MakeRequests(int academyStepCounter)
-        {
-            agentParameters.numberOfActionsBetweenDecisions =
-                Mathf.Max(agentParameters.numberOfActionsBetweenDecisions, 1);
-            if (!agentParameters.onDemandDecision)
-            {
-                RequestAction();
-                if (academyStepCounter %
-                    agentParameters.numberOfActionsBetweenDecisions == 0)
-                {
-                    RequestDecision();
-                }
-            }
-        }
 
         void DecideAction()
         {

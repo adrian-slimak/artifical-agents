@@ -4,7 +4,6 @@ using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using MLAgents.InferenceBrain;
 using Barracuda;
 
 /**
@@ -179,7 +178,6 @@ namespace MLAgents
         public ICommunicator Communicator;
 
         bool m_Initialized;
-        List<ModelRunner> m_ModelRunners = new List<ModelRunner>();
 
         // Flag used to keep track of the first time the Academy is reset.
         bool m_FirstAcademyReset;
@@ -194,19 +192,11 @@ namespace MLAgents
         // their Policy to decide on their next action.
         public event System.Action DecideAction;
 
-        // Signals to all the listeners that the academy is being destroyed
-        public event System.Action DestroyAction;
-
         // Signals to all the agents at each environment step along with the
         // Academy's maxStepReached, done and stepCount values. The agents rely
         // on this event to update their own values of max step reached and done
         // in addition to aligning on the step count of the global episode.
         public event System.Action<int> AgentSetStatus;
-
-        // Signals to all the agents at each environment step so they can reset
-        // if their flag has been set to done (assuming the agent has requested a
-        // decision).
-        public event System.Action AgentResetIfDone;
 
         // Signals to all the agents at each environment step so they can send
         // their state to their Policy if they have requested a decision.
@@ -326,9 +316,7 @@ namespace MLAgents
             SetIsInference(!IsCommunicatorOn);
 
             DecideAction += () => { };
-            DestroyAction += () => { };
             AgentSetStatus += i => { };
-            AgentResetIfDone += () => { };
             AgentSendState += () => { };
             AgentAct += () => { };
             AgentForceReset += () => { };
@@ -520,11 +508,6 @@ namespace MLAgents
 
             AgentSetStatus?.Invoke(m_StepCount);
 
-            using (TimerStack.Instance.Scoped("AgentResetIfDone"))
-            {
-                AgentResetIfDone?.Invoke();
-            }
-
             using (TimerStack.Instance.Scoped("AgentSendState"))
             {
                 AgentSendState?.Invoke();
@@ -568,29 +551,6 @@ namespace MLAgents
         }
 
         /// <summary>
-        /// Creates or retrieves an existing ModelRunner that uses the same
-        /// NNModel and the InferenceDevice as provided.
-        /// </summary>
-        /// <param name="model"> The NNModel the ModelRunner must use </param>
-        /// <param name="brainParameters"> The brainParameters used to create
-        /// the ModelRunner </param>
-        /// <param name="inferenceDevice"> The inference device (CPU or GPU)
-        /// the ModelRunner will use </param>
-        /// <returns> The ModelRunner compatible with the input settings</returns>
-        public ModelRunner GetOrCreateModelRunner(
-            NNModel model, BrainParameters brainParameters, InferenceDevice inferenceDevice)
-        {
-            var modelRunner = m_ModelRunners.Find(x => x.HasModel(model, inferenceDevice));
-            if (modelRunner == null)
-            {
-                modelRunner = new ModelRunner(
-                    model, brainParameters, inferenceDevice);
-                m_ModelRunners.Add(modelRunner);
-            }
-            return modelRunner;
-        }
-
-        /// <summary>
         /// Cleanup function
         /// </summary>
         protected virtual void OnDestroy()
@@ -598,14 +558,6 @@ namespace MLAgents
             Physics.gravity = m_OriginalGravity;
             Time.fixedDeltaTime = m_OriginalFixedDeltaTime;
             Time.maximumDeltaTime = m_OriginalMaximumDeltaTime;
-
-            // Signal to listeners that the academy is being destroyed now
-            DestroyAction?.Invoke();
-
-            foreach (var mr in m_ModelRunners)
-            {
-                mr.Dispose();
-            }
 
             // TODO - Pass worker ID or some other identifier,
             // so that multiple envs won't overwrite each others stats.

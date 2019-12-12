@@ -20,24 +20,6 @@ namespace MLAgents.Sensor
         int[] GetFloatObservationShape();
 
         /// <summary>
-        /// Write the observation data directly to the WriteAdapter.
-        /// This is considered an advanced interface; for a simpler approach, use SensorBase and override WriteFloats instead.
-        /// Note that this (and GetCompressedObservation) may be called multiple times per agent step, so should not
-        /// mutate any internal state.
-        /// </summary>
-        /// <param name="adapater"></param>
-        /// <returns>The number of elements written</returns>
-        int Write(WriteAdapter adapater);
-
-        /// <summary>
-        /// Return a compressed representation of the observation. For small observations, this should generally not be
-        /// implemented. However, compressing large observations (such as visual results) can significantly improve
-        /// model training time.
-        /// </summary>
-        /// <returns></returns>
-        byte[] GetCompressedObservation();
-
-        /// <summary>
         /// Update any internal state of the sensor. This is called once per each agent step.
         /// </summary>
         void Update();

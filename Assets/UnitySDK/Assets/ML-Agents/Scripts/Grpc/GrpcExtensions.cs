@@ -40,9 +40,9 @@ namespace MLAgents
         {
             var agentInfoProto = new AgentInfoProto
             {
-                Reward = ai.reward,
-                MaxStepReached = ai.maxStepReached,
-                Done = ai.done,
+                Reward = 0,
+                MaxStepReached = false,
+                Done = false,
                 Id = ai.id,
             };
 
