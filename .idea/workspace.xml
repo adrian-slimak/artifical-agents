@@ -2,58 +2,101 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7c823ea5-b782-4639-b9de-2593a81b4e3a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Prey.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/Prey.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BehaviorParametersEditor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BehaviorParametersEditor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Resources.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Resources/DemoIcon.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Resources/DemoIcon.png.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Python/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Python/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/VirtualAgent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/VirtualAgent.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/AgentEditor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/AgentEditor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BehaviorParametersEditor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BehaviorParametersEditor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BrainParametersDrawer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/BrainParametersDrawer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/ResetParameterDrawer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/ResetParameterDrawer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/UnityColors.colors" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Editor/UnityColors.colors.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Academy.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Academy.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ActionMasker.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ActionMasker.cs.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Agent.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Agent.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/GrpcExtensions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/GrpcExtensions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/RpcCommunicator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/RpcCommunicator.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/ApplierImpl.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/ApplierImpl.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/BarracudaModelParamLoader.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/BarracudaModelParamLoader.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/GeneratorImpl.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/GeneratorImpl.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/ModelRunner.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/ModelRunner.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorApplier.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorApplier.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorGenerator.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorGenerator.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorNames.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorNames.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorProxy.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/TensorProxy.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/Utils.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/Utils/Multinomial.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/Utils/Multinomial.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/Utils/RandomNormal.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/InferenceBrain/Utils/RandomNormal.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BarracudaPolicy.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BarracudaPolicy.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BehaviorParameters.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BehaviorParameters.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/ISensor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/ISensor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorBase.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorBase.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorComponent.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorComponent.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/StackingSensor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/StackingSensor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/VectorSensor.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/VectorSensor.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/WriteAdapter.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/WriteAdapter.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Startup.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Startup.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/UnityAgentsException.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/UnityAgentsException.cs.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Utilities.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Utilities.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentAction.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentAction.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentInfo.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentInfo.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentInfoActionPair.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/AgentInfoActionPair.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/BrainParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/BrainParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Command.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Command.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/CustomResetParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/CustomResetParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/DemonstrationMeta.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/DemonstrationMeta.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/EngineConfiguration.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/EngineConfiguration.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/EnvironmentParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/EnvironmentParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Header.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Header.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Observation.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/Observation.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/SpaceType.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/SpaceType.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityInput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityInput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityMessage.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityMessage.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityOutput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityOutput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInitializationInput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInitializationInput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInitializationOutput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInitializationOutput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlInput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlOutput.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityRlOutput.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityToExternal.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityToExternal.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityToExternalGrpc.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/CommunicatorObjects/UnityToExternalGrpc.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/GrpcExtensions.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/GrpcExtensions.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/RpcCommunicator.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Grpc/RpcCommunicator.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ICommunicator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ICommunicator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Monitor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Monitor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BehaviorParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BehaviorParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BrainParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/BrainParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/HeuristicPolicy.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/HeuristicPolicy.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/IPolicy.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/IPolicy.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/RemotePolicy.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Policy/RemotePolicy.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ResetParameters.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/ResetParameters.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/ISensor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/ISensor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/Observation.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/Observation.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorBase.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/SensorBase.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/StackingSensor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/StackingSensor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/VectorSensor.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Sensor/VectorSensor.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Timer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/UnitySDK/Assets/ML-Agents/Scripts/Timer.cs.meta" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/csharp_timers.json" beforeDir="false" afterPath="$PROJECT_DIR$/csharp_timers.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -154,6 +197,9 @@
       <workItem from="1576073999317" duration="4035000" />
       <workItem from="1576083570897" duration="1277000" />
       <workItem from="1576103255554" duration="3667000" />
+      <workItem from="1576184375008" duration="16149000" />
+      <workItem from="1576229119642" duration="42000" />
+      <workItem from="1576229215297" duration="182000" />
     </task>
     <servers />
   </component>
@@ -165,13 +211,15 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ArtificalAnimals$main.coverage" NAME="main Coverage Results" MODIFIED="1576109781059" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assets/Scripts/Python" />
+    <SUITE FILE_PATH="coverage/ArtificalAnimals$main.coverage" NAME="main Coverage Results" MODIFIED="1576201147114" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assets/Scripts/Python" />
   </component>
 </project>

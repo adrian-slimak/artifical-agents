@@ -21,9 +21,10 @@ public class Animal : MonoBehaviour
     Rigidbody2D rigidBody2D;
     public enum AnimalType { Fox, Bunny }
 
-    void Start()
+    void OnEnable()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
+
     }
 
     void FixedUpdate()

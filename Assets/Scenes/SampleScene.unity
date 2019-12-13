@@ -311,7 +311,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 582284026}
-  - component: {fileID: 582284025}
   m_Layer: 0
   m_Name: Preys Holder
   m_TagString: Untagged
@@ -319,27 +318,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &582284025
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 582284023}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_BrainParameters:
-    vectorObservationSize: 1
-    numStackedVectorObservations: 1
-    vectorActionSize: 14000000
-    vectorActionDescriptions: []
-    vectorActionSpaceType: 1
-  m_Model: {fileID: 0}
-  m_BehaviorType: 0
-  m_BehaviorName: prey
 --- !u!4 &582284026
 Transform:
   m_ObjectHideFlags: 0
@@ -389,19 +367,10 @@ MonoBehaviour:
     qualityLevel: 1
     timeScale: 1
     targetFrameRate: 0
-  m_InferenceConfiguration:
-    width: 1280
-    height: 720
-    qualityLevel: 1
-    timeScale: 1
-    targetFrameRate: 0
-  resetParameters:
-    m_ResetParameters:
-    - key: NumOfPreys
-      value: 400
+  m_Agents: []
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
     type: 3}
-  numberOfPreys: 10
+  numberOfPreys: 400
   PreysHolder: {fileID: 582284023}
 --- !u!4 &1361722398
 Transform:
@@ -545,75 +514,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1884211417}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1001 &1895904973
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 14.24
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 41.94
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 7
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1736914657236933669, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
-        type: 3}
-      propertyPath: m_Name
-      value: Prey
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0c186306311efe34f98d93da04e34833, type: 3}
 --- !u!1 &1998347051
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,8 +13,7 @@ GameObject:
   - component: {fileID: 2458119146003361092}
   - component: {fileID: 8756675883617140096}
   - component: {fileID: 6143707805166682195}
-  - component: {fileID: 6127257329547458518}
-  - component: {fileID: 6127257329547458519}
+  - component: {fileID: -1906410475071066707}
   m_Layer: 8
   m_Name: Prey
   m_TagString: Prey
@@ -112,7 +111,7 @@ MonoBehaviour:
   drawGizmo: 0
   nearFood: {fileID: 0}
   nearMate: {fileID: 0}
---- !u!114 &6127257329547458518
+--- !u!114 &-1906410475071066707
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,36 +120,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 6127257329547458512}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BrainParameters:
-    vectorObservationSize: 20
-    numStackedVectorObservations: 1
-    vectorActionSize: 20000000
-    vectorActionDescriptions: []
-    vectorActionSpaceType: 1
-  m_Model: {fileID: 0}
-  m_InferenceDevice: 1
-  m_BehaviorType: 0
-  m_BehaviorName: prey
---- !u!114 &6127257329547458519
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6127257329547458512}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f2724c08a408164eb81e151aee5a53e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  agentParameters:
-    maxStep: 0
-    resetOnDone: 1
-    onDemandDecision: 0
-    numberOfActionsBetweenDecisions: 1
+  numberOfActionsBetweenDecisions: 0
+  m_Id: 0
 --- !u!1 &7447736276596515859
 GameObject:
   m_ObjectHideFlags: 0
