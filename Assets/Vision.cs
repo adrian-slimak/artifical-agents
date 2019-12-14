@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 public class Vision : MonoBehaviour
 {
@@ -13,7 +14,7 @@ public class Vision : MonoBehaviour
     [HideInInspector]
     public Transform nearMate;
 
-    float[] visionCells;
+    ArraySegment<float> observationsVector;
     Vector3 arcStart;
     float cellAngle;
 
@@ -23,15 +24,33 @@ public class Vision : MonoBehaviour
 
     private void Awake()
     {
-        visionCells = new float[visionCellsNum];
+        observationsVector = new ArraySegment<float>(new float[visionCellsNum]);
         cellAngle = visionAngle / visionCellsNum;
+    }
+
+    //private void FixedUpdate()
+    //{
+    //    UpdateVisionObservations();
+    //}
+
+    public void SetObservationsVectorArray(ArraySegment<float> arraySegment)
+    {
+        observationsVector = arraySegment;
+        visionCellsNum = arraySegment.Count;
+    }
+
+    public void UpdateVisionObservations()
+    {
+        arcStart = rotateByAngle(transform.right, (180f - visionAngle) / 2f);
+        DetectVision();
     }
 
     void DetectVision()
     {
         hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hits);
-        for (int j = 0; j < visionCellsNum; j++)
-            visionCells[j] = 0;
+        for (int j = observationsVector.Offset; j < observationsVector.Offset + observationsVector.Count; j++)
+            observationsVector.Array[j] = 0;
+
         nearMate = null;
         nearFood = null;
 
@@ -47,7 +66,7 @@ public class Vision : MonoBehaviour
                     int cellNum = (int)(angle / cellAngle);
                     float distance = Vector2.Distance(transform.position, hits[i].transform.position) / visionDistance;
                     distance = 1f - Mathf.Clamp(distance, 0f, 0.99f);
-                    if (visionCells[cellNum] % 1 < distance)
+                    if (observationsVector.Array[observationsVector.Offset + cellNum] % 1 < distance)
                     {
                         if (hits[i].tag == "Predator")
                             if (distance > 0.9f && type == Animal.AnimalType.Fox) nearMate = hits[i].transform;
@@ -66,17 +85,11 @@ public class Vision : MonoBehaviour
                             distance += 2f;
                         }
 
-                        visionCells[cellNum] = distance;
+                        observationsVector.Array[observationsVector.Offset + cellNum] = distance;
                     }
                 }
             }
         }
-    }
-
-    private void FixedUpdate()
-    {
-        arcStart = rotateByAngle(transform.right, (180f - visionAngle) / 2f);
-        DetectVision();
     }
 
     private void OnDrawGizmos()
@@ -85,7 +98,7 @@ public class Vision : MonoBehaviour
         if(Application.isEditor)
         {
             Awake();
-            FixedUpdate();
+            UpdateVisionObservations();
         }
         UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
         UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, arcStart,
@@ -96,18 +109,18 @@ public class Vision : MonoBehaviour
         UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionDistance);
 
-        for (int i = 0; i<visionCellsNum; i++)
+        for (int i = observationsVector.Offset; i< observationsVector.Offset + observationsVector.Count; i++)
         {
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
             UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(cellAngle * i, Vector3.forward) * arcStart * visionDistance);
 
-            if (visionCells[i] > 0)
+            if (observationsVector.Array[i] > 0)
             {
                 UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
-                if (visionCells[i] > 2)
+                if (observationsVector.Array[i] > 2)
                     UnityEditor.Handles.color = new Color(0f, 0f, 1f, 0.15f);
-                else if (visionCells[i] > 1)
+                else if (observationsVector.Array[i] > 1)
                     UnityEditor.Handles.color = new Color(0f, 1f, 0f, 0.15f);
 
                 UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward,
@@ -121,10 +134,5 @@ public class Vision : MonoBehaviour
     Vector3 rotateByAngle(Vector3 vector, float angle)
     {
         return Quaternion.AngleAxis(angle, Vector3.forward) * vector;
-    }
-
-    public float[] GetVisionVector()
-    {
-        return visionCells;
     }
 }

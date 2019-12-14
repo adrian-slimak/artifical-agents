@@ -21,18 +21,26 @@ namespace MLAgents
     {
         AgentAction m_Action;
 
-        public ArraySegment<float> FloatData;
+        int m_Id;
+
+        public ArraySegment<float> m_ActionsVector;
+        public ArraySegment<float> m_ObservationsVector;
         public static int m_observationsSize = 20;
-        Observation m_Observations;
+        public static int m_actionsSize = 32;
 
         int m_StepCount;
 
         Academy m_Academy;
-
         Vision m_Vision;
         Animal m_Animal;
 
         public static int m_TotalAgentsCreated = 0;
+
+        void Awake()
+        {
+            m_Id = m_TotalAgentsCreated;
+            m_TotalAgentsCreated++;
+        }
 
         void OnEnable()
         {
@@ -46,7 +54,6 @@ namespace MLAgents
         void OnEnableHelper(Academy academy)
         {
             m_Action = new AgentAction();
-            m_Observations = new Observation();
 
             if (academy == null)
                 throw new Exception("No Academy Component could be found in the scene.");
@@ -56,6 +63,12 @@ namespace MLAgents
             academy.AgentUpdateObservations += UpdateObservations;
             academy.AgentUpdateMovement += AgentStep;
             ResetData();
+        }
+
+        void Start()
+        {
+            m_ObservationsVector = new ArraySegment<float>(m_Academy.m_StackedObservations, m_Id * m_observationsSize, m_observationsSize);
+            m_ActionsVector = new ArraySegment<float>(m_Academy.m_StackedActions, m_Id * m_actionsSize, m_actionsSize);
         }
 
         void ResetData()
@@ -71,32 +84,21 @@ namespace MLAgents
 
             using (TimerStack.Instance.Scoped("CollectObservations"))
             {
-                CollectObservations();
+                m_Vision.UpdateVisionObservations();
             }
 
         }
 
-        public virtual void CollectObservations()
+        public void AgentAction()
         {
-            float[] observations = m_Vision.GetVisionVector();
-            FloatData = new ArraySegment<float>(observations, 0, observations.Length);
-            m_Observations.observations = observations;
-        }
-
-        public void AgentAction(float[] vectorAction)
-        {
-            if (vectorAction == null) return;
-            m_Animal.SetMovement(vectorAction[0], vectorAction[1]);
-        }
-
-        public void UpdateAgentAction(AgentAction action)
-        {
-            m_Action = action;
+            if (m_ActionsVector == null) return;
+            Debug.Log(m_ActionsVector.Array[m_ActionsVector.Offset + 0]);
+            m_Animal.SetMovement(m_ActionsVector.Array[m_ActionsVector.Offset + 0], m_ActionsVector.Array[m_ActionsVector.Offset + 1]);
         }
 
         void AgentStep()
         {
-            AgentAction(m_Action.vectorActions);
+            AgentAction();
             m_StepCount += 1;
         }
     }

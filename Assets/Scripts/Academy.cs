@@ -1,9 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 
 namespace MLAgents
 {
@@ -44,6 +42,10 @@ namespace MLAgents
     {
         const string k_ApiVersion = "API-12";
 
+        [HideInInspector]
+        public float[] m_StackedObservations;
+        [HideInInspector]
+        public float[] m_StackedActions;
 
         float m_OriginalFixedDeltaTime;
         float m_OriginalMaximumDeltaTime;
@@ -79,6 +81,12 @@ namespace MLAgents
             m_Agents = new List<Agent>();
 
             LazyInitialization();
+        }
+
+        private void OnEnable()
+        {
+            m_StackedObservations = new float[Agent.m_TotalAgentsCreated * Agent.m_observationsSize];
+            m_StackedActions = new float[Agent.m_TotalAgentsCreated * Agent.m_actionsSize];
         }
 
         public void LazyInitialization()
@@ -158,6 +166,12 @@ namespace MLAgents
             AgentUpdateMovement += () => { };
 
             ConfigureEnvironment();
+            AcademyInitialization();
+        }
+
+        public virtual void AcademyInitialization()
+        {
+
         }
 
         static void OnQuitCommandReceived()
@@ -212,7 +226,7 @@ namespace MLAgents
 
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
-                Communicator?.DecideBatch(m_Agents);
+                Communicator?.DecideBatch(m_Agents, m_StackedObservations, m_StackedActions);
             }
 
             using (TimerStack.Instance.Scoped("AcademyStep"))

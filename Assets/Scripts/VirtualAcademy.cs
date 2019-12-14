@@ -20,7 +20,7 @@ public class VirtualAcademy : Academy
         //}
     }
 
-    private void Start()
+    public override void AcademyInitialization()
     {
         for (int i = 0; i < numberOfPreys; i++)
         {

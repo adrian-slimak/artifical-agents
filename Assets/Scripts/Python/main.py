@@ -18,6 +18,7 @@ def main():
 
     env_state = unity_environment.step()
     prey_observations = env_state['prey'].vector_observations
+    prey_observations = tf.reshape(())
 
     prey_model = LSTMModel(32, prey_observations.shape[0])
     prey_model.build(input_shape=(1, prey_observations.shape[1]))
@@ -28,6 +29,7 @@ def main():
         output = prey_model(tf.expand_dims(prey_observations, 1))
         action = {'prey': output.numpy()}
         env_state = unity_environment.step(action)
+        print(action)
         # end = timer()
         # print(end - start)
 

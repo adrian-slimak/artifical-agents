@@ -163,7 +163,7 @@ namespace MLAgents
 
         #region Sending and retreiving data
 
-        public void DecideBatch(List<Agent> agents)
+        public void DecideBatch(List<Agent> agents, float[] stackedObservations, float[] stackedActions)
         {
             if (!m_CurrentUnityRlOutput.AgentInfos.ContainsKey("prey"))
             {
@@ -174,41 +174,39 @@ namespace MLAgents
 
             using (TimerStack.Instance.Scoped("AgentInfo.ToProto"))
             {
-                foreach (var agent in agents)
+
+                var agentInfoProto = new AgentInfoProto
                 {
-                    var agentInfoProto = new AgentInfoProto
-                    {
-                        Reward = 0,
-                        MaxStepReached = false,
-                        Done = false,
-                        Id = 0,
-                    };
+                    Reward = 0,
+                    MaxStepReached = false,
+                    Done = false,
+                    Id = 0,
+                };
 
-                    ObservationProto obsProto = null;
+                ObservationProto obsProto = null;
 
-                    var floatDataProto = new ObservationProto.Types.FloatData
-                    {
-                        Data = { agent.FloatData },
-                    };
+                var floatDataProto = new ObservationProto.Types.FloatData
+                {
+                    Data = { stackedObservations },
+                };
 
-                    obsProto = new ObservationProto
-                    {
-                        FloatData = floatDataProto,
-                        CompressionType = CompressionTypeProto.None,
-                    };
+                obsProto = new ObservationProto
+                {
+                    FloatData = floatDataProto,
+                    CompressionType = CompressionTypeProto.None,
+                };
 
-                    obsProto.Shape.AddRange(new int[] { agent.FloatData.Count });
+                obsProto.Shape.AddRange(new int[] { stackedObservations.Length });
 
-                    agentInfoProto.Observations.Add(obsProto);
+                agentInfoProto.Observations.Add(obsProto);
 
-                    m_CurrentUnityRlOutput.AgentInfos["prey"].Value.Add(agentInfoProto);
-                }
+                m_CurrentUnityRlOutput.AgentInfos["prey"].Value.Add(agentInfoProto);
             }
 
-            
+
             using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
             {
-                SendBatchedMessageHelper(agents);
+                SendBatchedMessageHelper(stackedActions);
             }
         }
 
@@ -216,7 +214,7 @@ namespace MLAgents
         /// Helper method that sends the current UnityRLOutput, receives the next UnityInput and
         /// Applies the appropriate AgentAction to the agents.
         /// </summary>
-        void SendBatchedMessageHelper(List<Agent> agents)
+        void SendBatchedMessageHelper(float[] stackedActions)
         {
             var message = new UnityOutputProto
             {
@@ -246,20 +244,14 @@ namespace MLAgents
 
             foreach (var brainName in rlInput.AgentActions.Keys)
             {
-                var agentActions = new List<AgentAction>(rlInput.AgentActions[brainName].Value.Count);
+                int floatsWritten = 0;
                 foreach (var ap in rlInput.AgentActions[brainName].Value)
                 {
-                    agentActions.Add(
-                        new AgentAction
-                        {
-                            vectorActions = ap.VectorActions.ToArray(),
-                            value = ap.Value,
-                        });
-                }
-
-                for(int i=0; i<agents.Count; i++)
-                {
-                    agents[i].UpdateAgentAction(agentActions[i]);
+                    foreach(float f in ap.VectorActions)
+                    {
+                        stackedActions[floatsWritten] = f;
+                        floatsWritten++;
+                    }
                 }
             }
         }
@@ -333,7 +325,7 @@ namespace MLAgents
                 };
                 output.BrainParameters.Add(brainParametersProto);
             }
-            
+
 
             return output;
         }
