@@ -100,13 +100,16 @@ class RpcCommunicator(Communicator):
 
     def initialize(self, inputs: UnityInputProto) -> UnityOutputProto:
         self.poll_for_timeout()
-        aca_param = self.unity_to_external.parent_conn.recv().unity_output
+
         message = UnityMessageProto()
         message.header.status = 200
-        message.unity_input.CopyFrom(inputs)
+        message.unity_input.initialization_input.seed = 1
+
         self.unity_to_external.parent_conn.send(message)
-        self.unity_to_external.parent_conn.recv()
-        return aca_param
+        outputMessage = self.unity_to_external.parent_conn.recv()
+        # yes = self.unity_to_external.parent_conn.recv()
+
+        return outputMessage.unity_output
 
     def exchange(self, inputs: UnityInputProto) -> Optional[UnityOutputProto]:
         message = UnityMessageProto()

@@ -6,10 +6,7 @@ using System.Linq;
 using UnityEngine;
 using MLAgents.CommunicatorObjects;
 using Google.Protobuf;
-using System.IO;
 using System.IO.MemoryMappedFiles;
-using IronPython.Hosting;
-using System.Text;
 
 namespace MLAgents
 {
@@ -18,7 +15,7 @@ namespace MLAgents
     {
         public event QuitCommandHandler QuitCommandReceived;
         public event ResetCommandHandler ResetCommandReceived;
-        public event RLInputReceivedHandler RLInputReceived;
+        public event InputReceivedHandler RLInputReceived;
 
         bool m_IsOpen;
 
@@ -49,15 +46,14 @@ namespace MLAgents
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
         public UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters)
         {
-            var academyParameters = new UnityRLInitializationOutputProto
+            UnityRLInitializationOutputProto academyParameters = new UnityRLInitializationOutputProto
             {
-                Name = initParameters.name,
-                Version = initParameters.version
+                Name = initParameters.name
             };
 
             academyParameters.EnvironmentParameters = new EnvironmentParametersProto();
 
-            UnityInputProto input;
+            UnityInputProto resetInput;
             UnityInputProto initializationInput;
             try
             {
@@ -66,7 +62,7 @@ namespace MLAgents
                     {
                         RlInitializationOutput = academyParameters
                     },
-                    out input);
+                    out resetInput);
             }
             catch
             {
@@ -84,22 +80,21 @@ namespace MLAgents
                 throw new Exception(exceptionMessage);
             }
 
-            UpdateEnvironmentWithInput(input.RlInput);
+            UpdateEnvironmentWithInput(resetInput);
 
             return new UnityInitializationParameters
             {
-                seed = initializationInput.RlInitializationInput.Seed
+                seed = initializationInput.InitializationInput.Seed
             };
         }
 
-        void UpdateEnvironmentWithInput(UnityRLInputProto rlInput)
+        void UpdateEnvironmentWithInput(UnityInputProto rlInput)
         {
-            SendRLInputReceivedEvent(rlInput.IsTraining);
-            SendCommandEvent(rlInput.Command, rlInput.EnvironmentParameters);
+            //SendInputReceivedEvent();
+            SendCommandEvent(rlInput.Command);
         }
 
-        UnityInputProto Initialize(UnityOutputProto unityOutput,
-            out UnityInputProto unityInput)
+        UnityInputProto Initialize(UnityOutputProto unityOutput, out UnityInputProto unityInput)
         {
             m_IsOpen = true;
             var channel = new Channel(
@@ -107,8 +102,13 @@ namespace MLAgents
                 ChannelCredentials.Insecure);
 
             m_Client = new UnityToExternalProto.UnityToExternalProtoClient(channel);
-            var result = m_Client.Exchange(WrapMessage(unityOutput, 200));
-            unityInput = m_Client.Exchange(WrapMessage(null, 200)).UnityInput;
+
+            UnityMessageProto result = m_Client.Exchange(WrapMessage(unityOutput, 200));
+            UnityMessageProto msg = m_Client.Exchange(WrapMessage(null, 200));
+            unityInput = msg.UnityInput;
+
+            Debug.Log(result);
+            Debug.Log(msg);
 
             EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
 
@@ -142,7 +142,7 @@ namespace MLAgents
 
         #region Sending Events
 
-        void SendCommandEvent(CommandProto command, EnvironmentParametersProto environmentParametersProto)
+        void SendCommandEvent(CommandProto command)
         {
             switch (command)
             {
@@ -163,9 +163,9 @@ namespace MLAgents
             }
         }
 
-        void SendRLInputReceivedEvent(bool isTraining)
+        void SendInputReceivedEvent()
         {
-            RLInputReceived?.Invoke(new UnityRLInputParameters { isTraining = isTraining });
+            RLInputReceived?.Invoke(new UnityInputParameters { });
         }
 
         #endregion
@@ -206,12 +206,12 @@ namespace MLAgents
                 }
             }
 
-            var rlInput = input?.RlInput;
+            var rlInput = input?.InitializationInput;
 
             if (rlInput == null)
                 return;
 
-            UpdateEnvironmentWithInput(rlInput);
+            UpdateEnvironmentWithInput(input);
         }
 
         /// <summary>

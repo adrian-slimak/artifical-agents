@@ -6,7 +6,6 @@ import os
 import subprocess
 from typing import Dict, List, Optional, Any
 
-from mlagents.envs.base_unity_environment import BaseUnityEnvironment
 from mlagents.envs.timers import timed, hierarchical_timer
 from .brain import AllBrainInfo, BrainInfo, BrainParameters
 from .exception import (
@@ -24,9 +23,7 @@ from mlagents.envs.communicator_objects.environment_parameters_pb2 import (
     EnvironmentParametersProto,
 )
 from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
-from mlagents.envs.communicator_objects.unity_rl_initialization_input_pb2 import (
-    UnityRLInitializationInputProto,
-)
+from mlagents.envs.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 
 from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInputProto
 
@@ -42,7 +39,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mlagents.envs")
 
 
-class UnityEnvironment(BaseUnityEnvironment):
+class UnityEnvironment():
 
     def __init__(
         self,
@@ -98,19 +95,20 @@ class UnityEnvironment(BaseUnityEnvironment):
             )
         self._loaded = True
 
-        rl_init_parameters_in = UnityRLInitializationInputProto(seed=seed)
+        initialization_input = UnityInitializationInputProto(seed=seed)
         try:
-            aca_output = self.send_academy_parameters(rl_init_parameters_in)
+            aca_output = self.send_academy_parameters(initialization_input)
             aca_params = aca_output.rl_initialization_output
         except UnityTimeOutException:
             self._close()
             raise
 
-        self._n_agents: Dict[str, int] = {}
+        # self._n_agents: Dict[str, int] = {}
         self._is_first_message = True
         self._academy_name = aca_params.name
-        self._log_path = aca_params.log_path
+        # self._log_path = aca_params.log_path
         self._resetParameters = dict(aca_params.environment_parameters.float_parameters)
+
         logger.info(
             "\n'{0}' started successfully!\n{1}".format(self._academy_name, str(self))
         )
@@ -265,7 +263,7 @@ class UnityEnvironment(BaseUnityEnvironment):
         return f"""Unity Academy name: {self._academy_name}
         Reset Parameters : {reset_params_str}"""
 
-    def reset(self, config: Dict = None, train_mode: bool = True, custom_reset_parameters: Any = None) -> AllBrainInfo:
+    def reset(self, config: Dict = None):
         """
         Sends a signal to reset the unity environment.
         :return: AllBrainInfo  : A data structure corresponding to the initial reset state of the environment.
@@ -281,31 +279,16 @@ class UnityEnvironment(BaseUnityEnvironment):
         for k in config:
             if (k in self._resetParameters) and (isinstance(config[k], (int, float))):
                 self._resetParameters[k] = config[k]
-            elif not isinstance(config[k], (int, float)):
-                raise UnityEnvironmentException(
-                    "The value for parameter '{0}'' must be an Integer or a Float.".format(
-                        k
-                    )
-                )
-            else:
-                raise UnityEnvironmentException(
-                    "The parameter '{0}' is not a valid parameter.".format(k)
-                )
 
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
-        outputs = self.communicator.exchange(
-            self._generate_reset_input(train_mode, config, custom_reset_parameters)
-        )
+        outputs = self.communicator.exchange(self._generate_reset_input(config))
+
         if outputs is None:
             raise UnityCommunicationException("Communicator has stopped.")
 
         self._is_first_message = False
-
-        return None
-
-
 
     @timed
     def step(self, vector_action: Dict[str, np.ndarray] = None):
@@ -366,38 +349,22 @@ class UnityEnvironment(BaseUnityEnvironment):
 
     @timed
     def _generate_step_input(self) -> UnityInputProto:
-        rl_in = UnityRLInputProto()
-        rl_in.command = 0
-        return self.wrap_unity_input(rl_in)
+        unity_input = UnityInputProto()
+        unity_input.command = 0
+        return unity_input
 
+    def _generate_reset_input(self, config: Dict) -> UnityInputProto:
+        unity_input = UnityInputProto()
+        # unity_input.initialization_input.environment_parameters.CopyFrom(EnvironmentParametersProto())
+        # for key in config:
+        #     unity_input.initialization_input.environment_parameters.float_parameters[key] = config[key]
+        unity_input.command = 1
+        return unity_input
 
-    def _generate_reset_input(
-        self, training: bool, config: Dict, custom_reset_parameters: Any
-    ) -> UnityInputProto:
-        rl_in = UnityRLInputProto()
-        rl_in.is_training = training
-        rl_in.environment_parameters.CopyFrom(EnvironmentParametersProto())
-        for key in config:
-            rl_in.environment_parameters.float_parameters[key] = config[key]
-        if custom_reset_parameters is not None:
-            rl_in.environment_parameters.custom_reset_parameters.CopyFrom(
-                custom_reset_parameters
-            )
-        rl_in.command = 1
-        return self.wrap_unity_input(rl_in)
-
-    def send_academy_parameters(
-        self, init_parameters: UnityRLInitializationInputProto
-    ) -> UnityOutputProto:
+    def send_academy_parameters(self, initialization_input: UnityInitializationInputProto) -> UnityOutputProto:
         inputs = UnityInputProto()
-        inputs.rl_initialization_input.CopyFrom(init_parameters)
+        inputs.initialization_input.CopyFrom(initialization_input)
         return self.communicator.initialize(inputs)
-
-    @staticmethod
-    def wrap_unity_input(rl_input: UnityRLInputProto) -> UnityInputProto:
-        result = UnityInputProto()
-        result.rl_input.CopyFrom(rl_input)
-        return result
 
     @staticmethod
     def returncode_to_signal_name(returncode: int) -> Optional[str]:

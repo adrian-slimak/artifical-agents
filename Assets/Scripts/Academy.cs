@@ -142,7 +142,6 @@ namespace MLAgents
                     var unityInitializationParameters = Communicator.Initialize(
                         new CommunicatorInitParameters
                         {
-                            version = "dsada",
                             name = gameObject.name
                         });
                     Random.InitState(unityInitializationParameters.seed);

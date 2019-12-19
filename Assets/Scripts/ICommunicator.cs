@@ -27,7 +27,7 @@ namespace MLAgents
         /// </summary>
         public int seed;
     }
-    public struct UnityRLInputParameters
+    public struct UnityInputParameters
     {
         /// <summary>
         /// Boolean sent back from python to indicate whether or not training is happening.
@@ -50,7 +50,7 @@ namespace MLAgents
     /// Delegate to handle UnityRLInputParameters updates from the communicator.
     /// </summary>
     /// <param name="inputParams"></param>
-    public delegate void RLInputReceivedHandler(UnityRLInputParameters inputParams);
+    public delegate void InputReceivedHandler(UnityInputParameters inputParams);
 
     /**
     This is the interface of the Communicators.
@@ -104,7 +104,7 @@ namespace MLAgents
         /// <summary>
         /// Unity RL Input was received by the communicator.
         /// </summary>
-        event RLInputReceivedHandler RLInputReceived;
+        event InputReceivedHandler RLInputReceived;
 
         /// <summary>
         /// Sends the academy parameters through the Communicator.
