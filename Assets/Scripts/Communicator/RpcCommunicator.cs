@@ -5,6 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using MLAgents.CommunicatorObjects;
+using Google.Protobuf;
+using System.IO;
+using System.IO.MemoryMappedFiles;
+using IronPython.Hosting;
+using System.Text;
 
 namespace MLAgents
 {
@@ -23,11 +28,15 @@ namespace MLAgents
         /// The Unity to External client.
         UnityToExternalProto.UnityToExternalProtoClient m_Client;
 
+        MemoryMappedFile m_UnityOutputMemory;
+        MemoryMappedFile m_UnityInputMemory;
         /// The communicator parameters sent at construction
         CommunicatorInitParameters m_CommunicatorInitParameters;
         public RpcCommunicator(CommunicatorInitParameters communicatorInitParameters)
         {
             m_CommunicatorInitParameters = communicatorInitParameters;
+            m_UnityOutputMemory = MemoryMappedFile.CreateNew("unity_output", 200000);
+            m_UnityInputMemory = MemoryMappedFile.CreateNew("unity_input", 200000);
         }
 
         #region Initialization
@@ -38,7 +47,7 @@ namespace MLAgents
         /// </summary>
         /// <returns>The External Initialization Parameters received.</returns>
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
-        public UnityRLInitParameters Initialize(CommunicatorInitParameters initParameters)
+        public UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters)
         {
             var academyParameters = new UnityRLInitializationOutputProto
             {
@@ -77,7 +86,7 @@ namespace MLAgents
 
             UpdateEnvironmentWithInput(input.RlInput);
 
-            return new UnityRLInitParameters
+            return new UnityInitializationParameters
             {
                 seed = initializationInput.RlInitializationInput.Seed
             };
@@ -163,97 +172,46 @@ namespace MLAgents
 
         #region Sending and retreiving data
 
-        public void DecideBatch(List<Agent> agents, float[] stackedObservations, float[] stackedActions)
-        {
-            if (!m_CurrentUnityRlOutput.AgentInfos.ContainsKey("prey"))
-            {
-                m_CurrentUnityRlOutput.AgentInfos.Add("prey",
-                    new UnityRLOutputProto.Types.ListAgentInfoProto()
-                );
-            }
-
-            using (TimerStack.Instance.Scoped("AgentInfo.ToProto"))
-            {
-
-                var agentInfoProto = new AgentInfoProto
-                {
-                    Reward = 0,
-                    MaxStepReached = false,
-                    Done = false,
-                    Id = 0,
-                };
-
-                ObservationProto obsProto = null;
-
-                var floatDataProto = new ObservationProto.Types.FloatData
-                {
-                    Data = { stackedObservations },
-                };
-
-                obsProto = new ObservationProto
-                {
-                    FloatData = floatDataProto,
-                    CompressionType = CompressionTypeProto.None,
-                };
-
-                obsProto.Shape.AddRange(new int[] { stackedObservations.Length });
-
-                agentInfoProto.Observations.Add(obsProto);
-
-                m_CurrentUnityRlOutput.AgentInfos["prey"].Value.Add(agentInfoProto);
-            }
-
-
-            using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
-            {
-                SendBatchedMessageHelper(stackedActions);
-            }
-        }
-
-        /// <summary>
-        /// Helper method that sends the current UnityRLOutput, receives the next UnityInput and
-        /// Applies the appropriate AgentAction to the agents.
-        /// </summary>
-        void SendBatchedMessageHelper(float[] stackedActions)
+        public void DecideBatch(float[] stackedObservations, float[] stackedActions)
         {
             var message = new UnityOutputProto
             {
-                RlOutput = m_CurrentUnityRlOutput,
+                RlInitializationOutput = GetTempUnityRlInitializationOutput()
             };
-            var tempUnityRlInitializationOutput = GetTempUnityRlInitializationOutput();
-            if (tempUnityRlInitializationOutput != null)
+
+
+            using (TimerStack.Instance.Scoped("MemoryWrite"))
             {
-                message.RlInitializationOutput = tempUnityRlInitializationOutput;
+                using (MemoryMappedViewAccessor viewAccessor = m_UnityOutputMemory.CreateViewAccessor())
+                {
+                    var byteArray = new byte[stackedObservations.Length * 4];
+                    Buffer.BlockCopy(stackedObservations, 0, byteArray, 0, byteArray.Length);
+                    viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
+                }
             }
 
-            var input = Exchange(message);
-
-            foreach (var k in m_CurrentUnityRlOutput.AgentInfos.Keys)
+            UnityInputProto input;
+            using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
             {
-                m_CurrentUnityRlOutput.AgentInfos[k].Value.Clear();
+                input = Exchange(message);
+            }
+
+            using (TimerStack.Instance.Scoped("MemoryRead"))
+            {
+                using (MemoryMappedViewAccessor viewAccessor = m_UnityInputMemory.CreateViewAccessor())
+                {
+                    byte[] byteArray = new byte[12800];
+                    viewAccessor.ReadArray(0, byteArray, 0, byteArray.Length);
+                    Buffer.BlockCopy(byteArray, 0, stackedActions, 0, byteArray.Length);
+                }
             }
 
             var rlInput = input?.RlInput;
 
-            if (rlInput?.AgentActions == null)
-            {
+            if (rlInput == null)
                 return;
-            }
 
             UpdateEnvironmentWithInput(rlInput);
-
-            foreach (var brainName in rlInput.AgentActions.Keys)
-            {
-                int floatsWritten = 0;
-                foreach (var ap in rlInput.AgentActions[brainName].Value)
-                {
-                    foreach(float f in ap.VectorActions)
-                    {
-                        stackedActions[floatsWritten] = f;
-                        floatsWritten++;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -269,10 +227,17 @@ namespace MLAgents
             }
             try
             {
-                var message = m_Client.Exchange(WrapMessage(unityOutput, 200));
-                if (message.Header.Status == 200)
+                UnityMessageProto outputMessage = new UnityMessageProto
                 {
-                    return message.UnityInput;
+                    Header = new HeaderProto { Status = 200 },
+                    UnityOutput = unityOutput
+                };
+
+                var inputMessage = m_Client.Exchange(outputMessage);
+
+                if (inputMessage.Header.Status == 200)
+                {
+                    return inputMessage.UnityInput;
                 }
 
                 m_IsOpen = false;
@@ -280,7 +245,7 @@ namespace MLAgents
                 // non 200 message is received.  Notify that we are indeed
                 // quitting.
                 QuitCommandReceived?.Invoke();
-                return message.UnityInput;
+                return inputMessage.UnityInput;
             }
             catch
             {

@@ -15,10 +15,11 @@ from .exception import (
     UnityActionException,
     UnityTimeOutException,
 )
+from timeit import default_timer as timer
+
 
 from mlagents.envs.communicator_objects.unity_rl_input_pb2 import UnityRLInputProto
 from mlagents.envs.communicator_objects.unity_rl_output_pb2 import UnityRLOutputProto
-from mlagents.envs.communicator_objects.agent_action_pb2 import AgentActionProto
 from mlagents.envs.communicator_objects.environment_parameters_pb2 import (
     EnvironmentParametersProto,
 )
@@ -29,6 +30,10 @@ from mlagents.envs.communicator_objects.unity_rl_initialization_input_pb2 import
 
 from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInputProto
 
+import mmap
+import numpy as np
+
+
 from .rpc_communicator import RpcCommunicator
 from sys import platform
 import signal
@@ -38,9 +43,6 @@ logger = logging.getLogger("mlagents.envs")
 
 
 class UnityEnvironment(BaseUnityEnvironment):
-    SCALAR_ACTION_TYPES = (int, np.int32, np.int64, float, np.float32, np.float64)
-    SINGLE_BRAIN_ACTION_TYPES = SCALAR_ACTION_TYPES + (list, np.ndarray)
-    API_VERSION = "API-12"
 
     def __init__(
         self,
@@ -71,7 +73,6 @@ class UnityEnvironment(BaseUnityEnvironment):
         atexit.register(self._close)
         self.port = base_port + worker_id
         self._buffer_size = 12000
-        self._version_ = UnityEnvironment.API_VERSION
         # If true, this means the environment was successfully loaded
         self._loaded = False
         # The process that is started. If None, no process was started
@@ -88,6 +89,7 @@ class UnityEnvironment(BaseUnityEnvironment):
                 "If the environment name is None, "
                 "the worker-id must be 0 in order to connect with the Editor."
             )
+
         if file_name is not None:
             self.executable_launcher(file_name, docker_training, no_graphics, args)
         else:
@@ -103,23 +105,11 @@ class UnityEnvironment(BaseUnityEnvironment):
         except UnityTimeOutException:
             self._close()
             raise
-        # TODO : think of a better way to expose the academyParameters
-        self._unity_version = aca_params.version
-        if self._unity_version != self._version_:
-            self._close()
-            raise UnityEnvironmentException(
-                "The API number is not compatible between Unity and python. Python API : {0}, Unity API : "
-                "{1}.\nPlease go to https://github.com/Unity-Technologies/ml-agents to download the latest version "
-                "of ML-Agents.".format(self._version_, self._unity_version)
-            )
+
         self._n_agents: Dict[str, int] = {}
         self._is_first_message = True
         self._academy_name = aca_params.name
         self._log_path = aca_params.log_path
-        self._brains: Dict[str, BrainParameters] = {}
-        self._external_brain_names: List[str] = []
-        self._num_external_brains = 0
-        self._update_brain_parameters(aca_output)
         self._resetParameters = dict(aca_params.environment_parameters.float_parameters)
         logger.info(
             "\n'{0}' started successfully!\n{1}".format(self._academy_name, str(self))
@@ -130,20 +120,8 @@ class UnityEnvironment(BaseUnityEnvironment):
         return self._log_path
 
     @property
-    def brains(self):
-        return self._brains
-
-    @property
     def academy_name(self):
         return self._academy_name
-
-    @property
-    def number_external_brains(self):
-        return self._num_external_brains
-
-    @property
-    def external_brain_names(self):
-        return self._external_brain_names
 
     @staticmethod
     def get_communicator(worker_id, base_port, timeout_wait):
@@ -287,12 +265,7 @@ class UnityEnvironment(BaseUnityEnvironment):
         return f"""Unity Academy name: {self._academy_name}
         Reset Parameters : {reset_params_str}"""
 
-    def reset(
-        self,
-        config: Dict = None,
-        train_mode: bool = True,
-        custom_reset_parameters: Any = None,
-    ) -> AllBrainInfo:
+    def reset(self, config: Dict = None, train_mode: bool = True, custom_reset_parameters: Any = None) -> AllBrainInfo:
         """
         Sends a signal to reset the unity environment.
         :return: AllBrainInfo  : A data structure corresponding to the initial reset state of the environment.
@@ -319,150 +292,51 @@ class UnityEnvironment(BaseUnityEnvironment):
                     "The parameter '{0}' is not a valid parameter.".format(k)
                 )
 
-        if self._loaded:
-            outputs = self.communicator.exchange(
-                self._generate_reset_input(train_mode, config, custom_reset_parameters)
-            )
-            if outputs is None:
-                raise UnityCommunicationException("Communicator has stopped.")
-            self._update_brain_parameters(outputs)
-            rl_output = outputs.rl_output
-            s = self._get_state(rl_output)
-            for _b in self._external_brain_names:
-                self._n_agents[_b] = len(s[_b].agents)
-            self._is_first_message = False
-            return s
-        else:
+        if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
+        outputs = self.communicator.exchange(
+            self._generate_reset_input(train_mode, config, custom_reset_parameters)
+        )
+        if outputs is None:
+            raise UnityCommunicationException("Communicator has stopped.")
+
+        self._is_first_message = False
+
+        return None
+
+
+
     @timed
-    def step(
-        self,
-        vector_action: Dict[str, np.ndarray] = None,
-        value: Optional[Dict[str, np.ndarray]] = None,
-    ) -> AllBrainInfo:
-        """
-        Provides the environment with an action, moves the environment dynamics forward accordingly,
-        and returns observation, state, and reward information to the agent.
-        :param value: Value estimates provided by agents.
-        :param vector_action: Agent's vector action. Can be a scalar or vector of int/floats.
-        :param memory: Vector corresponding to memory used for recurrent policies.
-        :return: AllBrainInfo  : A Data structure corresponding to the new state of the environment.
-        """
+    def step(self, vector_action: Dict[str, np.ndarray] = None):
         if self._is_first_message:
             return self.reset()
-        vector_action = {} if vector_action is None else vector_action
-        value = {} if value is None else value
 
         # Check that environment is loaded, and episode is currently running.
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
-        else:
-            if isinstance(vector_action, self.SINGLE_BRAIN_ACTION_TYPES):
-                if self._num_external_brains == 1:
-                    vector_action = {self._external_brain_names[0]: vector_action}
-                elif self._num_external_brains > 1:
-                    raise UnityActionException(
-                        "You have {0} brains, you need to feed a dictionary of brain names a keys, "
-                        "and vector_actions as values".format(self._num_external_brains)
-                    )
-                else:
-                    raise UnityActionException(
-                        "There are no external brains in the environment, "
-                        "step cannot take a vector_action input"
-                    )
 
-            if isinstance(value, self.SINGLE_BRAIN_ACTION_TYPES):
-                if self._num_external_brains == 1:
-                    value = {self._external_brain_names[0]: value}
-                elif self._num_external_brains > 1:
-                    raise UnityActionException(
-                        "You have {0} brains, you need to feed a dictionary of brain names as keys "
-                        "and state/action value estimates as values".format(
-                            self._num_external_brains
-                        )
-                    )
-                else:
-                    raise UnityActionException(
-                        "There are no external brains in the environment, "
-                        "step cannot take a value input"
-                    )
+        start = timer()
+        mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
+        if vector_action:
+            byteArray = vector_action['prey'].tobytes()
+            mm.write(byteArray)
+        # print(timer() - start)
 
-            for brain_name in list(vector_action.keys()):
-                if brain_name not in self._external_brain_names:
-                    raise UnityActionException(
-                        "The name {0} does not correspond to an external brain "
-                        "in the environment".format(brain_name)
-                    )
+        step_input = self._generate_step_input()
+        with hierarchical_timer("communicator.exchange"):
+            outputs = self.communicator.exchange(step_input)
 
-            for brain_name in self._external_brain_names:
-                n_agent = self._n_agents[brain_name]
-                if brain_name not in vector_action:
-                    if self._brains[brain_name].vector_action_space_type == "discrete":
-                        vector_action[brain_name] = (
-                            [0.0]
-                            * n_agent
-                            * len(self._brains[brain_name].vector_action_space_size)
-                        )
-                    else:
-                        vector_action[brain_name] = (
-                            [0.0]
-                            * n_agent
-                            * self._brains[brain_name].vector_action_space_size[0]
-                        )
-                else:
-                    vector_action[brain_name] = self._flatten(vector_action[brain_name])
+        start = timer()
+        mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
+        numBytes = 40000
+        floats = np.fromstring(mm.read(numBytes), dtype='f')
+        # print(timer() - start)
 
-                discrete_check = (
-                    self._brains[brain_name].vector_action_space_type == "discrete"
-                )
+        if outputs is None:
+            raise UnityCommunicationException("Communicator has stopped.")
 
-                expected_discrete_size = n_agent * len(
-                    self._brains[brain_name].vector_action_space_size
-                )
-
-                continuous_check = (
-                    self._brains[brain_name].vector_action_space_type == "continuous"
-                )
-
-                expected_continuous_size = (
-                    self._brains[brain_name].vector_action_space_size[0] * n_agent
-                )
-
-                if not (
-                    (
-                        discrete_check
-                        and len(vector_action[brain_name]) == expected_discrete_size
-                    )
-                    or (
-                        continuous_check
-                        and len(vector_action[brain_name]) == expected_continuous_size
-                    )
-                ):
-                    raise UnityActionException(
-                        "There was a mismatch between the provided action and "
-                        "the environment's expectation: "
-                        "The brain {0} expected {1} {2} action(s), but was provided: {3}".format(
-                            brain_name,
-                            str(expected_discrete_size)
-                            if discrete_check
-                            else str(expected_continuous_size),
-                            self._brains[brain_name].vector_action_space_type,
-                            str(vector_action[brain_name]),
-                        )
-                    )
-
-            step_input = self._generate_step_input(vector_action, value)
-            with hierarchical_timer("communicator.exchange"):
-                outputs = self.communicator.exchange(step_input)
-            if outputs is None:
-                raise UnityCommunicationException("Communicator has stopped.")
-            self._update_brain_parameters(outputs)
-            rl_output = outputs.rl_output
-            state = self._get_state(rl_output)
-            for _b in self._external_brain_names:
-                self._n_agents[_b] = len(state[_b].agents)
-            return state
+        return {"prey": floats}
 
     def close(self):
         """
@@ -490,76 +364,12 @@ class UnityEnvironment(BaseUnityEnvironment):
             # Set to None so we don't try to close multiple times.
             self.proc1 = None
 
-    @classmethod
-    def _flatten(cls, arr: Any) -> List[float]:
-        """
-        Converts arrays to list.
-        :param arr: numpy vector.
-        :return: flattened list.
-        """
-        if isinstance(arr, cls.SCALAR_ACTION_TYPES):
-            arr = [float(arr)]
-        if isinstance(arr, np.ndarray):
-            arr = arr.tolist()
-        if len(arr) == 0:
-            return arr
-        if isinstance(arr[0], np.ndarray):
-            # pylint: disable=no-member
-            arr = [item for sublist in arr for item in sublist.tolist()]
-        if isinstance(arr[0], list):
-            # pylint: disable=not-an-iterable
-            arr = [item for sublist in arr for item in sublist]
-        arr = [float(x) for x in arr]
-        return arr
-
-    def _get_state(self, output: UnityRLOutputProto) -> AllBrainInfo:
-        """
-        Collects experience information from all external brains in environment at current step.
-        :return: a dictionary of BrainInfo objects.
-        """
-        _data = {}
-        for brain_name in output.agentInfos:
-            agent_info_list = output.agentInfos[brain_name].value
-            _data[brain_name] = BrainInfo.from_agent_proto(
-                self.worker_id, agent_info_list, self.brains[brain_name]
-            )
-        return _data
-
-    def _update_brain_parameters(self, output: UnityOutputProto) -> None:
-        init_output = output.rl_initialization_output
-
-        for brain_param in init_output.brain_parameters:
-            # Each BrainParameter in the rl_initialization_output should have at least one AgentInfo
-            # Get that agent, because we need some of its observations.
-            agent_infos = output.rl_output.agentInfos[brain_param.brain_name]
-            if agent_infos.value:
-                agent = agent_infos.value[0]
-                new_brain = BrainParameters.from_proto(brain_param, agent)
-                self._brains[brain_param.brain_name] = new_brain
-                logger.info(f"Connected new brain:\n{new_brain}")
-        self._external_brain_names = list(self._brains.keys())
-        self._num_external_brains = len(self._external_brain_names)
-
     @timed
-    def _generate_step_input(
-        self, vector_action: Dict[str, np.ndarray], value: Dict[str, np.ndarray]
-    ) -> UnityInputProto:
+    def _generate_step_input(self) -> UnityInputProto:
         rl_in = UnityRLInputProto()
-        for b in vector_action:
-            n_agents = self._n_agents[b]
-            if n_agents == 0:
-                continue
-            _a_s = len(vector_action[b]) // n_agents
-            for i in range(n_agents):
-                action = AgentActionProto(
-                    vector_actions=vector_action[b][i * _a_s : (i + 1) * _a_s]
-                )
-                if b in value:
-                    if value[b] is not None:
-                        action.value = float(value[b][i])
-                rl_in.agent_actions[b].value.extend([action])
-                rl_in.command = 0
+        rl_in.command = 0
         return self.wrap_unity_input(rl_in)
+
 
     def _generate_reset_input(
         self, training: bool, config: Dict, custom_reset_parameters: Any

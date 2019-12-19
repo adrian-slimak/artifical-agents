@@ -4,9 +4,10 @@ import numpy as np
 # tf.debugging.set_log_device_placement(True)
 from LSTM import LSTMModel
 from time import sleep
-
 from timeit import default_timer as timer
-
+import mmap
+from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
+from mlagents.envs.communicator_objects.unity_message_pb2 import UnityMessageProto
 brainNames = []
 
 def main():
@@ -17,19 +18,27 @@ def main():
     # brainNames = unity_environment.external_brain_names
 
     env_state = unity_environment.step()
-    prey_observations = env_state['prey'].vector_observations
-    prey_observations = tf.reshape(())
+    prey_observations = np.reshape(env_state['prey'], (100, 100))
+
+
+    # start = timer()
+    # print(message.header.status)
+    # print(timer() - start)
+
+    # prey_observations = env_state['prey'].vector_observations
+    # prey_observations = np.reshape(prey_observations, (100, 100))
 
     prey_model = LSTMModel(32, prey_observations.shape[0])
     prey_model.build(input_shape=(1, prey_observations.shape[1]))
 
+
+
     while True:
         # start = timer()
-
         output = prey_model(tf.expand_dims(prey_observations, 1))
-        action = {'prey': output.numpy()}
+        action = {'prey': output.numpy().flatten()}
         env_state = unity_environment.step(action)
-        print(action)
+        prey_observations = np.reshape(env_state['prey'], (100, 100))
         # end = timer()
         # print(end - start)
 

@@ -25,7 +25,7 @@ namespace MLAgents
 
         public ArraySegment<float> m_ActionsVector;
         public ArraySegment<float> m_ObservationsVector;
-        public static int m_observationsSize = 20;
+        public static int m_observationsSize = 100;
         public static int m_actionsSize = 32;
 
         int m_StepCount;
@@ -92,7 +92,6 @@ namespace MLAgents
         public void AgentAction()
         {
             if (m_ActionsVector == null) return;
-            Debug.Log(m_ActionsVector.Array[m_ActionsVector.Offset + 0]);
             m_Animal.SetMovement(m_ActionsVector.Array[m_ActionsVector.Offset + 0], m_ActionsVector.Array[m_ActionsVector.Offset + 1]);
         }
 

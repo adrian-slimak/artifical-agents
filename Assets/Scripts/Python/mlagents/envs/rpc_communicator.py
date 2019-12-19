@@ -18,6 +18,7 @@ from .exception import UnityTimeOutException, UnityWorkerInUseException
 
 logger = logging.getLogger("mlagents.envs")
 
+from timeit import default_timer as timer
 
 class UnityToExternalServicerImplementation(UnityToExternalProtoServicer):
     def __init__(self):
@@ -111,12 +112,14 @@ class RpcCommunicator(Communicator):
         message = UnityMessageProto()
         message.header.status = 200
         message.unity_input.CopyFrom(inputs)
+
         self.unity_to_external.parent_conn.send(message)
         self.poll_for_timeout()
-        output = self.unity_to_external.parent_conn.recv()
-        if output.header.status != 200:
+        outputMessage = self.unity_to_external.parent_conn.recv()
+
+        if outputMessage.header.status != 200:
             return None
-        return output.unity_output
+        return outputMessage.unity_output
 
     def close(self):
         """

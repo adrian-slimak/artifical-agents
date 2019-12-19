@@ -20,7 +20,7 @@ namespace MLAgents
         /// </summary>
         public string version;
     }
-    public struct UnityRLInitParameters
+    public struct UnityInitializationParameters
     {
         /// <summary>
         /// An RNG seed sent from the python process to Unity.
@@ -112,7 +112,7 @@ namespace MLAgents
         /// </summary>
         /// <returns>The External Initialization Parameters received.</returns>
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
-        UnityRLInitParameters Initialize(CommunicatorInitParameters initParameters);
+        UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters);
 
         /// <summary>
         /// Registers a new Brain to the Communicator.

@@ -40,8 +40,6 @@ namespace MLAgents
 
     public class Academy : MonoBehaviour
     {
-        const string k_ApiVersion = "API-12";
-
         [HideInInspector]
         public float[] m_StackedObservations;
         [HideInInspector]
@@ -91,7 +89,6 @@ namespace MLAgents
 
         public void LazyInitialization()
         {
-
             if (!m_Initialized)
             {
                 InitializeEnvironment();
@@ -142,13 +139,13 @@ namespace MLAgents
             {
                 try
                 {
-                    var unityRLInitParameters = Communicator.Initialize(
+                    var unityInitializationParameters = Communicator.Initialize(
                         new CommunicatorInitParameters
                         {
-                            version = k_ApiVersion,
+                            version = "dsada",
                             name = gameObject.name
                         });
-                    Random.InitState(unityRLInitParameters.seed);
+                    Random.InitState(unityInitializationParameters.seed);
                 }
                 catch
                 {
@@ -226,7 +223,7 @@ namespace MLAgents
 
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
-                Communicator?.DecideBatch(m_Agents, m_StackedObservations, m_StackedActions);
+                Communicator?.DecideBatch(m_StackedObservations, m_StackedActions);
             }
 
             using (TimerStack.Instance.Scoped("AcademyStep"))
