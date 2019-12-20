@@ -18,7 +18,7 @@ def main():
     # brainNames = unity_environment.external_brain_names
 
     env_state = unity_environment.step()
-    prey_observations = np.reshape(env_state['prey'], (100, 100))
+    prey_observations = env_state['prey']
 
 
     # start = timer()
@@ -38,7 +38,7 @@ def main():
         output = prey_model(tf.expand_dims(prey_observations, 1))
         action = {'prey': output.numpy().flatten()}
         env_state = unity_environment.step(action)
-        prey_observations = np.reshape(env_state['prey'], (100, 100))
+        prey_observations = env_state['prey']
         # end = timer()
         # print(end - start)
 

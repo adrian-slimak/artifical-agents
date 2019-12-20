@@ -40,10 +40,8 @@ namespace MLAgents
 
     public class Academy : MonoBehaviour
     {
-        [HideInInspector]
-        public float[] m_StackedObservations;
-        [HideInInspector]
-        public float[] m_StackedActions;
+        public List<Brain> brains;
+        public static Dictionary<string, Brain> m_Brains;
 
         float m_OriginalFixedDeltaTime;
         float m_OriginalMaximumDeltaTime;
@@ -72,28 +70,41 @@ namespace MLAgents
         public event System.Action AgentUpdateObservations;
         public event System.Action AgentUpdateMovement;
 
-        public List<Agent> m_Agents;
-
         void Awake()
         {
-            m_Agents = new List<Agent>();
+            m_Brains = new Dictionary<string, Brain>();
+
+            foreach (Brain brain in brains)
+                m_Brains.Add(brain.brainName, brain);
 
             LazyInitialization();
         }
 
         private void OnEnable()
         {
-            m_StackedObservations = new float[Agent.m_TotalAgentsCreated * Agent.m_observationsSize];
-            m_StackedActions = new float[Agent.m_TotalAgentsCreated * Agent.m_actionsSize];
+            int[] offset = {0, 0};
+            foreach (Brain brain in brains)
+            {
+                int[] size = brain.Init(offset);
+                offset[0] += size[0];
+                offset[1] += size[1];
+            }
         }
 
-        public void LazyInitialization()
+        private void Start()
         {
             if (!m_Initialized)
             {
                 InitializeEnvironment();
                 m_Initialized = true;
             }
+        }
+
+        public void LazyInitialization()
+        {
+            ConfigureEnvironment();
+
+            AcademyInitialization();
         }
 
         // Used to read Python-provided environment parameters
@@ -160,15 +171,9 @@ namespace MLAgents
 
             AgentUpdateObservations += () => { };
             AgentUpdateMovement += () => { };
-
-            ConfigureEnvironment();
-            AcademyInitialization();
         }
 
-        public virtual void AcademyInitialization()
-        {
 
-        }
 
         static void OnQuitCommandReceived()
         {
@@ -176,10 +181,6 @@ namespace MLAgents
             Application.Quit();
         }
 
-        /// <summary>
-        /// Configures the environment settings depending on the training/inference
-        /// mode and the corresponding parameters passed in the Editor.
-        /// </summary>
         void ConfigureEnvironment()
         {
             Screen.SetResolution(m_TrainingConfiguration.width, m_TrainingConfiguration.height, false);
@@ -188,6 +189,9 @@ namespace MLAgents
             Time.captureFramerate = 60;
             Application.targetFrameRate = m_TrainingConfiguration.targetFrameRate;
         }
+
+        public virtual void AcademyInitialization()
+        { }
 
         public virtual void AcademyStep()
         {
@@ -222,7 +226,7 @@ namespace MLAgents
 
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
-                Communicator?.DecideBatch(m_StackedObservations, m_StackedActions);
+                Communicator?.DecideBatch(brains);
             }
 
             using (TimerStack.Instance.Scoped("AcademyStep"))

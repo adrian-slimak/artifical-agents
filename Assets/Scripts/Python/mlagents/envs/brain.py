@@ -23,6 +23,16 @@ class CameraResolution(NamedTuple):
     def __str__(self):
         return f"CameraResolution({self.height}, {self.width}, {self.num_channels})"
 
+class Brain:
+    def __init__(self, brain: BrainParametersProto):
+        self.brain_name = brain.brain_name
+        self.agents_count = brain.agents_count
+        self.observation_vectors_size = brain.observations_vector_size
+        self.actions_vector_size = brain.actions_vector_size
+        self.mmf_offset_observations = brain.mmf_offset_observations
+        self.mmf_size_observations = brain.mmf_size_observations
+        self.mmf_offset_actions = brain.mmf_offset_actions
+        self.mmf_size_actions = brain.mmf_size_actions
 
 class BrainParameters:
     def __init__(

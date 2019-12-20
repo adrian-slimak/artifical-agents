@@ -25,19 +25,16 @@ namespace MLAgents.CommunicatorObjects {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CjVtbGFnZW50cy9lbnZzL2NvbW11bmljYXRvcl9vYmplY3RzL3VuaXR5X291",
-            "dHB1dC5wcm90bxIUY29tbXVuaWNhdG9yX29iamVjdHMaOG1sYWdlbnRzL2Vu",
-            "dnMvY29tbXVuaWNhdG9yX29iamVjdHMvdW5pdHlfcmxfb3V0cHV0LnByb3Rv",
-            "GkdtbGFnZW50cy9lbnZzL2NvbW11bmljYXRvcl9vYmplY3RzL3VuaXR5X3Js",
-            "X2luaXRpYWxpemF0aW9uX291dHB1dC5wcm90byKpAQoQVW5pdHlPdXRwdXRQ",
-            "cm90bxI7CglybF9vdXRwdXQYASABKAsyKC5jb21tdW5pY2F0b3Jfb2JqZWN0",
-            "cy5Vbml0eVJMT3V0cHV0UHJvdG8SWAoYcmxfaW5pdGlhbGl6YXRpb25fb3V0",
-            "cHV0GAIgASgLMjYuY29tbXVuaWNhdG9yX29iamVjdHMuVW5pdHlSTEluaXRp",
-            "YWxpemF0aW9uT3V0cHV0UHJvdG9CH6oCHE1MQWdlbnRzLkNvbW11bmljYXRv",
-            "ck9iamVjdHNiBnByb3RvMw=="));
+            "dHB1dC5wcm90bxIUY29tbXVuaWNhdG9yX29iamVjdHMaRG1sYWdlbnRzL2Vu",
+            "dnMvY29tbXVuaWNhdG9yX29iamVjdHMvdW5pdHlfaW5pdGlhbGl6YXRpb25f",
+            "b3V0cHV0LnByb3RvImcKEFVuaXR5T3V0cHV0UHJvdG8SUwoVaW5pdGlhbGl6",
+            "YXRpb25fb3V0cHV0GAIgASgLMjQuY29tbXVuaWNhdG9yX29iamVjdHMuVW5p",
+            "dHlJbml0aWFsaXphdGlvbk91dHB1dFByb3RvQh+qAhxNTEFnZW50cy5Db21t",
+            "dW5pY2F0b3JPYmplY3RzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.UnityRlOutputReflection.Descriptor, global::MLAgents.CommunicatorObjects.UnityRlInitializationOutputReflection.Descriptor, },
-          new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityOutputProto), global::MLAgents.CommunicatorObjects.UnityOutputProto.Parser, new[]{ "RlOutput", "RlInitializationOutput" }, null, null, null)
+          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.UnityInitializationOutputReflection.Descriptor, },
+          new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityOutputProto), global::MLAgents.CommunicatorObjects.UnityOutputProto.Parser, new[]{ "InitializationOutput" }, null, null, null, null)
           }));
     }
     #endregion
@@ -69,8 +66,7 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public UnityOutputProto(UnityOutputProto other) : this() {
-      RlOutput = other.rlOutput_ != null ? other.RlOutput.Clone() : null;
-      RlInitializationOutput = other.rlInitializationOutput_ != null ? other.RlInitializationOutput.Clone() : null;
+      initializationOutput_ = other.initializationOutput_ != null ? other.initializationOutput_.Clone() : null;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -79,25 +75,14 @@ namespace MLAgents.CommunicatorObjects {
       return new UnityOutputProto(this);
     }
 
-    /// <summary>Field number for the "rl_output" field.</summary>
-    public const int RlOutputFieldNumber = 1;
-    private global::MLAgents.CommunicatorObjects.UnityRLOutputProto rlOutput_;
+    /// <summary>Field number for the "initialization_output" field.</summary>
+    public const int InitializationOutputFieldNumber = 2;
+    private global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto initializationOutput_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.UnityRLOutputProto RlOutput {
-      get { return rlOutput_; }
+    public global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto InitializationOutput {
+      get { return initializationOutput_; }
       set {
-        rlOutput_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "rl_initialization_output" field.</summary>
-    public const int RlInitializationOutputFieldNumber = 2;
-    private global::MLAgents.CommunicatorObjects.UnityRLInitializationOutputProto rlInitializationOutput_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.UnityRLInitializationOutputProto RlInitializationOutput {
-      get { return rlInitializationOutput_; }
-      set {
-        rlInitializationOutput_ = value;
+        initializationOutput_ = value;
       }
     }
 
@@ -114,16 +99,14 @@ namespace MLAgents.CommunicatorObjects {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(RlOutput, other.RlOutput)) return false;
-      if (!object.Equals(RlInitializationOutput, other.RlInitializationOutput)) return false;
+      if (!object.Equals(InitializationOutput, other.InitializationOutput)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (rlOutput_ != null) hash ^= RlOutput.GetHashCode();
-      if (rlInitializationOutput_ != null) hash ^= RlInitializationOutput.GetHashCode();
+      if (initializationOutput_ != null) hash ^= InitializationOutput.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -137,13 +120,9 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (rlOutput_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(RlOutput);
-      }
-      if (rlInitializationOutput_ != null) {
+      if (initializationOutput_ != null) {
         output.WriteRawTag(18);
-        output.WriteMessage(RlInitializationOutput);
+        output.WriteMessage(InitializationOutput);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -153,11 +132,8 @@ namespace MLAgents.CommunicatorObjects {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (rlOutput_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(RlOutput);
-      }
-      if (rlInitializationOutput_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(RlInitializationOutput);
+      if (initializationOutput_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(InitializationOutput);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -170,17 +146,11 @@ namespace MLAgents.CommunicatorObjects {
       if (other == null) {
         return;
       }
-      if (other.rlOutput_ != null) {
-        if (rlOutput_ == null) {
-          rlOutput_ = new global::MLAgents.CommunicatorObjects.UnityRLOutputProto();
+      if (other.initializationOutput_ != null) {
+        if (initializationOutput_ == null) {
+          InitializationOutput = new global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto();
         }
-        RlOutput.MergeFrom(other.RlOutput);
-      }
-      if (other.rlInitializationOutput_ != null) {
-        if (rlInitializationOutput_ == null) {
-          rlInitializationOutput_ = new global::MLAgents.CommunicatorObjects.UnityRLInitializationOutputProto();
-        }
-        RlInitializationOutput.MergeFrom(other.RlInitializationOutput);
+        InitializationOutput.MergeFrom(other.InitializationOutput);
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -193,18 +163,11 @@ namespace MLAgents.CommunicatorObjects {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
-            if (rlOutput_ == null) {
-              rlOutput_ = new global::MLAgents.CommunicatorObjects.UnityRLOutputProto();
-            }
-            input.ReadMessage(rlOutput_);
-            break;
-          }
           case 18: {
-            if (rlInitializationOutput_ == null) {
-              rlInitializationOutput_ = new global::MLAgents.CommunicatorObjects.UnityRLInitializationOutputProto();
+            if (initializationOutput_ == null) {
+              InitializationOutput = new global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto();
             }
-            input.ReadMessage(rlInitializationOutput_);
+            input.ReadMessage(InitializationOutput);
             break;
           }
         }

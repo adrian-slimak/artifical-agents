@@ -46,12 +46,9 @@ namespace MLAgents
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
         public UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters)
         {
-            UnityRLInitializationOutputProto academyParameters = new UnityRLInitializationOutputProto
-            {
-                Name = initParameters.name
-            };
-
-            academyParameters.EnvironmentParameters = new EnvironmentParametersProto();
+            UnityInitializationOutputProto initialization_output = GetUnityInitializationOutput();
+            initialization_output.Name = initParameters.name;
+            initialization_output.EnvironmentParameters = new EnvironmentParametersProto();
 
             UnityInputProto resetInput;
             UnityInputProto initializationInput;
@@ -60,7 +57,7 @@ namespace MLAgents
                 initializationInput = Initialize(
                     new UnityOutputProto
                     {
-                        RlInitializationOutput = academyParameters
+                        InitializationOutput = initialization_output
                     },
                     out resetInput);
             }
@@ -107,8 +104,8 @@ namespace MLAgents
             UnityMessageProto msg = m_Client.Exchange(WrapMessage(null, 200));
             unityInput = msg.UnityInput;
 
-            Debug.Log(result);
-            Debug.Log(msg);
+            //Debug.Log(result);
+            //Debug.Log(msg);
 
             EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
 
@@ -172,20 +169,30 @@ namespace MLAgents
 
         #region Sending and retreiving data
 
-        public void DecideBatch(float[] stackedObservations, float[] stackedActions)
+        public void DecideBatch(List<Brain> brains)
         {
             var message = new UnityOutputProto
             {
-                RlInitializationOutput = GetTempUnityRlInitializationOutput()
+                InitializationOutput = GetUnityInitializationOutput()
             };
 
+            int byteObservationsArraySize = 0;
+            int byteActionsArraySize = 0;
+            foreach (Brain brain in brains)
+            {
+                byteObservationsArraySize += brain.mmf_size_observations;
+                byteActionsArraySize += brain.mmf_size_actions;
+            }
 
             using (TimerStack.Instance.Scoped("MemoryWrite"))
             {
                 using (MemoryMappedViewAccessor viewAccessor = m_UnityOutputMemory.CreateViewAccessor())
                 {
-                    var byteArray = new byte[stackedObservations.Length * 4];
-                    Buffer.BlockCopy(stackedObservations, 0, byteArray, 0, byteArray.Length);
+
+                    var byteArray = new byte[byteObservationsArraySize];
+                    foreach(Brain brain in brains)
+                        Buffer.BlockCopy(brain.stackedObservations, 0, byteArray, brain.mmf_offset_observations, brain.mmf_size_observations);
+
                     viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
                 }
             }
@@ -200,9 +207,10 @@ namespace MLAgents
             {
                 using (MemoryMappedViewAccessor viewAccessor = m_UnityInputMemory.CreateViewAccessor())
                 {
-                    byte[] byteArray = new byte[12800];
+                    byte[] byteArray = new byte[byteActionsArraySize];
                     viewAccessor.ReadArray(0, byteArray, 0, byteArray.Length);
-                    Buffer.BlockCopy(byteArray, 0, stackedActions, 0, byteArray.Length);
+                    foreach (Brain brain in brains)
+                        Buffer.BlockCopy(byteArray, brain.mmf_offset_actions, brain.stackedActions, 0, brain.mmf_size_actions);
                 }
             }
 
@@ -270,27 +278,31 @@ namespace MLAgents
             };
         }
 
-        UnityRLInitializationOutputProto GetTempUnityRlInitializationOutput()
+        UnityInitializationOutputProto GetUnityInitializationOutput()
         {
-            UnityRLInitializationOutputProto output = null;
+            UnityInitializationOutputProto output = null;
 
-            if (m_CurrentUnityRlOutput.AgentInfos.ContainsKey("prey"))
+            if (output == null)
             {
-                if (output == null)
-                {
-                    output = new UnityRLInitializationOutputProto();
-                }
-
-                var brainParametersProto = new BrainParametersProto
-                {
-                    VectorActionSize = { new[] { 32 } },
-                    VectorActionSpaceType = SpaceTypeProto.Continuous,
-                    BrainName = "prey",
-                    IsTraining = true
-                };
-                output.BrainParameters.Add(brainParametersProto);
+                output = new UnityInitializationOutputProto();
             }
 
+            foreach(Brain brain in Academy.m_Brains.Values)
+            {
+                var brainParametersProto = new BrainParametersProto
+                {
+                    BrainName = brain.brainName,
+                    AgentsCount = brain.agentsCount,
+                    ObservationsVectorSize = brain.observationsVectorSize,
+                    ActionsVectorSize = brain.actionsVectorSize,
+                    MmfOffsetObservations = brain.mmf_offset_observations,
+                    MmfOffsetActions = brain.mmf_offset_actions,
+                    MmfSizeObservations = brain.mmf_size_observations,
+                    MmfSizeActions = brain.mmf_size_actions
+                };
+
+                output.BrainParameters.Add(brainParametersProto);
+            }
 
             return output;
         }

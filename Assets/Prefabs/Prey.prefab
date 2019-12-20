@@ -123,8 +123,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88b6042bc9a5d4aa58d931eae49442e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfActionsBetweenDecisions: 0
-  m_Id: 0
+  brainName: prey
 --- !u!1 &7447736276596515859
 GameObject:
   m_ObjectHideFlags: 0

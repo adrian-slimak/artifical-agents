@@ -361,18 +361,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 165638be81007d04fa45563bfcb8d076, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_StackedObservations: []
-  m_StackedActions: []
+  brains:
+  - brainName: prey
+    observationsVectorSize: 20
+    actionsVectorSize: 32
+    agentsCount: 0
+    mmf_offset_observations: 0
+    mmf_size_observations: 0
+    mmf_offset_actions: 0
+    mmf_size_actions: 0
+    stackedObservations: []
+    stackedActions: []
   m_TrainingConfiguration:
     width: 80
     height: 80
     qualityLevel: 1
     timeScale: 1
     targetFrameRate: 0
-  m_Agents: []
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
     type: 3}
-  numberOfPreys: 100
+  numberOfPreys: 400
   PreysHolder: {fileID: 582284023}
 --- !u!4 &1361722398
 Transform:

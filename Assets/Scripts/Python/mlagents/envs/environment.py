@@ -7,7 +7,7 @@ import subprocess
 from typing import Dict, List, Optional, Any
 
 from mlagents.envs.timers import timed, hierarchical_timer
-from .brain import AllBrainInfo, BrainInfo, BrainParameters
+from .brain import AllBrainInfo, BrainInfo, BrainParameters, Brain
 from .exception import (
     UnityEnvironmentException,
     UnityCommunicationException,
@@ -16,12 +16,6 @@ from .exception import (
 )
 from timeit import default_timer as timer
 
-
-from mlagents.envs.communicator_objects.unity_rl_input_pb2 import UnityRLInputProto
-from mlagents.envs.communicator_objects.unity_rl_output_pb2 import UnityRLOutputProto
-from mlagents.envs.communicator_objects.environment_parameters_pb2 import (
-    EnvironmentParametersProto,
-)
 from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
 from mlagents.envs.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 
@@ -77,6 +71,7 @@ class UnityEnvironment():
         self.timeout_wait: int = timeout_wait
         self.communicator = self.get_communicator(worker_id, base_port, timeout_wait)
         self.worker_id = worker_id
+        self.brains_dict = {}
 
         # If the environment name is None, a new environment will not be launched
         # and the communicator will directly try to connect to an existing unity environment.
@@ -97,17 +92,19 @@ class UnityEnvironment():
 
         initialization_input = UnityInitializationInputProto(seed=seed)
         try:
-            aca_output = self.send_academy_parameters(initialization_input)
-            aca_params = aca_output.rl_initialization_output
+            unity_output: UnityOutputProto = self.send_academy_parameters(initialization_input)
+            initialization_output = unity_output.initialization_output
+            for brain in initialization_output.brain_parameters:
+                self.brains_dict[brain.brain_name] = Brain(brain)
         except UnityTimeOutException:
             self._close()
             raise
 
         # self._n_agents: Dict[str, int] = {}
         self._is_first_message = True
-        self._academy_name = aca_params.name
+        self._academy_name = initialization_output.name
         # self._log_path = aca_params.log_path
-        self._resetParameters = dict(aca_params.environment_parameters.float_parameters)
+        self._resetParameters = dict(initialization_output.environment_parameters.float_parameters)
 
         logger.info(
             "\n'{0}' started successfully!\n{1}".format(self._academy_name, str(self))
@@ -295,15 +292,19 @@ class UnityEnvironment():
         if self._is_first_message:
             return self.reset()
 
+        state = {}
+
         # Check that environment is loaded, and episode is currently running.
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
         start = timer()
-        mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
-        if vector_action:
-            byteArray = vector_action['prey'].tobytes()
-            mm.write(byteArray)
+        for brain in self.brains_dict.values():
+            mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
+            if vector_action:
+                byteArray = vector_action['prey'].tobytes()
+                mm.seek(brain.mmf_offset_actions)
+                mm.write(byteArray)
         # print(timer() - start)
 
         step_input = self._generate_step_input()
@@ -311,15 +312,17 @@ class UnityEnvironment():
             outputs = self.communicator.exchange(step_input)
 
         start = timer()
-        mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
-        numBytes = 40000
-        floats = np.fromstring(mm.read(numBytes), dtype='f')
+        for brain in self.brains_dict.values():
+            mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
+            mm.seek(brain.mmf_offset_observations)
+            observations = np.fromstring(mm.read(brain.mmf_size_observations), dtype='f')
+            state[brain.brain_name] = observations.reshape(brain.agents_count, brain.observation_vectors_size)
         # print(timer() - start)
 
         if outputs is None:
             raise UnityCommunicationException("Communicator has stopped.")
 
-        return {"prey": floats}
+        return state
 
     def close(self):
         """

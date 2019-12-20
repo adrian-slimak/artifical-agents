@@ -12,13 +12,9 @@ namespace MLAgents
         public float value;
     }
 
-    public class Observation
-    {
-        public float[] observations;
-    }
-
     public class Agent : MonoBehaviour
     {
+        public String brainName;
         AgentAction m_Action;
 
         int m_Id;
@@ -34,12 +30,9 @@ namespace MLAgents
         Vision m_Vision;
         Animal m_Animal;
 
-        public static int m_TotalAgentsCreated = 0;
-
         void Awake()
         {
-            m_Id = m_TotalAgentsCreated;
-            m_TotalAgentsCreated++;
+            m_Id = Academy.m_Brains[brainName].SubscribeAgent();
         }
 
         void OnEnable()
@@ -58,8 +51,6 @@ namespace MLAgents
             if (academy == null)
                 throw new Exception("No Academy Component could be found in the scene.");
 
-            academy.m_Agents.Add(this);
-
             academy.AgentUpdateObservations += UpdateObservations;
             academy.AgentUpdateMovement += AgentStep;
             ResetData();
@@ -67,8 +58,8 @@ namespace MLAgents
 
         void Start()
         {
-            m_ObservationsVector = new ArraySegment<float>(m_Academy.m_StackedObservations, m_Id * m_observationsSize, m_observationsSize);
-            m_ActionsVector = new ArraySegment<float>(m_Academy.m_StackedActions, m_Id * m_actionsSize, m_actionsSize);
+            m_ObservationsVector = Academy.m_Brains[brainName].GetObservationsVector(m_Id);
+            m_ActionsVector = Academy.m_Brains[brainName].GetActionsVector(m_Id);
         }
 
         void ResetData()
