@@ -4,26 +4,19 @@ import logging
 import numpy as np
 import os
 import subprocess
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 
 from mlagents.envs.timers import timed, hierarchical_timer
-from .brain import AllBrainInfo, BrainInfo, BrainParameters, Brain
-from .exception import (
-    UnityEnvironmentException,
-    UnityCommunicationException,
-    UnityActionException,
-    UnityTimeOutException,
-)
+from .brain import BrainParameters
+from .exception import (UnityEnvironmentException, UnityCommunicationException, UnityTimeOutException)
 from timeit import default_timer as timer
 
+from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInputProto
 from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
 from mlagents.envs.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
-
-from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInputProto
+from mlagents.envs.communicator_objects.engine_configuration_pb2 import EngineConfigurationProto
 
 import mmap
-import numpy as np
-
 
 from .rpc_communicator import RpcCommunicator
 from sys import platform
@@ -39,9 +32,8 @@ class UnityEnvironment():
         self,
         file_name: Optional[str] = None,
         worker_id: int = 0,
-        base_port: int = 5005,
+        base_port: int = 5004,
         seed: int = 0,
-        docker_training: bool = False,
         no_graphics: bool = False,
         timeout_wait: int = 60,
         args: Optional[List[str]] = None,
@@ -56,51 +48,51 @@ class UnityEnvironment():
         :int worker_id: Number to add to communication port (5005) [0]. Used for asynchronous agent scenarios.
         :bool docker_training: Informs this class whether the process is being run within a container.
         :bool no_graphics: Whether to run the Unity simulator in no-graphics mode
-        :int timeout_wait: Time (in seconds) to wait for connection from environment.
-        :bool train_mode: Whether to run in training mode, speeding up the simulation, by default.
+        :int timeout_wait: Time (in seconds) to wait for connection from environment
         :list args: Addition Unity command line arguments
         """
         args = args or []
         atexit.register(self._close)
         self.port = base_port + worker_id
-        self._buffer_size = 12000
+        self.worker_id = worker_id
         # If true, this means the environment was successfully loaded
         self._loaded = False
         # The process that is started. If None, no process was started
         self.proc1 = None
         self.timeout_wait: int = timeout_wait
-        self.communicator = self.get_communicator(worker_id, base_port, timeout_wait)
-        self.worker_id = worker_id
-        self.brains_dict = {}
+        self.communicator = RpcCommunicator(self.worker_id, self.port, self.timeout_wait)
+        self.external_brains = {}
 
-        # If the environment name is None, a new environment will not be launched
-        # and the communicator will directly try to connect to an existing unity environment.
-        # If the worker-id is not 0 and the environment name is None, an error is thrown
+
         if file_name is None and worker_id != 0:
-            raise UnityEnvironmentException(
-                "If the environment name is None, "
-                "the worker-id must be 0 in order to connect with the Editor."
-            )
+            raise UnityEnvironmentException("If the environment name is None, the worker-id must be 0 in order to connect with the Editor.")
 
         if file_name is not None:
-            self.executable_launcher(file_name, docker_training, no_graphics, args)
+            self.executable_launcher(file_name, no_graphics, args)
         else:
-            logger.info(
-                "Start training by pressing the Play button in the Unity Editor."
-            )
+            logger.info("Start training by pressing the Play button in the Unity Editor.")
         self._loaded = True
 
-        initialization_input = UnityInitializationInputProto(seed=seed)
+        engine_config = EngineConfigurationProto()
+        engine_config.width = 100
+        engine_config.height = 100
+        engine_config.quality_level = 1
+        engine_config.time_scale = 1
+        engine_config.target_frame_rate = -1
+        engine_config.show_monitor = False
+        initialization_input = UnityInitializationInputProto(seed=seed, engine_configuration=engine_config)
+
         try:
-            unity_output: UnityOutputProto = self.send_academy_parameters(initialization_input)
+            unity_input = UnityInputProto()
+            unity_input.initialization_input.CopyFrom(initialization_input)
+            unity_output: UnityOutputProto = self.communicator.initialize(unity_input)
             initialization_output = unity_output.initialization_output
             for brain in initialization_output.brain_parameters:
-                self.brains_dict[brain.brain_name] = Brain(brain)
+                self.external_brains[brain.brain_name] = BrainParameters(brain)
         except UnityTimeOutException:
             self._close()
             raise
 
-        # self._n_agents: Dict[str, int] = {}
         self._is_first_message = True
         self._academy_name = initialization_output.name
         # self._log_path = aca_params.log_path
@@ -111,140 +103,42 @@ class UnityEnvironment():
         )
 
     @property
-    def logfile_path(self):
-        return self._log_path
-
-    @property
     def academy_name(self):
         return self._academy_name
-
-    @staticmethod
-    def get_communicator(worker_id, base_port, timeout_wait):
-        return RpcCommunicator(worker_id, base_port, timeout_wait)
-
     @property
-    def external_brains(self):
-        external_brains = {}
-        for brain_name in self.external_brain_names:
-            external_brains[brain_name] = self.brains[brain_name]
-        return external_brains
-
+    def get_external_brains(self):
+        return self.external_brains
     @property
     def reset_parameters(self):
         return self._resetParameters
 
-    def executable_launcher(self, file_name, docker_training, no_graphics, args):
-        cwd = os.getcwd()
-        file_name = (
-            file_name.strip()
-            .replace(".app", "")
-            .replace(".exe", "")
-            .replace(".x86_64", "")
-            .replace(".x86", "")
-        )
-        true_filename = os.path.basename(os.path.normpath(file_name))
-        logger.debug("The true file name is {}".format(true_filename))
-        launch_string = None
-        if platform == "linux" or platform == "linux2":
-            candidates = glob.glob(os.path.join(cwd, file_name) + ".x86_64")
-            if len(candidates) == 0:
-                candidates = glob.glob(os.path.join(cwd, file_name) + ".x86")
-            if len(candidates) == 0:
-                candidates = glob.glob(file_name + ".x86_64")
-            if len(candidates) == 0:
-                candidates = glob.glob(file_name + ".x86")
-            if len(candidates) > 0:
-                launch_string = candidates[0]
+    def executable_launcher(self, file_name, no_graphics, args):
+        launch_string = file_name
+        logger.debug("This is the launch string {}".format(launch_string))
 
-        elif platform == "darwin":
-            candidates = glob.glob(
-                os.path.join(
-                    cwd, file_name + ".app", "Contents", "MacOS", true_filename
-                )
+        # Launch Unity environment
+        subprocess_args = [launch_string]
+        if no_graphics:
+            subprocess_args += ["-nographics", "-batchmode"]
+        subprocess_args += ["--port", str(self.port)]
+        subprocess_args += args
+        try:
+            self.proc1 = subprocess.Popen(
+                subprocess_args,
+                # start_new_session=True means that signals to the parent python process
+                # (e.g. SIGINT from keyboard interrupt) will not be sent to the new process on POSIX platforms.
+                # This is generally good since we want the environment to have a chance to shutdown,
+                # but may be undesirable in come cases; if so, we'll add a command-line toggle.
+                # Note that on Windows, the CTRL_C signal will still be sent.
+                start_new_session=True,
             )
-            if len(candidates) == 0:
-                candidates = glob.glob(
-                    os.path.join(file_name + ".app", "Contents", "MacOS", true_filename)
-                )
-            if len(candidates) == 0:
-                candidates = glob.glob(
-                    os.path.join(cwd, file_name + ".app", "Contents", "MacOS", "*")
-                )
-            if len(candidates) == 0:
-                candidates = glob.glob(
-                    os.path.join(file_name + ".app", "Contents", "MacOS", "*")
-                )
-            if len(candidates) > 0:
-                launch_string = candidates[0]
-        elif platform == "win32":
-            candidates = glob.glob(os.path.join(cwd, file_name + ".exe"))
-            if len(candidates) == 0:
-                candidates = glob.glob(file_name + ".exe")
-            if len(candidates) > 0:
-                launch_string = candidates[0]
-        if launch_string is None:
-            self._close()
+        except PermissionError as perm:
+            # This is likely due to missing read or execute permissions on file.
             raise UnityEnvironmentException(
-                "Couldn't launch the {0} environment. "
-                "Provided filename does not match any environments.".format(
-                    true_filename
-                )
-            )
-        else:
-            logger.debug("This is the launch string {}".format(launch_string))
-            # Launch Unity environment
-            if not docker_training:
-                subprocess_args = [launch_string]
-                if no_graphics:
-                    subprocess_args += ["-nographics", "-batchmode"]
-                subprocess_args += ["--port", str(self.port)]
-                subprocess_args += args
-                try:
-                    self.proc1 = subprocess.Popen(
-                        subprocess_args,
-                        # start_new_session=True means that signals to the parent python process
-                        # (e.g. SIGINT from keyboard interrupt) will not be sent to the new process on POSIX platforms.
-                        # This is generally good since we want the environment to have a chance to shutdown,
-                        # but may be undesirable in come cases; if so, we'll add a command-line toggle.
-                        # Note that on Windows, the CTRL_C signal will still be sent.
-                        start_new_session=True,
-                    )
-                except PermissionError as perm:
-                    # This is likely due to missing read or execute permissions on file.
-                    raise UnityEnvironmentException(
-                        f"Error when trying to launch environment - make sure "
-                        f"permissions are set correctly. For example "
-                        f'"chmod -R 755 {launch_string}"'
-                    ) from perm
-
-            else:
-                # Comments for future maintenance:
-                #     xvfb-run is a wrapper around Xvfb, a virtual xserver where all
-                #     rendering is done to virtual memory. It automatically creates a
-                #     new virtual server automatically picking a server number `auto-servernum`.
-                #     The server is passed the arguments using `server-args`, we are telling
-                #     Xvfb to create Screen number 0 with width 640, height 480 and depth 24 bits.
-                #     Note that 640 X 480 are the default width and height. The main reason for
-                #     us to add this is because we'd like to change the depth from the default
-                #     of 8 bits to 24.
-                #     Unfortunately, this means that we will need to pass the arguments through
-                #     a shell which is why we set `shell=True`. Now, this adds its own
-                #     complications. E.g SIGINT can bounce off the shell and not get propagated
-                #     to the child processes. This is why we add `exec`, so that the shell gets
-                #     launched, the arguments are passed to `xvfb-run`. `exec` replaces the shell
-                #     we created with `xvfb`.
-                #
-                docker_ls = (
-                    "exec xvfb-run --auto-servernum"
-                    " --server-args='-screen 0 640x480x24'"
-                    " {0} --port {1}"
-                ).format(launch_string, str(self.port))
-                self.proc1 = subprocess.Popen(
-                    docker_ls,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    shell=True,
-                )
+                f"Error when trying to launch environment - make sure "
+                f"permissions are set correctly. For example "
+                f'"chmod -R 755 {launch_string}"'
+            ) from perm
 
     def __str__(self):
         reset_params_str = (
@@ -261,10 +155,6 @@ class UnityEnvironment():
         Reset Parameters : {reset_params_str}"""
 
     def reset(self, config: Dict = None):
-        """
-        Sends a signal to reset the unity environment.
-        :return: AllBrainInfo  : A data structure corresponding to the initial reset state of the environment.
-        """
         if config is None:
             config = self._resetParameters
         elif config:
@@ -280,9 +170,9 @@ class UnityEnvironment():
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
-        outputs = self.communicator.exchange(self._generate_reset_input(config))
+        output = self.communicator.exchange(self._generate_reset_input(config))
 
-        if outputs is None:
+        if output is None:
             raise UnityCommunicationException("Communicator has stopped.")
 
         self._is_first_message = False
@@ -299,7 +189,7 @@ class UnityEnvironment():
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
         start = timer()
-        for brain in self.brains_dict.values():
+        for brain in self.external_brains.values():
             mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
             if vector_action:
                 byteArray = vector_action['prey'].tobytes()
@@ -312,7 +202,7 @@ class UnityEnvironment():
             outputs = self.communicator.exchange(step_input)
 
         start = timer()
-        for brain in self.brains_dict.values():
+        for brain in self.external_brains.values():
             mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
             mm.seek(brain.mmf_offset_observations)
             observations = np.fromstring(mm.read(brain.mmf_size_observations), dtype='f')
@@ -321,7 +211,6 @@ class UnityEnvironment():
 
         if outputs is None:
             raise UnityCommunicationException("Communicator has stopped.")
-
         return state
 
     def close(self):

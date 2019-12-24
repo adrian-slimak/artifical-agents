@@ -5,27 +5,10 @@ using MLAgents.CommunicatorObjects;
 
 namespace MLAgents
 {
-    public struct CommunicatorInitParameters
-    {
-        /// <summary>
-        /// Port to listen for connections on.
-        /// </summary>
-        public int port;
-        /// <summary>
-        /// The name of the environment.
-        /// </summary>
-        public string name;
-        /// <summary>
-        /// The version of the Unity SDK.
-        /// </summary>
-        public string version;
-    }
     public struct UnityInitializationParameters
     {
-        /// <summary>
-        /// An RNG seed sent from the python process to Unity.
-        /// </summary>
         public int seed;
+        public EngineConfiguration engine_configuration;
     }
     public struct UnityInputParameters
     {
@@ -112,7 +95,7 @@ namespace MLAgents
         /// </summary>
         /// <returns>The External Initialization Parameters received.</returns>
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
-        UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters);
+        UnityInitializationParameters Initialize(int port);
 
         /// <summary>
         /// Registers a new Brain to the Communicator.
@@ -134,12 +117,5 @@ namespace MLAgents
         /// it needs to get one at this point.
         /// </summary>
         void DecideBatch();
-
-        /// <summary>
-        /// Gets the AgentActions based on the batching key.
-        /// </summary>
-        /// <param name="key">A key to identify which actions to get</param>
-        /// <returns></returns>
-        Dictionary<Agent, AgentAction> GetActions(string key);
     }
 }

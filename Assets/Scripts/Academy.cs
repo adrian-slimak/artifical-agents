@@ -2,11 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
 using UnityEditor;
+using MLAgents.CommunicatorObjects;
 
 namespace MLAgents
 {
     [System.Serializable]
-    public class EnvironmentConfiguration
+    public class EngineConfiguration
     {
         [Tooltip("Width of the environment window in pixels.")]
         public int width;
@@ -25,7 +26,7 @@ namespace MLAgents
         [Tooltip("Frames per second (FPS) engine attempts to maintain.")]
         public int targetFrameRate;
 
-        public EnvironmentConfiguration(
+        public EngineConfiguration(
             int width, int height, int qualityLevel,
             float timeScale, int targetFrameRate)
         {
@@ -35,49 +36,50 @@ namespace MLAgents
             this.timeScale = timeScale;
             this.targetFrameRate = targetFrameRate;
         }
+
+        public EngineConfiguration(EngineConfigurationProto engineConfiguration)
+        {
+            this.width = engineConfiguration.Width;
+            this.height = engineConfiguration.Height;
+            this.qualityLevel = engineConfiguration.QualityLevel;
+            this.timeScale = engineConfiguration.TimeScale;
+            this.targetFrameRate = engineConfiguration.TargetFrameRate;
+        }
     }
 
 
     public class Academy : MonoBehaviour
     {
-        public List<Brain> brains;
-        public static Dictionary<string, Brain> m_Brains;
-
-        float m_OriginalFixedDeltaTime;
-        float m_OriginalMaximumDeltaTime;
-
         [FormerlySerializedAs("trainingConfiguration")]
         [SerializeField]
-        [Tooltip("The engine-level settings which correspond to rendering " +
-            "quality and engine speed during Training.")]
-        EnvironmentConfiguration m_TrainingConfiguration =
-            new EnvironmentConfiguration(80, 80, 1, 100.0f, -1);
-
-        public bool IsCommunicatorOn
-        {
-            get { return Communicator != null; }
-        }
-
-        int m_EpisodeCount;
-        int m_StepCount;
-        int m_TotalStepCount;
+        [Tooltip("The engine-level settings which correspond to rendering quality and engine speed during Training.")]
+        EngineConfiguration m_EngineConfiguration = new EngineConfiguration(80, 80, 1, 100.0f, -1);
+        EngineConfiguration m_ExternalConfiguration = null;
 
         public RpcCommunicator Communicator;
+        public bool IsCommunicatorOn
+        { get { return Communicator != null; } }
 
-        bool m_Initialized;
         bool m_FirstAcademyReset;
 
         public event System.Action AgentUpdateObservations;
         public event System.Action AgentUpdateMovement;
 
+        public List<Brain> brains;
+        public static Dictionary<string, Brain> m_Brains;
+
+        public int m_EpisodeCount;
+        public int m_StepCount;
+        public int m_TotalStepCount;
+
         void Awake()
         {
             m_Brains = new Dictionary<string, Brain>();
-
             foreach (Brain brain in brains)
                 m_Brains.Add(brain.brainName, brain);
 
-            LazyInitialization();
+            ConfigureEngine();
+            AcademyInitialization();
         }
 
         private void OnEnable()
@@ -93,18 +95,7 @@ namespace MLAgents
 
         private void Start()
         {
-            if (!m_Initialized)
-            {
-                InitializeEnvironment();
-                m_Initialized = true;
-            }
-        }
-
-        public void LazyInitialization()
-        {
-            ConfigureEnvironment();
-
-            AcademyInitialization();
+            InitializeCommunicator();
         }
 
         // Used to read Python-provided environment parameters
@@ -123,39 +114,25 @@ namespace MLAgents
             return int.Parse(inputPort);
         }
 
-        void InitializeEnvironment()
+        void InitializeCommunicator()
         {
-            m_OriginalFixedDeltaTime = Time.fixedDeltaTime;
-            m_OriginalMaximumDeltaTime = Time.maximumDeltaTime;
-
             // Try to launch the communicator by using the arguments passed at launch
             try
             {
-                Communicator = new RpcCommunicator(
-                    new CommunicatorInitParameters
-                    {
-                        port = ReadArgs()
-                    });
+                Communicator = new RpcCommunicator(port:ReadArgs());
             }
             catch
             {
-                Communicator = new RpcCommunicator(
-                    new CommunicatorInitParameters
-                    {
-                        port = 5004
-                    });
+                Communicator = new RpcCommunicator(port:5004);
             }
 
             if (Communicator != null)
             {
                 try
                 {
-                    var unityInitializationParameters = Communicator.Initialize(
-                        new CommunicatorInitParameters
-                        {
-                            name = gameObject.name
-                        });
-                    Random.InitState(unityInitializationParameters.seed);
+                    var unityInitializationInput = Communicator.Initialize(name:gameObject.name);
+                    Random.InitState(unityInitializationInput.seed);
+                    m_ExternalConfiguration = unityInitializationInput.engine_configuration;
                 }
                 catch
                 {
@@ -165,68 +142,47 @@ namespace MLAgents
                 if (Communicator != null)
                 {
                     Communicator.QuitCommandReceived += OnQuitCommandReceived;
-                    Communicator.ResetCommandReceived += ForcedFullReset;
+                    Communicator.ResetCommandReceived += OnResetCommandReceived;
                 }
             }
-
-            AgentUpdateObservations += () => { };
-            AgentUpdateMovement += () => { };
         }
 
 
-
-        static void OnQuitCommandReceived()
+        void ConfigureEngine()
         {
-            EditorApplication.isPlaying = false;
-            Application.Quit();
-        }
-
-        void ConfigureEnvironment()
-        {
-            Screen.SetResolution(m_TrainingConfiguration.width, m_TrainingConfiguration.height, false);
-            QualitySettings.SetQualityLevel(m_TrainingConfiguration.qualityLevel, true);
-            Time.timeScale = m_TrainingConfiguration.timeScale;
+            Screen.SetResolution(m_EngineConfiguration.width, m_EngineConfiguration.height, false);
+            QualitySettings.SetQualityLevel(m_EngineConfiguration.qualityLevel, true);
+            Time.timeScale = m_EngineConfiguration.timeScale;
             Time.captureFramerate = 60;
-            Application.targetFrameRate = m_TrainingConfiguration.targetFrameRate;
+            Application.targetFrameRate = m_EngineConfiguration.targetFrameRate;
         }
 
         public virtual void AcademyInitialization()
         { }
 
         public virtual void AcademyStep()
-        {
-        }
+        { }
 
         public virtual void AcademyReset()
-        {
-        }
+        { }
 
-        /// <summary>
-        /// Forces the full reset. The done flags are not affected. Is either
-        /// called the first reset at inference and every external reset
-        /// at training.
-        /// </summary>
-        void ForcedFullReset()
-        {
-            EnvironmentReset();
-            m_FirstAcademyReset = true;
-        }
+
 
         void EnvironmentStep()
         {
             if (!m_FirstAcademyReset)
             {
-                ForcedFullReset();
+                OnResetCommandReceived();
             }
 
-            using (TimerStack.Instance.Scoped("AgentSendState"))
+            using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
             {
                 AgentUpdateObservations?.Invoke();
             }
 
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
-                Communicator?.DecideBatch(brains);
+                Communicator?.Communicate(brains);
             }
 
             using (TimerStack.Instance.Scoped("AcademyStep"))
@@ -234,7 +190,7 @@ namespace MLAgents
                 AcademyStep();
             }
 
-            using (TimerStack.Instance.Scoped("AgentAct"))
+            using (TimerStack.Instance.Scoped("AgentUpdateMovement"))
             {
                 AgentUpdateMovement?.Invoke();
             }
@@ -243,9 +199,12 @@ namespace MLAgents
             m_TotalStepCount += 1;
         }
 
-        /// <summary>
-        /// Resets the environment, including the Academy.
-        /// </summary>
+        void OnResetCommandReceived()
+        {
+            EnvironmentReset();
+            m_FirstAcademyReset = true;
+        }
+
         void EnvironmentReset()
         {
             m_StepCount = 0;
@@ -253,25 +212,31 @@ namespace MLAgents
             AcademyReset();
         }
 
-        /// <summary>
-        /// MonoBehaviour function that dictates each environment step.
-        /// </summary>
         void FixedUpdate()
         {
             EnvironmentStep();
         }
 
-        /// <summary>
-        /// Cleanup function
-        /// </summary>
+
         protected virtual void OnDestroy()
         {
-            Time.fixedDeltaTime = m_OriginalFixedDeltaTime;
-            Time.maximumDeltaTime = m_OriginalMaximumDeltaTime;
-
             // TODO - Pass worker ID or some other identifier,
             // so that multiple envs won't overwrite each others stats.
             TimerStack.Instance.SaveJsonTimers();
+        }
+
+        static void OnQuitCommandReceived()
+        {
+#if UNITY_EDITOR
+
+            EditorApplication.isPlaying = false;
+#endif
+            Application.Quit();
+        }
+
+        void OnApplicationQuit()
+        {
+            //Communicator.Dispose();
         }
     }
 }

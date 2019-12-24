@@ -3,16 +3,11 @@ import tensorflow as tf
 import numpy as np
 # tf.debugging.set_log_device_placement(True)
 from LSTM import LSTMModel
-from time import sleep
-from timeit import default_timer as timer
-import mmap
-from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
-from mlagents.envs.communicator_objects.unity_message_pb2 import UnityMessageProto
-brainNames = []
 
 def main():
     # tf_utils.set_warnings_enabled(False)
-    unity_environment = UnityEnvironment(worker_id=0, base_port=5004)
+    # unity_environment = UnityEnvironment(file_name="C:/Users/adek1/Desktop/Agents/ArtificalAnimals.exe", worker_id=0)
+    unity_environment = UnityEnvironment(worker_id=0)
     unity_environment.reset()
 
     # brainNames = unity_environment.external_brain_names

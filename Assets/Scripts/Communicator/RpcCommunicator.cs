@@ -15,39 +15,30 @@ namespace MLAgents
     {
         public event QuitCommandHandler QuitCommandReceived;
         public event ResetCommandHandler ResetCommandReceived;
-        public event InputReceivedHandler RLInputReceived;
+        public event InputReceivedHandler InputReceived;
 
         bool m_IsOpen;
-
-        UnityRLOutputProto m_CurrentUnityRlOutput =
-            new UnityRLOutputProto();
 
         /// The Unity to External client.
         UnityToExternalProto.UnityToExternalProtoClient m_Client;
 
         MemoryMappedFile m_UnityOutputMemory;
         MemoryMappedFile m_UnityInputMemory;
-        /// The communicator parameters sent at construction
-        CommunicatorInitParameters m_CommunicatorInitParameters;
-        public RpcCommunicator(CommunicatorInitParameters communicatorInitParameters)
+
+        int m_Port;
+        public RpcCommunicator(int port)
         {
-            m_CommunicatorInitParameters = communicatorInitParameters;
+            m_Port = port;
             m_UnityOutputMemory = MemoryMappedFile.CreateNew("unity_output", 200000);
             m_UnityInputMemory = MemoryMappedFile.CreateNew("unity_input", 200000);
         }
 
         #region Initialization
 
-        /// <summary>
-        /// Sends the initialization parameters through the Communicator.
-        /// Is used by the academy to send initialization parameters to the communicator.
-        /// </summary>
-        /// <returns>The External Initialization Parameters received.</returns>
-        /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
-        public UnityInitializationParameters Initialize(CommunicatorInitParameters initParameters)
+        public UnityInitializationParameters Initialize(string name)
         {
             UnityInitializationOutputProto initialization_output = GetUnityInitializationOutput();
-            initialization_output.Name = initParameters.name;
+            initialization_output.Name = name;
             initialization_output.EnvironmentParameters = new EnvironmentParametersProto();
 
             UnityInputProto resetInput;
@@ -81,35 +72,34 @@ namespace MLAgents
 
             return new UnityInitializationParameters
             {
-                seed = initializationInput.InitializationInput.Seed
+                seed = initializationInput.InitializationInput.Seed,
+                engine_configuration = new EngineConfiguration(initializationInput.InitializationInput.EngineConfiguration)
+                
             };
         }
 
-        void UpdateEnvironmentWithInput(UnityInputProto rlInput)
+        void UpdateEnvironmentWithInput(UnityInputProto Input)
         {
             //SendInputReceivedEvent();
-            SendCommandEvent(rlInput.Command);
+            SendCommandEvent(Input.Command);
         }
 
         UnityInputProto Initialize(UnityOutputProto unityOutput, out UnityInputProto unityInput)
         {
             m_IsOpen = true;
             var channel = new Channel(
-                "localhost:" + m_CommunicatorInitParameters.port,
+                "localhost:" + m_Port,
                 ChannelCredentials.Insecure);
 
             m_Client = new UnityToExternalProto.UnityToExternalProtoClient(channel);
 
-            UnityMessageProto result = m_Client.Exchange(WrapMessage(unityOutput, 200));
-            UnityMessageProto msg = m_Client.Exchange(WrapMessage(null, 200));
-            unityInput = msg.UnityInput;
-
-            //Debug.Log(result);
-            //Debug.Log(msg);
-
+            UnityMessageProto initializationMessage = m_Client.Exchange(WrapMessage(unityOutput, 200));
+            UnityMessageProto resetMessage = m_Client.Exchange(WrapMessage(null, 200));
+            unityInput = resetMessage.UnityInput;
+#if UNITY_EDITOR
             EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
-
-            return result.UnityInput;
+#endif
+            return initializationMessage.UnityInput;
         }
 
         #endregion
@@ -162,26 +152,41 @@ namespace MLAgents
 
         void SendInputReceivedEvent()
         {
-            RLInputReceived?.Invoke(new UnityInputParameters { });
+            InputReceived?.Invoke(new UnityInputParameters { });
         }
 
         #endregion
 
         #region Sending and retreiving data
 
-        public void DecideBatch(List<Brain> brains)
+        public void Communicate(List<Brain> brains)
         {
-            var message = new UnityOutputProto
-            {
-                InitializationOutput = GetUnityInitializationOutput()
-            };
+            var unityOutput = new UnityOutputProto();
+            UnityInputProto unityInput;
 
+            MemoryWrite(brains);
+
+            using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
+            {
+                unityInput = Exchange(unityOutput);
+            }
+
+            MemoryRead(brains);
+
+            var rlInput = unityInput?.InitializationInput;
+
+            if (rlInput == null)
+                return;
+
+            UpdateEnvironmentWithInput(unityInput);
+        }
+
+        void MemoryWrite(List<Brain> brains)
+        {
             int byteObservationsArraySize = 0;
-            int byteActionsArraySize = 0;
             foreach (Brain brain in brains)
             {
                 byteObservationsArraySize += brain.mmf_size_observations;
-                byteActionsArraySize += brain.mmf_size_actions;
             }
 
             using (TimerStack.Instance.Scoped("MemoryWrite"))
@@ -190,17 +195,20 @@ namespace MLAgents
                 {
 
                     var byteArray = new byte[byteObservationsArraySize];
-                    foreach(Brain brain in brains)
+                    foreach (Brain brain in brains)
                         Buffer.BlockCopy(brain.stackedObservations, 0, byteArray, brain.mmf_offset_observations, brain.mmf_size_observations);
 
                     viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
                 }
             }
+        }
 
-            UnityInputProto input;
-            using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
+        void MemoryRead(List<Brain> brains)
+        {
+            int byteActionsArraySize = 0;
+            foreach (Brain brain in brains)
             {
-                input = Exchange(message);
+                byteActionsArraySize += brain.mmf_size_actions;
             }
 
             using (TimerStack.Instance.Scoped("MemoryRead"))
@@ -213,13 +221,6 @@ namespace MLAgents
                         Buffer.BlockCopy(byteArray, brain.mmf_offset_actions, brain.stackedActions, 0, brain.mmf_size_actions);
                 }
             }
-
-            var rlInput = input?.InitializationInput;
-
-            if (rlInput == null)
-                return;
-
-            UpdateEnvironmentWithInput(input);
         }
 
         /// <summary>
@@ -235,11 +236,7 @@ namespace MLAgents
             }
             try
             {
-                UnityMessageProto outputMessage = new UnityMessageProto
-                {
-                    Header = new HeaderProto { Status = 200 },
-                    UnityOutput = unityOutput
-                };
+                var outputMessage = WrapMessage(unityOutput, 200);
 
                 var inputMessage = m_Client.Exchange(outputMessage);
 
@@ -263,12 +260,6 @@ namespace MLAgents
             }
         }
 
-        /// <summary>
-        /// Wraps the UnityOuptut into a message with the appropriate status.
-        /// </summary>
-        /// <returns>The UnityMessage corresponding.</returns>
-        /// <param name="content">The UnityOutput to be wrapped.</param>
-        /// <param name="status">The status of the message.</param>
         static UnityMessageProto WrapMessage(UnityOutputProto content, int status)
         {
             return new UnityMessageProto
@@ -287,7 +278,7 @@ namespace MLAgents
                 output = new UnityInitializationOutputProto();
             }
 
-            foreach(Brain brain in Academy.m_Brains.Values)
+            foreach (Brain brain in Academy.m_Brains.Values)
             {
                 var brainParametersProto = new BrainParametersProto
                 {
@@ -309,10 +300,7 @@ namespace MLAgents
 
         #endregion
 
-        /// <summary>
-        /// When the editor exits, the communicator must be closed
-        /// </summary>
-        /// <param name="state">State.</param>
+#if UNITY_EDITOR
         void HandleOnPlayModeChanged(PlayModeStateChange state)
         {
             // This method is run whenever the playmode state is changed.
@@ -321,5 +309,6 @@ namespace MLAgents
                 Dispose();
             }
         }
+#endif
     }
 }

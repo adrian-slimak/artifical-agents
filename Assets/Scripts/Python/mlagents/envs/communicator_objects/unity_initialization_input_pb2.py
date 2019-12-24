@@ -14,6 +14,7 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
+from mlagents.envs.communicator_objects import engine_configuration_pb2 as mlagents_dot_envs_dot_communicator__objects_dot_engine__configuration__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -21,8 +22,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='communicator_objects',
   syntax='proto3',
   serialized_options=b'\252\002\034MLAgents.CommunicatorObjects',
-  serialized_pb=b'\nCmlagents/envs/communicator_objects/unity_initialization_input.proto\x12\x14\x63ommunicator_objects\"-\n\x1dUnityInitializationInputProto\x12\x0c\n\x04seed\x18\x01 \x01(\x05\x42\x1f\xaa\x02\x1cMLAgents.CommunicatorObjectsb\x06proto3'
-)
+  serialized_pb=b'\nCmlagents/envs/communicator_objects/unity_initialization_input.proto\x12\x14\x63ommunicator_objects\x1a=mlagents/envs/communicator_objects/engine_configuration.proto\"{\n\x1dUnityInitializationInputProto\x12L\n\x14\x65ngine_configuration\x18\x01 \x01(\x0b\x32..communicator_objects.EngineConfigurationProto\x12\x0c\n\x04seed\x18\x02 \x01(\x05\x42\x1f\xaa\x02\x1cMLAgents.CommunicatorObjectsb\x06proto3'
+  ,
+  dependencies=[mlagents_dot_envs_dot_communicator__objects_dot_engine__configuration__pb2.DESCRIPTOR,])
 
 
 
@@ -35,8 +37,15 @@ _UNITYINITIALIZATIONINPUTPROTO = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='seed', full_name='communicator_objects.UnityInitializationInputProto.seed', index=0,
-      number=1, type=5, cpp_type=1, label=1,
+      name='engine_configuration', full_name='communicator_objects.UnityInitializationInputProto.engine_configuration', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='seed', full_name='communicator_objects.UnityInitializationInputProto.seed', index=1,
+      number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -53,10 +62,11 @@ _UNITYINITIALIZATIONINPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=93,
-  serialized_end=138,
+  serialized_start=156,
+  serialized_end=279,
 )
 
+_UNITYINITIALIZATIONINPUTPROTO.fields_by_name['engine_configuration'].message_type = mlagents_dot_envs_dot_communicator__objects_dot_engine__configuration__pb2._ENGINECONFIGURATIONPROTO
 DESCRIPTOR.message_types_by_name['UnityInitializationInputProto'] = _UNITYINITIALIZATIONINPUTPROTO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 

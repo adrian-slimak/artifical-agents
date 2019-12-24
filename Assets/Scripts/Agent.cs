@@ -6,23 +6,15 @@ using UnityEngine.Serialization;
 
 namespace MLAgents
 {
-    public struct AgentAction
-    {
-        public float[] vectorActions;
-        public float value;
-    }
 
     public class Agent : MonoBehaviour
     {
-        public String brainName;
-        AgentAction m_Action;
+        public string m_BrainName;
 
         int m_Id;
 
         public ArraySegment<float> m_ActionsVector;
         public ArraySegment<float> m_ObservationsVector;
-        public static int m_observationsSize = 100;
-        public static int m_actionsSize = 32;
 
         int m_StepCount;
 
@@ -32,42 +24,31 @@ namespace MLAgents
 
         void Awake()
         {
-            m_Id = Academy.m_Brains[brainName].SubscribeAgent();
+            m_Id = Academy.m_Brains[m_BrainName].SubscribeAgent();
+            m_Vision = GetComponent<Vision>();
+            m_Animal = GetComponent<Animal>();
+            m_Academy = FindObjectOfType<Academy>();
         }
 
         void OnEnable()
         {
-            m_Vision = GetComponent<Vision>();
-            m_Animal = GetComponent<Animal>();
-            m_Academy = FindObjectOfType<Academy>();
-
             OnEnableHelper(m_Academy);
         }
 
         void OnEnableHelper(Academy academy)
         {
-            m_Action = new AgentAction();
 
             if (academy == null)
                 throw new Exception("No Academy Component could be found in the scene.");
 
             academy.AgentUpdateObservations += UpdateObservations;
             academy.AgentUpdateMovement += AgentStep;
-            ResetData();
         }
 
         void Start()
         {
-            m_ObservationsVector = Academy.m_Brains[brainName].GetObservationsVector(m_Id);
-            m_ActionsVector = Academy.m_Brains[brainName].GetActionsVector(m_Id);
-        }
-
-        void ResetData()
-        {
-            if (m_Action.vectorActions == null)
-            {
-                m_Action.vectorActions = new float[20];
-            }
+            m_ObservationsVector = Academy.m_Brains[m_BrainName].GetObservationsVector(m_Id);
+            m_ActionsVector = Academy.m_Brains[m_BrainName].GetActionsVector(m_Id);
         }
 
         void UpdateObservations()

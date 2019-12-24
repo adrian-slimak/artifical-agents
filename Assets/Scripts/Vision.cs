@@ -54,7 +54,7 @@ public class Vision : MonoBehaviour
         nearMate = null;
         nearFood = null;
 
-        for (int i=0; i<hitsNum; i++)
+        for (int i = 0; i < hitsNum; i++)
         {
             if (hits[i].gameObject != this.gameObject)
             {
@@ -70,7 +70,7 @@ public class Vision : MonoBehaviour
                     {
                         if (hits[i].tag == "Predator")
                             if (distance > 0.9f && type == Animal.AnimalType.Fox) nearMate = hits[i].transform;
-                            distance += 0f;
+                        distance += 0f;
                         if (hits[i].tag == "Plant")
                         {
                             if (distance > 0.9f && type == Animal.AnimalType.Bunny) nearFood = hits[i].transform;
@@ -92,10 +92,11 @@ public class Vision : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     private void OnDrawGizmos()
     {
         if (!drawGizmo) return;
-        if(Application.isEditor)
+        if (Application.isEditor)
         {
             Awake();
             UpdateVisionObservations();
@@ -109,7 +110,7 @@ public class Vision : MonoBehaviour
         UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionDistance);
 
-        for (int i = observationsVector.Offset; i< observationsVector.Offset + observationsVector.Count; i++)
+        for (int i = observationsVector.Offset; i < observationsVector.Offset + observationsVector.Count; i++)
         {
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
             UnityEditor.Handles.DrawLine(transform.position,
@@ -130,6 +131,7 @@ public class Vision : MonoBehaviour
         }
 
     }
+#endif
 
     Vector3 rotateByAngle(Vector3 vector, float angle)
     {

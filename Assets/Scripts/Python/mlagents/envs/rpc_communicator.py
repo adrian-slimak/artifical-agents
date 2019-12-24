@@ -98,12 +98,12 @@ class RpcCommunicator(Communicator):
                 "\t The environment and the Python interface have compatible versions."
             )
 
-    def initialize(self, inputs: UnityInputProto) -> UnityOutputProto:
+    def initialize(self, unity_input: UnityInputProto) -> UnityOutputProto:
         self.poll_for_timeout()
 
         message = UnityMessageProto()
         message.header.status = 200
-        message.unity_input.initialization_input.seed = 1
+        message.unity_input.CopyFrom(unity_input)
 
         self.unity_to_external.parent_conn.send(message)
         outputMessage = self.unity_to_external.parent_conn.recv()
