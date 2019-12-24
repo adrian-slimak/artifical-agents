@@ -70,7 +70,6 @@ namespace MLAgents
 
         public int m_EpisodeCount;
         public int m_StepCount;
-        public int m_TotalStepCount;
 
         void Awake()
         {
@@ -78,24 +77,11 @@ namespace MLAgents
             foreach (Brain brain in brains)
                 m_Brains.Add(brain.brainName, brain);
 
+            InitializeCommunicator();
             ConfigureEngine();
             AcademyInitialization();
-        }
 
-        private void OnEnable()
-        {
-            int[] offset = {0, 0};
-            foreach (Brain brain in brains)
-            {
-                int[] size = brain.Init(offset);
-                offset[0] += size[0];
-                offset[1] += size[1];
-            }
-        }
-
-        private void Start()
-        {
-            InitializeCommunicator();
+            Communicator.InitializeReset();
         }
 
         // Used to read Python-provided environment parameters
@@ -131,6 +117,7 @@ namespace MLAgents
                 try
                 {
                     var unityInitializationInput = Communicator.Initialize(name:gameObject.name);
+                
                     Random.InitState(unityInitializationInput.seed);
                     m_ExternalConfiguration = unityInitializationInput.engine_configuration;
                 }
@@ -164,25 +151,29 @@ namespace MLAgents
         { }
 
         public virtual void AcademyReset()
-        { }
+        {
+            AgentUpdateObservations = null;
+            AgentUpdateMovement = null;
+        }
 
 
 
         void EnvironmentStep()
         {
             if (!m_FirstAcademyReset)
-            {
-                OnResetCommandReceived();
-            }
+                return;
 
             using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
             {
                 AgentUpdateObservations?.Invoke();
             }
 
+            CommandProto resultCommand;
             using (TimerStack.Instance.Scoped("DecideAction"))
             {
-                Communicator?.Communicate(brains);
+                resultCommand = Communicator.ExchangeDataWithPython(brains);
+                if (resultCommand == CommandProto.Reset)
+                    return;
             }
 
             using (TimerStack.Instance.Scoped("AcademyStep"))
@@ -196,20 +187,16 @@ namespace MLAgents
             }
 
             m_StepCount += 1;
-            m_TotalStepCount += 1;
         }
 
         void OnResetCommandReceived()
         {
-            EnvironmentReset();
-            m_FirstAcademyReset = true;
-        }
-
-        void EnvironmentReset()
-        {
             m_StepCount = 0;
             m_EpisodeCount++;
+
             AcademyReset();
+
+            m_FirstAcademyReset = true;
         }
 
         void FixedUpdate()

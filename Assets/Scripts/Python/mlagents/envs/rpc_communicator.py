@@ -111,10 +111,11 @@ class RpcCommunicator(Communicator):
 
         return outputMessage.unity_output
 
-    def exchange(self, inputs: UnityInputProto) -> Optional[UnityOutputProto]:
+    def exchange(self, unity_input: UnityInputProto=None) -> Optional[UnityOutputProto]:
         message = UnityMessageProto()
         message.header.status = 200
-        message.unity_input.CopyFrom(inputs)
+        if unity_input:
+            message.unity_input.CopyFrom(unity_input)
 
         self.unity_to_external.parent_conn.send(message)
         self.poll_for_timeout()

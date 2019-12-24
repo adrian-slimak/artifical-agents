@@ -26,6 +26,16 @@ public class Brain
     [HideInInspector]
     public float[] stackedActions;
 
+    public void Reset()
+    {
+        agentsCount = 0;
+        mmf_offset_actions = -1;
+        mmf_offset_observations = -1;
+        mmf_size_actions = -1;
+        mmf_size_observations = -1;
+        stackedActions = null;
+        stackedObservations = null;
+    }
 
     public int[] Init(int[] offset)
     {

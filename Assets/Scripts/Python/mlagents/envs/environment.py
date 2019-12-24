@@ -80,15 +80,14 @@ class UnityEnvironment():
         engine_config.time_scale = 1
         engine_config.target_frame_rate = -1
         engine_config.show_monitor = False
-        initialization_input = UnityInitializationInputProto(seed=seed, engine_configuration=engine_config)
+        initialization_input = UnityInitializationInputProto(seed=seed)
 
         try:
             unity_input = UnityInputProto()
             unity_input.initialization_input.CopyFrom(initialization_input)
             unity_output: UnityOutputProto = self.communicator.initialize(unity_input)
             initialization_output = unity_output.initialization_output
-            for brain in initialization_output.brain_parameters:
-                self.external_brains[brain.brain_name] = BrainParameters(brain)
+
         except UnityTimeOutException:
             self._close()
             raise
@@ -170,10 +169,17 @@ class UnityEnvironment():
         if not self._loaded:
             raise UnityEnvironmentException("No Unity environment is loaded.")
 
-        output = self.communicator.exchange(self._generate_reset_input(config))
+        unity_input = UnityInputProto()
+        unity_input.command = 1
+        self.communicator.exchange(unity_input)
+        unity_output = self.communicator.exchange()
 
-        if output is None:
+        if unity_output is None:
             raise UnityCommunicationException("Communicator has stopped.")
+
+        initialization_output = unity_output.initialization_output
+        for brain in initialization_output.brain_parameters:
+            self.external_brains[brain.brain_name] = BrainParameters(brain)
 
         self._is_first_message = False
 

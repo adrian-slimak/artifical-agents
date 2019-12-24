@@ -37,20 +37,13 @@ namespace MLAgents
 
         public UnityInitializationParameters Initialize(string name)
         {
-            UnityInitializationOutputProto initialization_output = GetUnityInitializationOutput();
-            initialization_output.Name = name;
-            initialization_output.EnvironmentParameters = new EnvironmentParametersProto();
-
-            UnityInputProto resetInput;
-            UnityInputProto initializationInput;
+            UnityOutputProto unity_output = new UnityOutputProto {
+                InitializationOutput = new UnityInitializationOutputProto { Name = name, EnvironmentParameters = new EnvironmentParametersProto()}
+            };
+            UnityInputProto initialization_input;
             try
             {
-                initializationInput = Initialize(
-                    new UnityOutputProto
-                    {
-                        InitializationOutput = initialization_output
-                    },
-                    out resetInput);
+                initialization_input = Initialize(unity_output);
             }
             catch
             {
@@ -68,38 +61,50 @@ namespace MLAgents
                 throw new Exception(exceptionMessage);
             }
 
-            UpdateEnvironmentWithInput(resetInput);
+            var initializationParameters = new UnityInitializationParameters { seed = initialization_input.InitializationInput.Seed };
+            if (initialization_input.InitializationInput.EngineConfiguration != null)
+                initializationParameters.engine_configuration = new EngineConfiguration(initialization_input.InitializationInput.EngineConfiguration);
 
-            return new UnityInitializationParameters
-            {
-                seed = initializationInput.InitializationInput.Seed,
-                engine_configuration = new EngineConfiguration(initializationInput.InitializationInput.EngineConfiguration)
-                
-            };
+            return initializationParameters;
         }
 
-        void UpdateEnvironmentWithInput(UnityInputProto Input)
-        {
-            //SendInputReceivedEvent();
-            SendCommandEvent(Input.Command);
-        }
-
-        UnityInputProto Initialize(UnityOutputProto unityOutput, out UnityInputProto unityInput)
+        UnityInputProto Initialize(UnityOutputProto unityOutput)
         {
             m_IsOpen = true;
-            var channel = new Channel(
-                "localhost:" + m_Port,
-                ChannelCredentials.Insecure);
-
+            var channel = new Channel("localhost:" + m_Port, ChannelCredentials.Insecure);
             m_Client = new UnityToExternalProto.UnityToExternalProtoClient(channel);
 
             UnityMessageProto initializationMessage = m_Client.Exchange(WrapMessage(unityOutput, 200));
-            UnityMessageProto resetMessage = m_Client.Exchange(WrapMessage(null, 200));
-            unityInput = resetMessage.UnityInput;
+
 #if UNITY_EDITOR
             EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
 #endif
             return initializationMessage.UnityInput;
+        }
+
+        public void InitializeReset()
+        {
+            var resetMessage = m_Client.Exchange(WrapMessage(null, 200));
+
+            ResetCommandReceived?.Invoke();
+
+            var reset_output = new UnityOutputProto {
+                InitializationOutput = GetUnityInitializationOutput()
+            };
+
+            m_Client.Exchange(WrapMessage(reset_output, 200));
+        }
+
+        public void Reset(UnityInputProto unity_input)
+        {
+            ResetCommandReceived?.Invoke();
+
+            var reset_output = new UnityOutputProto
+            {
+                InitializationOutput = GetUnityInitializationOutput()
+            };
+
+            m_Client.Exchange(WrapMessage(reset_output, 200));
         }
 
         #endregion
@@ -127,39 +132,9 @@ namespace MLAgents
 
         #endregion
 
-        #region Sending Events
-
-        void SendCommandEvent(CommandProto command)
-        {
-            switch (command)
-            {
-                case CommandProto.Quit:
-                    {
-                        QuitCommandReceived?.Invoke();
-                        return;
-                    }
-                case CommandProto.Reset:
-                    {
-                        ResetCommandReceived?.Invoke();
-                        return;
-                    }
-                default:
-                    {
-                        return;
-                    }
-            }
-        }
-
-        void SendInputReceivedEvent()
-        {
-            InputReceived?.Invoke(new UnityInputParameters { });
-        }
-
-        #endregion
-
         #region Sending and retreiving data
 
-        public void Communicate(List<Brain> brains)
+        public CommandProto ExchangeDataWithPython(List<Brain> brains)
         {
             var unityOutput = new UnityOutputProto();
             UnityInputProto unityInput;
@@ -173,12 +148,23 @@ namespace MLAgents
 
             MemoryRead(brains);
 
-            var rlInput = unityInput?.InitializationInput;
+            if (unityInput == null)
+                return CommandProto.Quit;
 
-            if (rlInput == null)
-                return;
+            if (unityInput.Command == CommandProto.Reset)
+            {
+                Reset(unityInput);
 
-            UpdateEnvironmentWithInput(unityInput);
+                return CommandProto.Reset;
+            }
+
+            if(unityInput.Command == CommandProto.Quit)
+            {
+                QuitCommandReceived?.Invoke();
+                return CommandProto.Quit;
+            }
+
+            return CommandProto.Step;
         }
 
         void MemoryWrite(List<Brain> brains)

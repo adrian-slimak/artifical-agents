@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 # tf.debugging.set_log_device_placement(True)
 from LSTM import LSTMModel
+from time import sleep
 
 def main():
     # tf_utils.set_warnings_enabled(False)
@@ -10,25 +11,17 @@ def main():
     unity_environment = UnityEnvironment(worker_id=0)
     unity_environment.reset()
 
-    # brainNames = unity_environment.external_brain_names
-
     env_state = unity_environment.step()
     prey_observations = env_state['prey']
-
-
-    # start = timer()
-    # print(message.header.status)
-    # print(timer() - start)
-
-    # prey_observations = env_state['prey'].vector_observations
-    # prey_observations = np.reshape(prey_observations, (100, 100))
 
     prey_model = LSTMModel(32, prey_observations.shape[0])
     prey_model.build(input_shape=(1, prey_observations.shape[1]))
 
-
-
+    i=1
     while True:
+        i+=1
+        if i % 1000==0:
+            unity_environment.reset()
         # start = timer()
         output = prey_model(tf.expand_dims(prey_observations, 1))
         action = {'prey': output.numpy().flatten()}

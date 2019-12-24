@@ -11,22 +11,46 @@ public class VirtualAcademy : Academy
 
     public override void AcademyReset()
     {
-        //GameObject parent = new GameObject("Preys Holder");
-        //for (int i = 0; i < numberOfPreys; i++)
-        //{
-        //    Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
-        //    Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-        //    Instantiate(PreyAgentInstance, randomPosition, randomRotation, parent.transform);
-        //}
+        base.AcademyReset();
+        ResetAgents();
     }
 
-    public override void AcademyInitialization()
+    List<Agent> SpawnAgents()
     {
+        List<Agent> agents = new List<Agent>(numberOfPreys);
         for (int i = 0; i < numberOfPreys; i++)
         {
             Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
             Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-            Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
+            GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
+            agents.Add(agent.GetComponent<Agent>());
         }
+
+        return agents;
+    }
+
+    public void ResetAgents()
+    {
+        Agent[] oldAgents = FindObjectsOfType<Agent>();
+        foreach (Agent agent in oldAgents)
+            Destroy(agent.gameObject);
+
+        foreach (Brain brain in brains)
+            brain.Reset();
+
+        List<Agent> agents = SpawnAgents();
+        foreach (Agent agent in agents)
+            agent.Subscribe(this);
+
+        int[] offset = { 0, 0 };
+        foreach (Brain brain in brains)
+        {
+            int[] size = brain.Init(offset);
+            offset[0] += size[0];
+            offset[1] += size[1];
+        }
+
+        foreach (Agent agent in agents)
+            agent.Init(this);
     }
 }
