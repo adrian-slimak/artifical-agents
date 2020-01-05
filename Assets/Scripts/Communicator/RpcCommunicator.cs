@@ -1,49 +1,41 @@
 using Grpc.Core;
-using UnityEditor;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using MLAgents.CommunicatorObjects;
-using Google.Protobuf;
-using System.IO.MemoryMappedFiles;
+using System;
+using UnityEditor;
+using UnityEngine;
 
 namespace MLAgents
 {
     /// Responsible for communication with External using gRPC.
     public class RpcCommunicator
     {
+        bool m_IsOpen;
+        int m_Port;
+
         public event QuitCommandHandler QuitCommandReceived;
         public event ResetCommandHandler ResetCommandReceived;
-        public event InputReceivedHandler InputReceived;
+        public event StepCommandHandler StepCommandReceived;
+        public event EpisodeCompletedCommandHandler EpisodeCompletedCommandReceived;
 
-        bool m_IsOpen;
-
-        /// The Unity to External client.
         UnityToExternalProto.UnityToExternalProtoClient m_Client;
 
-        MemoryMappedFile m_UnityOutputMemory;
-        MemoryMappedFile m_UnityInputMemory;
-
-        int m_Port;
         public RpcCommunicator(int port)
         {
             m_Port = port;
-            m_UnityOutputMemory = MemoryMappedFile.CreateNew("unity_output", 200000);
-            m_UnityInputMemory = MemoryMappedFile.CreateNew("unity_input", 200000);
         }
 
         #region Initialization
 
-        public UnityInitializationParameters Initialize(string name)
+        public UnityInitializationParameters Initialize(string name, ResetParameters resetParameters)
         {
             UnityOutputProto unity_output = new UnityOutputProto {
-                InitializationOutput = new UnityInitializationOutputProto { Name = name, EnvironmentParameters = new EnvironmentParametersProto()}
+                InitializationOutput = GetUnityInitializationOutput(name, resetParameters)
             };
-            UnityInputProto initialization_input;
+
+            UnityInputProto unity_input;
             try
             {
-                initialization_input = Initialize(unity_output);
+                unity_input = Initialize(unity_output);
             }
             catch
             {
@@ -61,9 +53,9 @@ namespace MLAgents
                 throw new Exception(exceptionMessage);
             }
 
-            var initializationParameters = new UnityInitializationParameters { seed = initialization_input.InitializationInput.Seed };
-            if (initialization_input.InitializationInput.EngineConfiguration != null)
-                initializationParameters.engine_configuration = new EngineConfiguration(initialization_input.InitializationInput.EngineConfiguration);
+            var initializationParameters = new UnityInitializationParameters { seed = unity_input.InitializationInput.Seed };
+            if (unity_input.InitializationInput.EngineConfiguration != null)
+                initializationParameters.engine_configuration = new EngineConfiguration(unity_input.InitializationInput.EngineConfiguration);
 
             return initializationParameters;
         }
@@ -73,7 +65,6 @@ namespace MLAgents
             m_IsOpen = true;
             var channel = new Channel("localhost:" + m_Port, ChannelCredentials.Insecure);
             m_Client = new UnityToExternalProto.UnityToExternalProtoClient(channel);
-
             UnityMessageProto initializationMessage = m_Client.Exchange(WrapMessage(unityOutput, 200));
 
 #if UNITY_EDITOR
@@ -82,29 +73,27 @@ namespace MLAgents
             return initializationMessage.UnityInput;
         }
 
-        public void InitializeReset()
+        public void Reset(UnityInputProto unity_input)
         {
-            var resetMessage = m_Client.Exchange(WrapMessage(null, 200));
+            ResetParameters customResetParameters = new ResetParameters();
+            if (unity_input.InitializationInput?.CustomResetParameters != null)
+                foreach (string key in unity_input.InitializationInput.CustomResetParameters.Keys)
+                    customResetParameters[key] = unity_input.InitializationInput.CustomResetParameters[key];
 
-            ResetCommandReceived?.Invoke();
+            ResetCommandReceived?.Invoke(customResetParameters);
 
-            var reset_output = new UnityOutputProto {
-                InitializationOutput = GetUnityInitializationOutput()
+            var reset_output = new UnityOutputProto
+            {
+                InitializationOutput = GetUnityResetOutput()
             };
 
             m_Client.Exchange(WrapMessage(reset_output, 200));
         }
 
-        public void Reset(UnityInputProto unity_input)
+        public void EpisodeCompleted()
         {
-            ResetCommandReceived?.Invoke();
-
-            var reset_output = new UnityOutputProto
-            {
-                InitializationOutput = GetUnityInitializationOutput()
-            };
-
-            m_Client.Exchange(WrapMessage(reset_output, 200));
+            EpisodeCompletedCommandReceived?.Invoke();
+            var unity = m_Client.Exchange(WrapMessage(null, 200));
         }
 
         #endregion
@@ -134,78 +123,40 @@ namespace MLAgents
 
         #region Sending and retreiving data
 
-        public CommandProto ExchangeDataWithPython(List<Brain> brains)
+        public void CommunicateWithPython()
         {
             var unityOutput = new UnityOutputProto();
             UnityInputProto unityInput;
 
-            MemoryWrite(brains);
 
             using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
             {
                 unityInput = Exchange(unityOutput);
             }
 
-            MemoryRead(brains);
-
             if (unityInput == null)
-                return CommandProto.Quit;
-
-            if (unityInput.Command == CommandProto.Reset)
             {
-                Reset(unityInput);
-
-                return CommandProto.Reset;
+                return;
             }
 
-            if(unityInput.Command == CommandProto.Quit)
+            CommandProto command = unityInput.Command;
+            switch (command)
             {
-                QuitCommandReceived?.Invoke();
-                return CommandProto.Quit;
-            }
+                case CommandProto.Quit:
+                    QuitCommandReceived?.Invoke();
+                    break;
 
-            return CommandProto.Step;
-        }
+                case CommandProto.Reset:
+                    Reset(unityInput);
+                    break;
 
-        void MemoryWrite(List<Brain> brains)
-        {
-            int byteObservationsArraySize = 0;
-            foreach (Brain brain in brains)
-            {
-                byteObservationsArraySize += brain.mmf_size_observations;
-            }
+                case CommandProto.Step:
+                    StepCommandReceived?.Invoke();
+                    break;
 
-            using (TimerStack.Instance.Scoped("MemoryWrite"))
-            {
-                using (MemoryMappedViewAccessor viewAccessor = m_UnityOutputMemory.CreateViewAccessor())
-                {
-
-                    var byteArray = new byte[byteObservationsArraySize];
-                    foreach (Brain brain in brains)
-                        Buffer.BlockCopy(brain.stackedObservations, 0, byteArray, brain.mmf_offset_observations, brain.mmf_size_observations);
-
-                    viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
-                }
-            }
-        }
-
-        void MemoryRead(List<Brain> brains)
-        {
-            int byteActionsArraySize = 0;
-            foreach (Brain brain in brains)
-            {
-                byteActionsArraySize += brain.mmf_size_actions;
-            }
-
-            using (TimerStack.Instance.Scoped("MemoryRead"))
-            {
-                using (MemoryMappedViewAccessor viewAccessor = m_UnityInputMemory.CreateViewAccessor())
-                {
-                    byte[] byteArray = new byte[byteActionsArraySize];
-                    viewAccessor.ReadArray(0, byteArray, 0, byteArray.Length);
-                    foreach (Brain brain in brains)
-                        Buffer.BlockCopy(byteArray, brain.mmf_offset_actions, brain.stackedActions, 0, brain.mmf_size_actions);
-                }
+                case CommandProto.EpisodeCompleted:
+                    EpisodeCompleted();
+                    break;
             }
         }
 
@@ -223,7 +174,6 @@ namespace MLAgents
             try
             {
                 var outputMessage = WrapMessage(unityOutput, 200);
-
                 var inputMessage = m_Client.Exchange(outputMessage);
 
                 if (inputMessage.Header.Status == 200)
@@ -255,16 +205,11 @@ namespace MLAgents
             };
         }
 
-        UnityInitializationOutputProto GetUnityInitializationOutput()
+        UnityInitializationOutputProto GetUnityResetOutput()
         {
-            UnityInitializationOutputProto output = null;
+            var output = new UnityInitializationOutputProto();
 
-            if (output == null)
-            {
-                output = new UnityInitializationOutputProto();
-            }
-
-            foreach (Brain brain in Academy.m_Brains.Values)
+            foreach (Brain brain in Academy.Instance.m_Brains.Values)
             {
                 var brainParametersProto = new BrainParametersProto
                 {
@@ -283,6 +228,22 @@ namespace MLAgents
 
             return output;
         }
+
+        UnityInitializationOutputProto GetUnityInitializationOutput(string name, ResetParameters resetParameters)
+        {
+            var output = new UnityInitializationOutputProto();
+            output.Name = name;
+ 
+
+            foreach (string key in resetParameters.Keys)
+            {
+                output.DefaultResetParameters[key] = resetParameters[key];
+            }
+
+            return output;
+        }
+
+
 
         #endregion
 

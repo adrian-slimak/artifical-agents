@@ -29,7 +29,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6127257329547458512}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 14.24, y: 41.94, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 7447736276596515858}
@@ -68,7 +68,7 @@ CircleCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: -0.05}
@@ -86,12 +86,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c234b24b9bbf42340b9763d9a6740273, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Type: 0
   steer: 0
   maxMoveSpeed: 5
   turnSpeed: 100
   energy: 100
-  energyDrainPerSec: 0.1
-  vision: {fileID: 6143707805166682195}
+  energyDrainPerStep: 0.1
 --- !u!114 &6143707805166682195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -104,13 +104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef0dd629f85df3e4a98868b90c6399ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 0
   visionAngle: 240
   visionDistance: 5
   visionCellsNum: 20
   drawGizmo: 0
-  nearFood: {fileID: 0}
-  nearMate: {fileID: 0}
 --- !u!114 &-1906410475071066707
 MonoBehaviour:
   m_ObjectHideFlags: 0

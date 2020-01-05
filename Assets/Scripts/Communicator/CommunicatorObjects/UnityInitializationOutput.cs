@@ -27,18 +27,18 @@ namespace MLAgents.CommunicatorObjects {
             "CkRtbGFnZW50cy9lbnZzL2NvbW11bmljYXRvcl9vYmplY3RzL3VuaXR5X2lu",
             "aXRpYWxpemF0aW9uX291dHB1dC5wcm90bxIUY29tbXVuaWNhdG9yX29iamVj",
             "dHMaOW1sYWdlbnRzL2VudnMvY29tbXVuaWNhdG9yX29iamVjdHMvYnJhaW5f",
-            "cGFyYW1ldGVycy5wcm90bxo/bWxhZ2VudHMvZW52cy9jb21tdW5pY2F0b3Jf",
-            "b2JqZWN0cy9lbnZpcm9ubWVudF9wYXJhbWV0ZXJzLnByb3RvIsYBCh5Vbml0",
-            "eUluaXRpYWxpemF0aW9uT3V0cHV0UHJvdG8SDAoEbmFtZRgBIAEoCRJEChBi",
-            "cmFpbl9wYXJhbWV0ZXJzGAIgAygLMiouY29tbXVuaWNhdG9yX29iamVjdHMu",
-            "QnJhaW5QYXJhbWV0ZXJzUHJvdG8SUAoWZW52aXJvbm1lbnRfcGFyYW1ldGVy",
-            "cxgDIAEoCzIwLmNvbW11bmljYXRvcl9vYmplY3RzLkVudmlyb25tZW50UGFy",
-            "YW1ldGVyc1Byb3RvQh+qAhxNTEFnZW50cy5Db21tdW5pY2F0b3JPYmplY3Rz",
-            "YgZwcm90bzM="));
+            "cGFyYW1ldGVycy5wcm90byKnAgoeVW5pdHlJbml0aWFsaXphdGlvbk91dHB1",
+            "dFByb3RvEgwKBG5hbWUYASABKAkSRAoQYnJhaW5fcGFyYW1ldGVycxgCIAMo",
+            "CzIqLmNvbW11bmljYXRvcl9vYmplY3RzLkJyYWluUGFyYW1ldGVyc1Byb3Rv",
+            "EnIKGGRlZmF1bHRfcmVzZXRfcGFyYW1ldGVycxgDIAMoCzJQLmNvbW11bmlj",
+            "YXRvcl9vYmplY3RzLlVuaXR5SW5pdGlhbGl6YXRpb25PdXRwdXRQcm90by5E",
+            "ZWZhdWx0UmVzZXRQYXJhbWV0ZXJzRW50cnkaPQobRGVmYXVsdFJlc2V0UGFy",
+            "YW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoAjoCOAFC",
+            "H6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVjdHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.BrainParametersReflection.Descriptor, global::MLAgents.CommunicatorObjects.EnvironmentParametersReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.BrainParametersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto), global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto.Parser, new[]{ "Name", "BrainParameters", "EnvironmentParameters" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto), global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto.Parser, new[]{ "Name", "BrainParameters", "DefaultResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
     #endregion
@@ -72,7 +72,7 @@ namespace MLAgents.CommunicatorObjects {
     public UnityInitializationOutputProto(UnityInitializationOutputProto other) : this() {
       name_ = other.name_;
       brainParameters_ = other.brainParameters_.Clone();
-      environmentParameters_ = other.environmentParameters_ != null ? other.environmentParameters_.Clone() : null;
+      defaultResetParameters_ = other.defaultResetParameters_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -102,15 +102,14 @@ namespace MLAgents.CommunicatorObjects {
       get { return brainParameters_; }
     }
 
-    /// <summary>Field number for the "environment_parameters" field.</summary>
-    public const int EnvironmentParametersFieldNumber = 3;
-    private global::MLAgents.CommunicatorObjects.EnvironmentParametersProto environmentParameters_;
+    /// <summary>Field number for the "default_reset_parameters" field.</summary>
+    public const int DefaultResetParametersFieldNumber = 3;
+    private static readonly pbc::MapField<string, float>.Codec _map_defaultResetParameters_codec
+        = new pbc::MapField<string, float>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForFloat(21, 0F), 26);
+    private readonly pbc::MapField<string, float> defaultResetParameters_ = new pbc::MapField<string, float>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.EnvironmentParametersProto EnvironmentParameters {
-      get { return environmentParameters_; }
-      set {
-        environmentParameters_ = value;
-      }
+    public pbc::MapField<string, float> DefaultResetParameters {
+      get { return defaultResetParameters_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -128,7 +127,7 @@ namespace MLAgents.CommunicatorObjects {
       }
       if (Name != other.Name) return false;
       if(!brainParameters_.Equals(other.brainParameters_)) return false;
-      if (!object.Equals(EnvironmentParameters, other.EnvironmentParameters)) return false;
+      if (!DefaultResetParameters.Equals(other.DefaultResetParameters)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -137,7 +136,7 @@ namespace MLAgents.CommunicatorObjects {
       int hash = 1;
       if (Name.Length != 0) hash ^= Name.GetHashCode();
       hash ^= brainParameters_.GetHashCode();
-      if (environmentParameters_ != null) hash ^= EnvironmentParameters.GetHashCode();
+      hash ^= DefaultResetParameters.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -156,10 +155,7 @@ namespace MLAgents.CommunicatorObjects {
         output.WriteString(Name);
       }
       brainParameters_.WriteTo(output, _repeated_brainParameters_codec);
-      if (environmentParameters_ != null) {
-        output.WriteRawTag(26);
-        output.WriteMessage(EnvironmentParameters);
-      }
+      defaultResetParameters_.WriteTo(output, _map_defaultResetParameters_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -172,9 +168,7 @@ namespace MLAgents.CommunicatorObjects {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Name);
       }
       size += brainParameters_.CalculateSize(_repeated_brainParameters_codec);
-      if (environmentParameters_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(EnvironmentParameters);
-      }
+      size += defaultResetParameters_.CalculateSize(_map_defaultResetParameters_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -190,12 +184,7 @@ namespace MLAgents.CommunicatorObjects {
         Name = other.Name;
       }
       brainParameters_.Add(other.brainParameters_);
-      if (other.environmentParameters_ != null) {
-        if (environmentParameters_ == null) {
-          EnvironmentParameters = new global::MLAgents.CommunicatorObjects.EnvironmentParametersProto();
-        }
-        EnvironmentParameters.MergeFrom(other.EnvironmentParameters);
-      }
+      defaultResetParameters_.Add(other.defaultResetParameters_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -216,10 +205,7 @@ namespace MLAgents.CommunicatorObjects {
             break;
           }
           case 26: {
-            if (environmentParameters_ == null) {
-              EnvironmentParameters = new global::MLAgents.CommunicatorObjects.EnvironmentParametersProto();
-            }
-            input.ReadMessage(EnvironmentParameters);
+            defaultResetParameters_.AddEntriesFrom(input, _map_defaultResetParameters_codec);
             break;
           }
         }

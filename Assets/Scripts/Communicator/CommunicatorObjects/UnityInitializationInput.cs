@@ -27,15 +27,19 @@ namespace MLAgents.CommunicatorObjects {
             "CkNtbGFnZW50cy9lbnZzL2NvbW11bmljYXRvcl9vYmplY3RzL3VuaXR5X2lu",
             "aXRpYWxpemF0aW9uX2lucHV0LnByb3RvEhRjb21tdW5pY2F0b3Jfb2JqZWN0",
             "cxo9bWxhZ2VudHMvZW52cy9jb21tdW5pY2F0b3Jfb2JqZWN0cy9lbmdpbmVf",
-            "Y29uZmlndXJhdGlvbi5wcm90byJ7Ch1Vbml0eUluaXRpYWxpemF0aW9uSW5w",
-            "dXRQcm90bxJMChRlbmdpbmVfY29uZmlndXJhdGlvbhgBIAEoCzIuLmNvbW11",
-            "bmljYXRvcl9vYmplY3RzLkVuZ2luZUNvbmZpZ3VyYXRpb25Qcm90bxIMCgRz",
-            "ZWVkGAIgASgFQh+qAhxNTEFnZW50cy5Db21tdW5pY2F0b3JPYmplY3RzYgZw",
-            "cm90bzM="));
+            "Y29uZmlndXJhdGlvbi5wcm90byKqAgodVW5pdHlJbml0aWFsaXphdGlvbklu",
+            "cHV0UHJvdG8SDAoEc2VlZBgBIAEoBRJMChRlbmdpbmVfY29uZmlndXJhdGlv",
+            "bhgCIAEoCzIuLmNvbW11bmljYXRvcl9vYmplY3RzLkVuZ2luZUNvbmZpZ3Vy",
+            "YXRpb25Qcm90bxJvChdjdXN0b21fcmVzZXRfcGFyYW1ldGVycxgDIAMoCzJO",
+            "LmNvbW11bmljYXRvcl9vYmplY3RzLlVuaXR5SW5pdGlhbGl6YXRpb25JbnB1",
+            "dFByb3RvLkN1c3RvbVJlc2V0UGFyYW1ldGVyc0VudHJ5GjwKGkN1c3RvbVJl",
+            "c2V0UGFyYW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEo",
+            "AjoCOAFCH6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVjdHNiBnByb3Rv",
+            "Mw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.EngineConfigurationReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationInputProto), global::MLAgents.CommunicatorObjects.UnityInitializationInputProto.Parser, new[]{ "EngineConfiguration", "Seed" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationInputProto), global::MLAgents.CommunicatorObjects.UnityInitializationInputProto.Parser, new[]{ "Seed", "EngineConfiguration", "CustomResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
     #endregion
@@ -67,8 +71,9 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public UnityInitializationInputProto(UnityInitializationInputProto other) : this() {
-      engineConfiguration_ = other.engineConfiguration_ != null ? other.engineConfiguration_.Clone() : null;
       seed_ = other.seed_;
+      engineConfiguration_ = other.engineConfiguration_ != null ? other.engineConfiguration_.Clone() : null;
+      customResetParameters_ = other.customResetParameters_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -77,8 +82,19 @@ namespace MLAgents.CommunicatorObjects {
       return new UnityInitializationInputProto(this);
     }
 
+    /// <summary>Field number for the "seed" field.</summary>
+    public const int SeedFieldNumber = 1;
+    private int seed_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int Seed {
+      get { return seed_; }
+      set {
+        seed_ = value;
+      }
+    }
+
     /// <summary>Field number for the "engine_configuration" field.</summary>
-    public const int EngineConfigurationFieldNumber = 1;
+    public const int EngineConfigurationFieldNumber = 2;
     private global::MLAgents.CommunicatorObjects.EngineConfigurationProto engineConfiguration_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::MLAgents.CommunicatorObjects.EngineConfigurationProto EngineConfiguration {
@@ -88,15 +104,14 @@ namespace MLAgents.CommunicatorObjects {
       }
     }
 
-    /// <summary>Field number for the "seed" field.</summary>
-    public const int SeedFieldNumber = 2;
-    private int seed_;
+    /// <summary>Field number for the "custom_reset_parameters" field.</summary>
+    public const int CustomResetParametersFieldNumber = 3;
+    private static readonly pbc::MapField<string, float>.Codec _map_customResetParameters_codec
+        = new pbc::MapField<string, float>.Codec(pb::FieldCodec.ForString(10, ""), pb::FieldCodec.ForFloat(21, 0F), 26);
+    private readonly pbc::MapField<string, float> customResetParameters_ = new pbc::MapField<string, float>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int Seed {
-      get { return seed_; }
-      set {
-        seed_ = value;
-      }
+    public pbc::MapField<string, float> CustomResetParameters {
+      get { return customResetParameters_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -112,16 +127,18 @@ namespace MLAgents.CommunicatorObjects {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!object.Equals(EngineConfiguration, other.EngineConfiguration)) return false;
       if (Seed != other.Seed) return false;
+      if (!object.Equals(EngineConfiguration, other.EngineConfiguration)) return false;
+      if (!CustomResetParameters.Equals(other.CustomResetParameters)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (engineConfiguration_ != null) hash ^= EngineConfiguration.GetHashCode();
       if (Seed != 0) hash ^= Seed.GetHashCode();
+      if (engineConfiguration_ != null) hash ^= EngineConfiguration.GetHashCode();
+      hash ^= CustomResetParameters.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -135,14 +152,15 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (engineConfiguration_ != null) {
-        output.WriteRawTag(10);
-        output.WriteMessage(EngineConfiguration);
-      }
       if (Seed != 0) {
-        output.WriteRawTag(16);
+        output.WriteRawTag(8);
         output.WriteInt32(Seed);
       }
+      if (engineConfiguration_ != null) {
+        output.WriteRawTag(18);
+        output.WriteMessage(EngineConfiguration);
+      }
+      customResetParameters_.WriteTo(output, _map_customResetParameters_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -151,12 +169,13 @@ namespace MLAgents.CommunicatorObjects {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (engineConfiguration_ != null) {
-        size += 1 + pb::CodedOutputStream.ComputeMessageSize(EngineConfiguration);
-      }
       if (Seed != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(Seed);
       }
+      if (engineConfiguration_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(EngineConfiguration);
+      }
+      size += customResetParameters_.CalculateSize(_map_customResetParameters_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -168,15 +187,16 @@ namespace MLAgents.CommunicatorObjects {
       if (other == null) {
         return;
       }
+      if (other.Seed != 0) {
+        Seed = other.Seed;
+      }
       if (other.engineConfiguration_ != null) {
         if (engineConfiguration_ == null) {
           EngineConfiguration = new global::MLAgents.CommunicatorObjects.EngineConfigurationProto();
         }
         EngineConfiguration.MergeFrom(other.EngineConfiguration);
       }
-      if (other.Seed != 0) {
-        Seed = other.Seed;
-      }
+      customResetParameters_.Add(other.customResetParameters_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -188,15 +208,19 @@ namespace MLAgents.CommunicatorObjects {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 10: {
+          case 8: {
+            Seed = input.ReadInt32();
+            break;
+          }
+          case 18: {
             if (engineConfiguration_ == null) {
               EngineConfiguration = new global::MLAgents.CommunicatorObjects.EngineConfigurationProto();
             }
             input.ReadMessage(EngineConfiguration);
             break;
           }
-          case 16: {
-            Seed = input.ReadInt32();
+          case 26: {
+            customResetParameters_.AddEntriesFrom(input, _map_customResetParameters_codec);
             break;
           }
         }

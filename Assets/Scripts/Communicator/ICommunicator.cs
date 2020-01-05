@@ -18,22 +18,17 @@ namespace MLAgents
         public bool isTraining;
     }
 
-    /// <summary>
-    /// Delegate for handling quite events sent back from the communicator.
-    /// </summary>
+
     public delegate void QuitCommandHandler();
 
-    /// <summary>
-    /// Delegate for handling reset parameter updates sent from the communicator.
-    /// </summary>
-    /// <param name="resetParams"></param>
-    public delegate void ResetCommandHandler();
 
-    /// <summary>
-    /// Delegate to handle UnityRLInputParameters updates from the communicator.
-    /// </summary>
-    /// <param name="inputParams"></param>
-    public delegate void InputReceivedHandler(UnityInputParameters inputParams);
+    public delegate void ResetCommandHandler(ResetParameters customResetParameters);
+
+
+    public delegate void StepCommandHandler();
+
+
+    public delegate void EpisodeCompletedCommandHandler();
 
     /**
     This is the interface of the Communicators.
@@ -87,7 +82,7 @@ namespace MLAgents
         /// <summary>
         /// Unity RL Input was received by the communicator.
         /// </summary>
-        event InputReceivedHandler RLInputReceived;
+        event StepCommandHandler StepCommandReceived;
 
         /// <summary>
         /// Sends the academy parameters through the Communicator.
@@ -96,26 +91,5 @@ namespace MLAgents
         /// <returns>The External Initialization Parameters received.</returns>
         /// <param name="initParameters">The Unity Initialization Parameters to be sent.</param>
         UnityInitializationParameters Initialize(int port);
-
-        /// <summary>
-        /// Registers a new Brain to the Communicator.
-        /// </summary>
-        /// <param name="name">The name or key uniquely identifying the Brain</param>
-        /// <param name="brainParameters">The Parameters for the Brain being registered</param>
-        void SubscribeBrain(string name);
-
-        /// <summary>
-        /// Sends the observations of one Agent. 
-        /// </summary>
-        /// <param name="brainKey">Batch Key.</param>
-        /// <param name="agent">Agent info.</param>
-        void PutObservations(string brainKey, Agent agent);
-
-        /// <summary>
-        /// Signals the ICommunicator that the Agents are now ready to receive their action
-        /// and that if the communicator has not yet received an action for one of the Agents
-        /// it needs to get one at this point.
-        /// </summary>
-        void DecideBatch();
     }
 }

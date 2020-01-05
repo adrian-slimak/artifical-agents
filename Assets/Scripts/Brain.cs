@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAgents;
+
 
 [System.Serializable]
 public class Brain
@@ -25,9 +27,13 @@ public class Brain
     public float[] stackedObservations;
     [HideInInspector]
     public float[] stackedActions;
+    [HideInInspector]
+    public float[] agentsFitness;
 
     public void Reset()
     {
+        observationsVectorSize = (int)(Academy.Instance.GetResetParameter(brainName + "_observations_vector_size") ?? observationsVectorSize);
+        actionsVectorSize = (int)(Academy.Instance.GetResetParameter(brainName + "_actions_vector_size") ?? actionsVectorSize);
         agentsCount = 0;
         mmf_offset_actions = -1;
         mmf_offset_observations = -1;
@@ -41,6 +47,7 @@ public class Brain
     {
         stackedObservations = new float[agentsCount * observationsVectorSize];
         stackedActions = new float[agentsCount * actionsVectorSize];
+        agentsFitness = new float[agentsCount];
 
         mmf_size_observations = 4 * stackedObservations.Length;
         mmf_size_actions = 4 * stackedActions.Length;

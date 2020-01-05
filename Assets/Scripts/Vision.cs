@@ -3,16 +3,12 @@ using System;
 
 public class Vision : MonoBehaviour
 {
-    public Animal.AnimalType type;
     public float visionAngle = 120f;
     public float visionDistance = 20f;
     public int visionCellsNum = 10;
     public bool drawGizmo = false;
 
-    [HideInInspector]
-    public Transform nearFood;
-    [HideInInspector]
-    public Transform nearMate;
+    Animal animal;
 
     ArraySegment<float> observationsVector;
     Vector3 arcStart;
@@ -24,19 +20,16 @@ public class Vision : MonoBehaviour
 
     private void Awake()
     {
+        animal = GetComponent<Animal>();
         observationsVector = new ArraySegment<float>(new float[visionCellsNum]);
         cellAngle = visionAngle / visionCellsNum;
     }
-
-    //private void FixedUpdate()
-    //{
-    //    UpdateVisionObservations();
-    //}
 
     public void SetObservationsVectorArray(ArraySegment<float> arraySegment)
     {
         observationsVector = arraySegment;
         visionCellsNum = arraySegment.Count;
+        cellAngle = visionAngle / visionCellsNum;
     }
 
     public void UpdateVisionObservations()
@@ -51,8 +44,7 @@ public class Vision : MonoBehaviour
         for (int j = observationsVector.Offset; j < observationsVector.Offset + observationsVector.Count; j++)
             observationsVector.Array[j] = 0;
 
-        nearMate = null;
-        nearFood = null;
+        animal.ResetNearObject();
 
         for (int i = 0; i < hitsNum; i++)
         {
@@ -64,26 +56,20 @@ public class Vision : MonoBehaviour
                 if (angle < visionAngle)
                 {
                     int cellNum = (int)(angle / cellAngle);
-                    float distance = Vector2.Distance(transform.position, hits[i].transform.position) / visionDistance;
-                    distance = 1f - Mathf.Clamp(distance, 0f, 0.99f);
+                    float distance = Vector2.Distance(transform.position, hits[i].transform.position);
+
+
+                    distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.99f);
+
                     if (observationsVector.Array[observationsVector.Offset + cellNum] % 1 < distance)
                     {
-                        if (hits[i].tag == "Predator")
-                            if (distance > 0.9f && type == Animal.AnimalType.Fox) nearMate = hits[i].transform;
-                        distance += 0f;
-                        if (hits[i].tag == "Plant")
-                        {
-                            if (distance > 0.9f && type == Animal.AnimalType.Bunny) nearFood = hits[i].transform;
-                            distance += 1f;
-                        }
-                        if (hits[i].tag == "Prey")
-                        {
-                            if (distance > 0.9f)
-                                if (type == Animal.AnimalType.Bunny) nearMate = hits[i].transform;
-                                else nearFood = hits[i].transform;
+                        if ((1f-distance) * visionDistance < 0.3f) animal.SetNearObject(hits[i].transform);
 
+                        if (hits[i].tag == "Plant")
+                            distance += 1f;
+
+                        if (hits[i].tag == "Prey")
                             distance += 2f;
-                        }
 
                         observationsVector.Array[observationsVector.Offset + cellNum] = distance;
                     }

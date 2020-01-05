@@ -41,6 +41,10 @@ _COMMANDPROTO = _descriptor.EnumDescriptor(
       name='QUIT', index=2, number=2,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='EPISODE_COMPLETED', index=3, number=3,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
@@ -53,6 +57,7 @@ CommandProto = enum_type_wrapper.EnumTypeWrapper(_COMMANDPROTO)
 STEP = 0
 RESET = 1
 QUIT = 2
+GET_FITNESS = 3
 
 
 DESCRIPTOR.enum_types_by_name['CommandProto'] = _COMMANDPROTO

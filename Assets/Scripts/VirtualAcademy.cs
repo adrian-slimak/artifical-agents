@@ -6,27 +6,12 @@ using MLAgents;
 public class VirtualAcademy : Academy
 {
     public GameObject PreyAgentInstance;
-    public int numberOfPreys = 100;
     public GameObject PreysHolder;
 
     public override void AcademyReset()
     {
         base.AcademyReset();
         ResetAgents();
-    }
-
-    List<Agent> SpawnAgents()
-    {
-        List<Agent> agents = new List<Agent>(numberOfPreys);
-        for (int i = 0; i < numberOfPreys; i++)
-        {
-            Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
-            Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-            GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
-            agents.Add(agent.GetComponent<Agent>());
-        }
-
-        return agents;
     }
 
     public void ResetAgents()
@@ -51,6 +36,22 @@ public class VirtualAcademy : Academy
         }
 
         foreach (Agent agent in agents)
-            agent.Init(this);
+            agent.Init();
+    }
+
+    List<Agent> SpawnAgents()
+    {
+        int numberOfPreys = (int)(GetResetParameter("preys_count")??0);
+
+        List<Agent> agents = new List<Agent>(numberOfPreys);
+        for (int i = 0; i < numberOfPreys; i++)
+        {
+            Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
+            Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
+            GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
+            agents.Add(agent.GetComponent<Agent>());
+        }
+
+        return agents;
     }
 }

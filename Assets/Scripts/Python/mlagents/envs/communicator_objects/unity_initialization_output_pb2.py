@@ -12,7 +12,6 @@ _sym_db = _symbol_database.Default()
 
 
 from mlagents.envs.communicator_objects import brain_parameters_pb2 as mlagents_dot_envs_dot_communicator__objects_dot_brain__parameters__pb2
-from mlagents.envs.communicator_objects import environment_parameters_pb2 as mlagents_dot_envs_dot_communicator__objects_dot_environment__parameters__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -20,12 +19,49 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='communicator_objects',
   syntax='proto3',
   serialized_options=b'\252\002\034MLAgents.CommunicatorObjects',
-  serialized_pb=b'\nDmlagents/envs/communicator_objects/unity_initialization_output.proto\x12\x14\x63ommunicator_objects\x1a\x39mlagents/envs/communicator_objects/brain_parameters.proto\x1a?mlagents/envs/communicator_objects/environment_parameters.proto\"\xc6\x01\n\x1eUnityInitializationOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x44\n\x10\x62rain_parameters\x18\x02 \x03(\x0b\x32*.communicator_objects.BrainParametersProto\x12P\n\x16\x65nvironment_parameters\x18\x03 \x01(\x0b\x32\x30.communicator_objects.EnvironmentParametersProtoB\x1f\xaa\x02\x1cMLAgents.CommunicatorObjectsb\x06proto3'
+  serialized_pb=b'\nDmlagents/envs/communicator_objects/unity_initialization_output.proto\x12\x14\x63ommunicator_objects\x1a\x39mlagents/envs/communicator_objects/brain_parameters.proto\"\xa7\x02\n\x1eUnityInitializationOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x44\n\x10\x62rain_parameters\x18\x02 \x03(\x0b\x32*.communicator_objects.BrainParametersProto\x12r\n\x18\x64\x65\x66\x61ult_reset_parameters\x18\x03 \x03(\x0b\x32P.communicator_objects.UnityInitializationOutputProto.DefaultResetParametersEntry\x1a=\n\x1b\x44\x65\x66\x61ultResetParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02:\x02\x38\x01\x42\x1f\xaa\x02\x1cMLAgents.CommunicatorObjectsb\x06proto3'
   ,
-  dependencies=[mlagents_dot_envs_dot_communicator__objects_dot_brain__parameters__pb2.DESCRIPTOR,mlagents_dot_envs_dot_communicator__objects_dot_environment__parameters__pb2.DESCRIPTOR,])
+  dependencies=[mlagents_dot_envs_dot_communicator__objects_dot_brain__parameters__pb2.DESCRIPTOR,])
 
 
 
+
+_UNITYINITIALIZATIONOUTPUTPROTO_DEFAULTRESETPARAMETERSENTRY = _descriptor.Descriptor(
+  name='DefaultResetParametersEntry',
+  full_name='communicator_objects.UnityInitializationOutputProto.DefaultResetParametersEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='communicator_objects.UnityInitializationOutputProto.DefaultResetParametersEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='communicator_objects.UnityInitializationOutputProto.DefaultResetParametersEntry.value', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=388,
+  serialized_end=449,
+)
 
 _UNITYINITIALIZATIONOUTPUTPROTO = _descriptor.Descriptor(
   name='UnityInitializationOutputProto',
@@ -49,16 +85,16 @@ _UNITYINITIALIZATIONOUTPUTPROTO = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='environment_parameters', full_name='communicator_objects.UnityInitializationOutputProto.environment_parameters', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='default_reset_parameters', full_name='communicator_objects.UnityInitializationOutputProto.default_reset_parameters', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_UNITYINITIALIZATIONOUTPUTPROTO_DEFAULTRESETPARAMETERSENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -67,21 +103,30 @@ _UNITYINITIALIZATIONOUTPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=219,
-  serialized_end=417,
+  serialized_start=154,
+  serialized_end=449,
 )
 
+_UNITYINITIALIZATIONOUTPUTPROTO_DEFAULTRESETPARAMETERSENTRY.containing_type = _UNITYINITIALIZATIONOUTPUTPROTO
 _UNITYINITIALIZATIONOUTPUTPROTO.fields_by_name['brain_parameters'].message_type = mlagents_dot_envs_dot_communicator__objects_dot_brain__parameters__pb2._BRAINPARAMETERSPROTO
-_UNITYINITIALIZATIONOUTPUTPROTO.fields_by_name['environment_parameters'].message_type = mlagents_dot_envs_dot_communicator__objects_dot_environment__parameters__pb2._ENVIRONMENTPARAMETERSPROTO
+_UNITYINITIALIZATIONOUTPUTPROTO.fields_by_name['default_reset_parameters'].message_type = _UNITYINITIALIZATIONOUTPUTPROTO_DEFAULTRESETPARAMETERSENTRY
 DESCRIPTOR.message_types_by_name['UnityInitializationOutputProto'] = _UNITYINITIALIZATIONOUTPUTPROTO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 UnityInitializationOutputProto = _reflection.GeneratedProtocolMessageType('UnityInitializationOutputProto', (_message.Message,), {
+
+  'DefaultResetParametersEntry' : _reflection.GeneratedProtocolMessageType('DefaultResetParametersEntry', (_message.Message,), {
+    'DESCRIPTOR' : _UNITYINITIALIZATIONOUTPUTPROTO_DEFAULTRESETPARAMETERSENTRY,
+    '__module__' : 'mlagents.envs.communicator_objects.unity_initialization_output_pb2'
+    # @@protoc_insertion_point(class_scope:communicator_objects.UnityInitializationOutputProto.DefaultResetParametersEntry)
+    })
+  ,
   'DESCRIPTOR' : _UNITYINITIALIZATIONOUTPUTPROTO,
   '__module__' : 'mlagents.envs.communicator_objects.unity_initialization_output_pb2'
   # @@protoc_insertion_point(class_scope:communicator_objects.UnityInitializationOutputProto)
   })
 _sym_db.RegisterMessage(UnityInitializationOutputProto)
+_sym_db.RegisterMessage(UnityInitializationOutputProto.DefaultResetParametersEntry)
 
 
 DESCRIPTOR._options = None

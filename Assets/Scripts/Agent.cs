@@ -29,15 +29,16 @@ namespace MLAgents
 
         public void Subscribe(Academy academy)
         {
-            m_Id = Academy.m_Brains[m_BrainName].SubscribeAgent();
+            m_Id = Academy.Instance.m_Brains[m_BrainName].SubscribeAgent();
             academy.AgentUpdateObservations += UpdateObservations;
             academy.AgentUpdateMovement += AgentStep;
+            academy.AgentUpdateFitness += UpdateFitness;
         }
 
-        public void Init(Academy academy)
+        public void Init()
         {
-            m_ObservationsVector = Academy.m_Brains[m_BrainName].GetObservationsVector(m_Id);
-            m_ActionsVector = Academy.m_Brains[m_BrainName].GetActionsVector(m_Id);
+            m_ObservationsVector = Academy.Instance.m_Brains[m_BrainName].GetObservationsVector(m_Id);
+            m_ActionsVector = Academy.Instance.m_Brains[m_BrainName].GetActionsVector(m_Id);
 
             m_Vision.SetObservationsVectorArray(m_ObservationsVector);
         }
@@ -47,12 +48,26 @@ namespace MLAgents
              m_Vision.UpdateVisionObservations();
         }
 
+        public void UpdateFitness()
+        {
+            float fitness = m_Animal.energy + Academy.Instance.m_StepCount;
+            Academy.Instance.m_Brains[m_BrainName].agentsFitness[m_Id] = fitness;
+        }
+
         void AgentStep()
         {
             m_StepCount += 1;
 
             if (m_ActionsVector == null) return;
             m_Animal.SetMovement(m_ActionsVector.Array[m_ActionsVector.Offset + 0], m_ActionsVector.Array[m_ActionsVector.Offset + 1]);
+            m_Animal.AnimalStep();
+        }
+
+        private void OnDestroy()
+        {
+            Academy.Instance.AgentUpdateObservations -= UpdateObservations;
+            Academy.Instance.AgentUpdateMovement -= AgentStep;
+            Academy.Instance.AgentUpdateFitness -= UpdateFitness;
         }
     }
 }

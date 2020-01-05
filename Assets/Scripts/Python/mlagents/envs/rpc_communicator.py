@@ -17,6 +17,8 @@ from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
 from .exception import UnityTimeOutException, UnityWorkerInUseException
 
 logger = logging.getLogger("mlagents.envs")
+import time
+
 
 from timeit import default_timer as timer
 
@@ -105,9 +107,9 @@ class RpcCommunicator(Communicator):
         message.header.status = 200
         message.unity_input.CopyFrom(unity_input)
 
-        self.unity_to_external.parent_conn.send(message)
         outputMessage = self.unity_to_external.parent_conn.recv()
-        # yes = self.unity_to_external.parent_conn.recv()
+
+        self.unity_to_external.parent_conn.send(message)
 
         return outputMessage.unity_output
 
@@ -118,6 +120,22 @@ class RpcCommunicator(Communicator):
             message.unity_input.CopyFrom(unity_input)
 
         self.unity_to_external.parent_conn.send(message)
+        self.poll_for_timeout()
+        outputMessage = self.unity_to_external.parent_conn.recv()
+
+        if outputMessage.header.status != 200:
+            return None
+        return outputMessage.unity_output
+
+    def send(self, unity_input: UnityInputProto=None):
+        message = UnityMessageProto()
+        message.header.status = 200
+        if unity_input:
+            message.unity_input.CopyFrom(unity_input)
+
+        self.unity_to_external.parent_conn.send(message)
+
+    def receive(self):
         self.poll_for_timeout()
         outputMessage = self.unity_to_external.parent_conn.recv()
 

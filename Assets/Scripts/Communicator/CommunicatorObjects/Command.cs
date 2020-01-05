@@ -40,6 +40,7 @@ namespace MLAgents.CommunicatorObjects {
     [pbr::OriginalName("STEP")] Step = 0,
     [pbr::OriginalName("RESET")] Reset = 1,
     [pbr::OriginalName("QUIT")] Quit = 2,
+    [pbr::OriginalName("EPISODE_COMPLETED")] EpisodeCompleted = 3,
   }
 
   #endregion

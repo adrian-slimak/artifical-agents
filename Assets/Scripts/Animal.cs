@@ -4,68 +4,101 @@ using UnityEngine;
 
 public class Animal : MonoBehaviour
 {
+    public AnimalType Type;
     public bool steer = false;
-    public float maxMoveSpeed = 3f;
-    public float turnSpeed = 4f;
+    public float maxMoveSpeed = 5f;
+    public float turnSpeed = 100f;
 
     public float energy = 100f;
-    public float energyDrainPerSec = 0.1f;
+    public float energyDrainPerStep = 0.1f;
+    public float maxEnergyDrainPerSpeed = 0.1f;
 
     Vector2 velocity;
     float moveSpeed;
     float angularVelocity;
     float energyDrainSpeed;
 
-    public Vision vision;
+    MLAgents.Agent agent;
+    Vision vision;
+
+    Transform nearFood;
+    Transform nearMate;
 
     Rigidbody2D rigidBody2D;
-    public enum AnimalType { Fox, Bunny }
+    public enum AnimalType { Prey, Predator }
 
     void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
+        vision = GetComponent<Vision>();
+        agent = GetComponent<MLAgents.Agent>();
 
     }
 
-    void FixedUpdate()
+    public void AnimalStep()
     {
-        if (energy <= 0) Die();
-
         rigidBody2D.angularVelocity = angularVelocity;
         rigidBody2D.velocity = velocity;
 
-        energy -= (energyDrainSpeed + energyDrainPerSec) * Time.fixedDeltaTime;
+        TryEat();
+
+        energy -= (energyDrainSpeed + energyDrainPerStep);
+
+        if (energy <= 0) Die();
     }
 
     public void SetMovement(float vel, float angVel)
     {
-        if (Mathf.Abs(angVel) > 0)
+        if (angVel != 0f)
             angularVelocity = (angVel / Mathf.Abs(angVel)) * turnSpeed;
         else
-            angularVelocity = 0;
+            angularVelocity = 0f;
 
         moveSpeed = vel * maxMoveSpeed;
 
-        energyDrainSpeed = Mathf.Pow(moveSpeed / maxMoveSpeed, 2f);
+        energyDrainSpeed = Mathf.Pow(moveSpeed / maxMoveSpeed, 2f)* maxEnergyDrainPerSpeed;
         velocity = transform.up * moveSpeed;
 
         rigidBody2D.angularVelocity = angularVelocity;
         rigidBody2D.velocity = velocity;
     }
 
+
+    public void SetNearObject(Transform nearObject)
+    {
+        if (Type == AnimalType.Predator)
+        {
+            if (nearObject.tag == "Predator") nearMate = nearObject;
+            else if (nearObject.tag == "Prey") nearFood = nearObject;
+        }
+
+        if(Type == AnimalType.Prey)
+        {
+            if (nearObject.tag == "Prey") nearMate = nearObject;
+            else if (nearObject.tag == "Plant") nearFood = nearObject;
+        }
+    }
+
+    public void ResetNearObject()
+    {
+        nearMate = null;
+        nearFood = null;
+    }
+
     void Die()
     {
+        agent.UpdateFitness();
         Destroy(this.gameObject);
     }
 
-    void Eat()
+    void TryEat()
     {
-        if (vision.nearFood)
+        if (nearFood)
         {
             // Eat effect
             energy += 50f;
-            Destroy(vision.nearFood.gameObject);
-            vision.nearFood = null;
+            Destroy(nearFood.gameObject);
+            nearFood = null;
         }
     }
 }
