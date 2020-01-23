@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace MLAgents.CommunicatorObjects {
+namespace UPC.CommunicatorObjects {
 
   /// <summary>Holder for reflection information generated from mlagents/envs/communicator_objects/unity_input.proto</summary>
   public static partial class UnityInputReflection {
@@ -34,9 +34,9 @@ namespace MLAgents.CommunicatorObjects {
             "MiIuY29tbXVuaWNhdG9yX29iamVjdHMuQ29tbWFuZFByb3RvQh+qAhxNTEFn",
             "ZW50cy5Db21tdW5pY2F0b3JPYmplY3RzYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.UnityInitializationInputReflection.Descriptor, global::MLAgents.CommunicatorObjects.CommandReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::UPC.CommunicatorObjects.UnityInitializationInputReflection.Descriptor, global::UPC.CommunicatorObjects.CommandReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInputProto), global::MLAgents.CommunicatorObjects.UnityInputProto.Parser, new[]{ "InitializationInput", "Command" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::UPC.CommunicatorObjects.UnityInputProto), global::UPC.CommunicatorObjects.UnityInputProto.Parser, new[]{ "InitializationInput", "Command" }, null, null, null, null)
           }));
     }
     #endregion
@@ -51,7 +51,7 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::MLAgents.CommunicatorObjects.UnityInputReflection.Descriptor.MessageTypes[0]; }
+      get { return global::UPC.CommunicatorObjects.UnityInputReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -80,9 +80,9 @@ namespace MLAgents.CommunicatorObjects {
 
     /// <summary>Field number for the "initialization_input" field.</summary>
     public const int InitializationInputFieldNumber = 1;
-    private global::MLAgents.CommunicatorObjects.UnityInitializationInputProto initializationInput_;
+    private global::UPC.CommunicatorObjects.UnityInitializationInputProto initializationInput_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.UnityInitializationInputProto InitializationInput {
+    public global::UPC.CommunicatorObjects.UnityInitializationInputProto InitializationInput {
       get { return initializationInput_; }
       set {
         initializationInput_ = value;
@@ -91,9 +91,9 @@ namespace MLAgents.CommunicatorObjects {
 
     /// <summary>Field number for the "command" field.</summary>
     public const int CommandFieldNumber = 2;
-    private global::MLAgents.CommunicatorObjects.CommandProto command_ = global::MLAgents.CommunicatorObjects.CommandProto.Step;
+    private global::UPC.CommunicatorObjects.CommandProto command_ = global::UPC.CommunicatorObjects.CommandProto.Step;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.CommandProto Command {
+    public global::UPC.CommunicatorObjects.CommandProto Command {
       get { return command_; }
       set {
         command_ = value;
@@ -122,7 +122,7 @@ namespace MLAgents.CommunicatorObjects {
     public override int GetHashCode() {
       int hash = 1;
       if (initializationInput_ != null) hash ^= InitializationInput.GetHashCode();
-      if (Command != global::MLAgents.CommunicatorObjects.CommandProto.Step) hash ^= Command.GetHashCode();
+      if (Command != global::UPC.CommunicatorObjects.CommandProto.Step) hash ^= Command.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -140,7 +140,7 @@ namespace MLAgents.CommunicatorObjects {
         output.WriteRawTag(10);
         output.WriteMessage(InitializationInput);
       }
-      if (Command != global::MLAgents.CommunicatorObjects.CommandProto.Step) {
+      if (Command != global::UPC.CommunicatorObjects.CommandProto.Step) {
         output.WriteRawTag(16);
         output.WriteEnum((int) Command);
       }
@@ -155,7 +155,7 @@ namespace MLAgents.CommunicatorObjects {
       if (initializationInput_ != null) {
         size += 1 + pb::CodedOutputStream.ComputeMessageSize(InitializationInput);
       }
-      if (Command != global::MLAgents.CommunicatorObjects.CommandProto.Step) {
+      if (Command != global::UPC.CommunicatorObjects.CommandProto.Step) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Command);
       }
       if (_unknownFields != null) {
@@ -171,11 +171,11 @@ namespace MLAgents.CommunicatorObjects {
       }
       if (other.initializationInput_ != null) {
         if (initializationInput_ == null) {
-          InitializationInput = new global::MLAgents.CommunicatorObjects.UnityInitializationInputProto();
+          InitializationInput = new global::UPC.CommunicatorObjects.UnityInitializationInputProto();
         }
         InitializationInput.MergeFrom(other.InitializationInput);
       }
-      if (other.Command != global::MLAgents.CommunicatorObjects.CommandProto.Step) {
+      if (other.Command != global::UPC.CommunicatorObjects.CommandProto.Step) {
         Command = other.Command;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
@@ -191,13 +191,13 @@ namespace MLAgents.CommunicatorObjects {
             break;
           case 10: {
             if (initializationInput_ == null) {
-              InitializationInput = new global::MLAgents.CommunicatorObjects.UnityInitializationInputProto();
+              InitializationInput = new global::UPC.CommunicatorObjects.UnityInitializationInputProto();
             }
             input.ReadMessage(InitializationInput);
             break;
           }
           case 16: {
-            Command = (global::MLAgents.CommunicatorObjects.CommandProto) input.ReadEnum();
+            Command = (global::UPC.CommunicatorObjects.CommandProto) input.ReadEnum();
             break;
           }
         }

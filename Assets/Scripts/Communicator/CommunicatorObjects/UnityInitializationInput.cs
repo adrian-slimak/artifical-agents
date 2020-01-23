@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace MLAgents.CommunicatorObjects {
+namespace UPC.CommunicatorObjects {
 
   /// <summary>Holder for reflection information generated from mlagents/envs/communicator_objects/unity_initialization_input.proto</summary>
   public static partial class UnityInitializationInputReflection {
@@ -37,9 +37,9 @@ namespace MLAgents.CommunicatorObjects {
             "AjoCOAFCH6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVjdHNiBnByb3Rv",
             "Mw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.EngineConfigurationReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::UPC.CommunicatorObjects.EngineConfigurationReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationInputProto), global::MLAgents.CommunicatorObjects.UnityInitializationInputProto.Parser, new[]{ "Seed", "EngineConfiguration", "CustomResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
+            new pbr::GeneratedClrTypeInfo(typeof(global::UPC.CommunicatorObjects.UnityInitializationInputProto), global::UPC.CommunicatorObjects.UnityInitializationInputProto.Parser, new[]{ "Seed", "EngineConfiguration", "CustomResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
     #endregion
@@ -54,7 +54,7 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::MLAgents.CommunicatorObjects.UnityInitializationInputReflection.Descriptor.MessageTypes[0]; }
+      get { return global::UPC.CommunicatorObjects.UnityInitializationInputReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -95,9 +95,9 @@ namespace MLAgents.CommunicatorObjects {
 
     /// <summary>Field number for the "engine_configuration" field.</summary>
     public const int EngineConfigurationFieldNumber = 2;
-    private global::MLAgents.CommunicatorObjects.EngineConfigurationProto engineConfiguration_;
+    private global::UPC.CommunicatorObjects.EngineConfigurationProto engineConfiguration_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::MLAgents.CommunicatorObjects.EngineConfigurationProto EngineConfiguration {
+    public global::UPC.CommunicatorObjects.EngineConfigurationProto EngineConfiguration {
       get { return engineConfiguration_; }
       set {
         engineConfiguration_ = value;
@@ -192,7 +192,7 @@ namespace MLAgents.CommunicatorObjects {
       }
       if (other.engineConfiguration_ != null) {
         if (engineConfiguration_ == null) {
-          EngineConfiguration = new global::MLAgents.CommunicatorObjects.EngineConfigurationProto();
+          EngineConfiguration = new global::UPC.CommunicatorObjects.EngineConfigurationProto();
         }
         EngineConfiguration.MergeFrom(other.EngineConfiguration);
       }
@@ -214,7 +214,7 @@ namespace MLAgents.CommunicatorObjects {
           }
           case 18: {
             if (engineConfiguration_ == null) {
-              EngineConfiguration = new global::MLAgents.CommunicatorObjects.EngineConfigurationProto();
+              EngineConfiguration = new global::UPC.CommunicatorObjects.EngineConfigurationProto();
             }
             input.ReadMessage(EngineConfiguration);
             break;

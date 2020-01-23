@@ -1,12 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
 using UnityEditor;
-using MLAgents.CommunicatorObjects;
-using System;
-using System.IO;
+using UPC.CommunicatorObjects;
 
-namespace MLAgents
+namespace UPC
 {
     [System.Serializable]
     public class EngineConfiguration
@@ -69,7 +66,7 @@ namespace MLAgents
         public bool IsCommunicatorOn
         { get { return Communicator != null; } }
 
-        Memory m_Memory;
+        public Memory m_Memory;
 
         bool m_FirstAcademyReset;
 
@@ -190,7 +187,7 @@ namespace MLAgents
                     AgentUpdateObservations?.Invoke();
                 }
 
-                m_Memory.WriteAgentsObservations(brains);
+                //m_Memory.WriteAgentsObservations(brains);
             }
 
             using (TimerStack.Instance.Scoped("CommunicateWithPython"))

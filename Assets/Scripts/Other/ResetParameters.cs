@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace MLAgents
+namespace UPC
 {
     [Serializable]
     public class ResetParameters : Dictionary<string, float>, ISerializationCallbackReceiver

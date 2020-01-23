@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents;
+using UPC;
 
 
 [System.Serializable]
@@ -74,13 +74,16 @@ public class Brain
         return agentsCount++;
     }
 
-    public ArraySegment<float> GetVisionObservationsArray(int agent_id)
+    public MMArray GetVisionObservationsArray(int agent_id)
     {
-        return new ArraySegment<float>(stackedObservations, agent_id * observationsVectorSize, visionObservationsVectorSize);
+        //return new ArraySegment<float>(stackedObservations, agent_id * observationsVectorSize, visionObservationsVectorSize);
+        return Academy.Instance.m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize, visionObservationsVectorSize);
     }
 
-    public ArraySegment<float> GetActionsVector(int agent_id)
+    public MMArray GetActionsVector(int agent_id)
     {
-        return new ArraySegment<float>(stackedActions, agent_id * actionsVectorSize, actionsVectorSize);
+        //return new ArraySegment<float>(stackedActions, agent_id * actionsVectorSize, actionsVectorSize);
+        return Academy.Instance.m_Memory.GetActionsMemoryArray(agent_id * actionsVectorSize, actionsVectorSize);
+
     }
 }

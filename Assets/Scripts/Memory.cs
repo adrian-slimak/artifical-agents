@@ -17,6 +17,26 @@ public class Memory
         m_AgentsFitnessMemory = MemoryMappedFile.CreateOrOpen("agents_fitness_" + m_Port, 200000);
     }
 
+    public unsafe UPC.MMArray GetObservationsMemoryArray(int offset, int length)
+    {
+        byte* pointer = null;
+
+        using (MemoryMappedViewAccessor viewAccessor = m_AgentsObservationsMemory.CreateViewAccessor())
+            viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
+
+        return new UPC.MMArray((float*) (pointer + offset*4), length);
+    }
+
+    public unsafe UPC.MMArray GetActionsMemoryArray(int offset, int length)
+    {
+        byte* pointer = null;
+
+        using (MemoryMappedViewAccessor viewAccessor = m_AgentsActionsMemory.CreateViewAccessor())
+            viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
+
+        return new UPC.MMArray((float*) (pointer + offset*4), length);
+    }
+
     internal void WriteAgentsObservations(List<Brain> brains)
     {
         int byteObservationsArraySize = 0;
@@ -25,7 +45,7 @@ public class Memory
             byteObservationsArraySize += brain.mmf_size_observations;
         }
 
-        using (MLAgents.TimerStack.Instance.Scoped("MemoryWrite"))
+        using (UPC.TimerStack.Instance.Scoped("MemoryWrite"))
         {
             using (MemoryMappedViewAccessor viewAccessor = m_AgentsObservationsMemory.CreateViewAccessor())
             {
@@ -52,7 +72,7 @@ public class Memory
             byteFitnessArraySize += brain.mmf_size_fitness;
         }
 
-        using (MLAgents.TimerStack.Instance.Scoped("MemoryWrite"))
+        using (UPC.TimerStack.Instance.Scoped("MemoryWrite"))
         {
             using (MemoryMappedViewAccessor viewAccessor = m_AgentsFitnessMemory.CreateViewAccessor())
             {
@@ -74,7 +94,7 @@ public class Memory
             byteActionsArraySize += brain.mmf_size_actions;
         }
 
-        using (MLAgents.TimerStack.Instance.Scoped("MemoryRead"))
+        using (UPC.TimerStack.Instance.Scoped("MemoryRead"))
         {
             using (MemoryMappedViewAccessor viewAccessor = m_AgentsActionsMemory.CreateViewAccessor())
             {

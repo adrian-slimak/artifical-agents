@@ -19,7 +19,7 @@ public class Animal : MonoBehaviour
     float angularVelocity;
     float energyDrainSpeed;
 
-    MLAgents.Agent agent;
+    UPC.Agent agent;
 
     Transform nearFood;
     Transform nearMate;
@@ -30,7 +30,7 @@ public class Animal : MonoBehaviour
     void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
-        agent = GetComponent<MLAgents.Agent>();
+        agent = GetComponent<UPC.Agent>();
 
     }
 

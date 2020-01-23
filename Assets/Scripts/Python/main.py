@@ -32,8 +32,8 @@ def load_custom_reset_parameters(fileName='custom_reset_params_1'):
 
 def main():
     # tf_utils.set_warnings_enabled(False)
-    unity_environment = UnityEnvironment(file_name="C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe", worker_id=0, initialization_input=get_initialization_input())
-    # unity_environment = UnityEnvironment(worker_id=0, initialization_input=get_initialization_input())
+    # unity_environment = UnityEnvironment(file_name="C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe", worker_id=0, initialization_input=get_initialization_input())
+    unity_environment = UnityEnvironment(worker_id=0, initialization_input=get_initialization_input())
     unity_environment.reset(load_custom_reset_parameters())
 
     external_brain = unity_environment.get_external_brains()

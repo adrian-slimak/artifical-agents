@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using MLAgents.CommunicatorObjects;
+using UPC.CommunicatorObjects;
 
-namespace MLAgents
+namespace UPC
 {
     public struct UnityInitializationParameters
     {

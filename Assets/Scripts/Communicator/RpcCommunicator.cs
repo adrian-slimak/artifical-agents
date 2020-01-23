@@ -1,10 +1,10 @@
 using Grpc.Core;
-using MLAgents.CommunicatorObjects;
+using UPC.CommunicatorObjects;
 using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace MLAgents
+namespace UPC
 {
     /// Responsible for communication with External using gRPC.
     public class RpcCommunicator

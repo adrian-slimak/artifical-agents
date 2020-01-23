@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace MLAgents
+namespace UPC
 {
     /// <summary>
     /// Monitor is used to display information about the Agent within the Unity

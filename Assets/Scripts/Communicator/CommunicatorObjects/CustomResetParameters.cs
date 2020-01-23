@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace MLAgents.CommunicatorObjects {
+namespace UPC.CommunicatorObjects {
 
   /// <summary>Holder for reflection information generated from mlagents/envs/communicator_objects/custom_reset_parameters.proto</summary>
   public static partial class CustomResetParametersReflection {
@@ -31,7 +31,7 @@ namespace MLAgents.CommunicatorObjects {
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.CustomResetParametersProto), global::MLAgents.CommunicatorObjects.CustomResetParametersProto.Parser, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::UPC.CommunicatorObjects.CustomResetParametersProto), global::UPC.CommunicatorObjects.CustomResetParametersProto.Parser, null, null, null, null)
           }));
     }
     #endregion
@@ -46,7 +46,7 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::MLAgents.CommunicatorObjects.CustomResetParametersReflection.Descriptor.MessageTypes[0]; }
+      get { return global::UPC.CommunicatorObjects.CustomResetParametersReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 
-namespace MLAgents
+namespace UPC
 {
     /// <summary>
     /// PropertyDrawer for ResetParameters. Defines how ResetParameters are displayed in the

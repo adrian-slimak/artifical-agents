@@ -4,6 +4,7 @@ import numpy as np
 import subprocess
 from typing import Dict, Optional
 from tensorflow import expand_dims
+from time import sleep
 from Memory import Memory
 
 from .brain import BrainParameters

@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using Barracuda;
-using UnityEngine.Serialization;
 
-namespace MLAgents
+namespace UPC
 {
 
     public class Agent : MonoBehaviour
@@ -14,8 +11,12 @@ namespace MLAgents
         Brain m_Brain;
         int m_Id;
 
-        public ArraySegment<float> m_ActionsVector;
-        public ArraySegment<float> m_VisionObservationsVectorArray;
+        //public ArraySegment<float> m_ActionsVector;
+        //public ArraySegment<float> m_VisionObservationsVectorArray;
+        MMArray m_ActionsVector;
+        MMArray m_VisionObservationsVectorArray;
+
+        public 
 
         int m_StepCount;
 
@@ -47,7 +48,11 @@ namespace MLAgents
 
         void UpdateObservations()
         {
-             m_Vision.UpdateVisionObservations();
+            m_Vision.UpdateVisionObservations();
+            //float s = 0;
+            //foreach (float f in m_VisionObservationsVectorArray)
+            //    s += f;
+            //Debug.Log(m_Id + ": " + s);
         }
 
         public void UpdateFitness()
@@ -61,7 +66,7 @@ namespace MLAgents
             m_StepCount += 1;
 
             if (m_ActionsVector == null) return;
-            m_Animal.SetMovement(m_ActionsVector.Array[m_ActionsVector.Offset + 0], m_ActionsVector.Array[m_ActionsVector.Offset + 1]);
+            m_Animal.SetMovement(m_ActionsVector[0], m_ActionsVector[1]);
             m_Animal.AnimalStep();
         }
 

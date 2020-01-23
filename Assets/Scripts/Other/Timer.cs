@@ -6,7 +6,7 @@ using UnityEngine.Profiling;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
-namespace MLAgents
+namespace UPC
 {
     [DataContract]
     public class TimerNode

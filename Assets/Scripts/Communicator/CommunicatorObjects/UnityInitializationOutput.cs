@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace MLAgents.CommunicatorObjects {
+namespace UPC.CommunicatorObjects {
 
   /// <summary>Holder for reflection information generated from mlagents/envs/communicator_objects/unity_initialization_output.proto</summary>
   public static partial class UnityInitializationOutputReflection {
@@ -36,9 +36,9 @@ namespace MLAgents.CommunicatorObjects {
             "YW1ldGVyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoAjoCOAFC",
             "H6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVjdHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::MLAgents.CommunicatorObjects.BrainParametersReflection.Descriptor, },
+          new pbr::FileDescriptor[] { global::UPC.CommunicatorObjects.BrainParametersReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto), global::MLAgents.CommunicatorObjects.UnityInitializationOutputProto.Parser, new[]{ "Name", "BrainParameters", "DefaultResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
+            new pbr::GeneratedClrTypeInfo(typeof(global::UPC.CommunicatorObjects.UnityInitializationOutputProto), global::UPC.CommunicatorObjects.UnityInitializationOutputProto.Parser, new[]{ "Name", "BrainParameters", "DefaultResetParameters" }, null, null, null, new pbr::GeneratedClrTypeInfo[] { null, })
           }));
     }
     #endregion
@@ -53,7 +53,7 @@ namespace MLAgents.CommunicatorObjects {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::MLAgents.CommunicatorObjects.UnityInitializationOutputReflection.Descriptor.MessageTypes[0]; }
+      get { return global::UPC.CommunicatorObjects.UnityInitializationOutputReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -94,11 +94,11 @@ namespace MLAgents.CommunicatorObjects {
 
     /// <summary>Field number for the "brain_parameters" field.</summary>
     public const int BrainParametersFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::MLAgents.CommunicatorObjects.BrainParametersProto> _repeated_brainParameters_codec
-        = pb::FieldCodec.ForMessage(18, global::MLAgents.CommunicatorObjects.BrainParametersProto.Parser);
-    private readonly pbc::RepeatedField<global::MLAgents.CommunicatorObjects.BrainParametersProto> brainParameters_ = new pbc::RepeatedField<global::MLAgents.CommunicatorObjects.BrainParametersProto>();
+    private static readonly pb::FieldCodec<global::UPC.CommunicatorObjects.BrainParametersProto> _repeated_brainParameters_codec
+        = pb::FieldCodec.ForMessage(18, global::UPC.CommunicatorObjects.BrainParametersProto.Parser);
+    private readonly pbc::RepeatedField<global::UPC.CommunicatorObjects.BrainParametersProto> brainParameters_ = new pbc::RepeatedField<global::UPC.CommunicatorObjects.BrainParametersProto>();
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::MLAgents.CommunicatorObjects.BrainParametersProto> BrainParameters {
+    public pbc::RepeatedField<global::UPC.CommunicatorObjects.BrainParametersProto> BrainParameters {
       get { return brainParameters_; }
     }
 
