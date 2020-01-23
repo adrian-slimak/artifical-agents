@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 const = 100
 
 class StackedLSTMCell(tf.keras.layers.Layer):
-    def __init__(self, units, models, use_bias=True, **kwargs):
+    def __init__(self, units, models, use_bias=False, **kwargs):
         super(StackedLSTMCell, self).__init__(**kwargs)
 
         self.models = models
@@ -100,7 +100,7 @@ class DenseLayer(tf.keras.layers.Layer):
     @tf.function
     def call(self, inputs):
         z = tf.matmul(inputs, self.kernel) + self.bias
-        return tf.nn.sigmoid(z)
+        return tf.nn.tanh(z)
 
 
 class LSTMModel:
@@ -132,7 +132,7 @@ class LSTMModel:
 
 
     def __call__(self, inputs):
-        return self.call(inputs)
+        return self.call(inputs).numpy()
 
     @tf.function
     def call(self, inputs):
@@ -141,9 +141,6 @@ class LSTMModel:
         output = self.dense_layer.call(output)
         output = tf.squeeze(output, 1)
         return output
-
-    def warmupTensorGraph(self):
-        pass
 
 # model = tf.keras.layers.LSTMCell(units=32, kernel_initializer='random_normal', recurrent_initializer='random_normal', bias_initializer='random_normal', use_bias=True)
 # dense = tf.keras.layers.Dense(units=2, kernel_initializer='random_normal', bias_initializer='random_normal', use_bias=True, activation='sigmoid')

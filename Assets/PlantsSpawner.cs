@@ -4,17 +4,29 @@ using UnityEngine;
 
 public class PlantsSpawner : MonoBehaviour
 {
+    public static PlantsSpawner Instance;
     public Transform plantsHolder;
     public GameObject plantPrefab;
 
-    public int plantsOnStart = 100;
+    public int plantsOnReset = 100;
     public float plantsPerStep = 0.05f;
 
     float plantsToSpawn;
 
-    void Start()
+    private void Awake()
     {
-        Spawn(plantsOnStart);
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(this.gameObject);
+    }
+
+    public void OnReset()
+    {
+        foreach (Transform child in plantsHolder.transform)
+            Destroy(child.gameObject);
+
+        Spawn(plantsOnReset);
     }
 
     private void FixedUpdate()
@@ -31,7 +43,7 @@ public class PlantsSpawner : MonoBehaviour
     {
         for (int i = 0; i < amount; i++)
         {
-            Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
+            Vector2 randomPosition = new Vector2((Random.value-0.5f) * 100f, (Random.value - 0.5f) * 100f);
             GameObject agent = Instantiate(plantPrefab, randomPosition, Quaternion.identity, plantsHolder.transform);
         }
     }

@@ -25,14 +25,15 @@ public class VirtualAcademy : Academy
 
         List<Agent> agents = SpawnAgents();
         foreach (Agent agent in agents)
-            agent.Subscribe(this);
+            agent.Subscribe();
 
-        int[] offset = { 0, 0 };
+        int[] offset = { 0, 0, 0};
         foreach (Brain brain in brains)
         {
             int[] size = brain.Init(offset);
             offset[0] += size[0];
             offset[1] += size[1];
+            offset[2] += size[2];
         }
 
         foreach (Agent agent in agents)
@@ -46,7 +47,7 @@ public class VirtualAcademy : Academy
         List<Agent> agents = new List<Agent>(numberOfPreys);
         for (int i = 0; i < numberOfPreys; i++)
         {
-            Vector2 randomPosition = new Vector2(Random.value * 100f, Random.value * 100f);
+            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * 100f, (Random.value - 0.5f) * 100f);
             Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
             GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
             agents.Add(agent.GetComponent<Agent>());

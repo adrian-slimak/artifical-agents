@@ -11,10 +11,11 @@ namespace MLAgents
     {
         public string m_BrainName;
 
+        Brain m_Brain;
         int m_Id;
 
         public ArraySegment<float> m_ActionsVector;
-        public ArraySegment<float> m_ObservationsVector;
+        public ArraySegment<float> m_VisionObservationsVectorArray;
 
         int m_StepCount;
 
@@ -27,20 +28,21 @@ namespace MLAgents
             m_Animal = GetComponent<Animal>();
         }
 
-        public void Subscribe(Academy academy)
+        public void Subscribe()
         {
-            m_Id = Academy.Instance.m_Brains[m_BrainName].SubscribeAgent();
-            academy.AgentUpdateObservations += UpdateObservations;
-            academy.AgentUpdateMovement += AgentStep;
-            academy.AgentUpdateFitness += UpdateFitness;
+            m_Brain = Academy.Instance.m_Brains[m_BrainName];
+            m_Id = m_Brain.SubscribeAgent();
+            Academy.Instance.AgentUpdateObservations += UpdateObservations;
+            Academy.Instance.AgentUpdateMovement += AgentStep;
+            Academy.Instance.AgentUpdateFitness += UpdateFitness;
         }
 
         public void Init()
         {
-            m_ObservationsVector = Academy.Instance.m_Brains[m_BrainName].GetObservationsVector(m_Id);
-            m_ActionsVector = Academy.Instance.m_Brains[m_BrainName].GetActionsVector(m_Id);
+            m_VisionObservationsVectorArray = m_Brain.GetVisionObservationsArray(m_Id);
+            m_ActionsVector = m_Brain.GetActionsVector(m_Id);
 
-            m_Vision.SetObservationsVectorArray(m_ObservationsVector);
+            m_Vision.SetVisionObservationsVectorArray(m_VisionObservationsVectorArray);
         }
 
         void UpdateObservations()
@@ -50,7 +52,7 @@ namespace MLAgents
 
         public void UpdateFitness()
         {
-            float fitness = m_Animal.energy + Academy.Instance.m_StepCount;
+            float fitness = m_Animal.collectedFood*10;
             Academy.Instance.m_Brains[m_BrainName].agentsFitness[m_Id] = fitness;
         }
 

@@ -1,12 +1,11 @@
 import atexit
-import glob
 import logging
 import numpy as np
-import os
 import subprocess
-from typing import Dict, List, Optional
+from typing import Dict, Optional
+from tensorflow import expand_dims
+from Memory import Memory
 
-from mlagents.envs.timers import timed, hierarchical_timer
 from .brain import BrainParameters
 from .exception import (UnityEnvironmentException, UnityCommunicationException, UnityTimeOutException)
 from timeit import default_timer as timer
@@ -16,10 +15,7 @@ from mlagents.envs.communicator_objects.unity_input_pb2 import UnityInputProto
 from mlagents.envs.communicator_objects.unity_output_pb2 import UnityOutputProto
 from mlagents.envs.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 
-import mmap
-
 from .rpc_communicator import RpcCommunicator
-from sys import platform
 import signal
 
 logging.basicConfig(level=logging.INFO)
@@ -28,47 +24,23 @@ logger = logging.getLogger("mlagents.envs")
 
 class UnityEnvironment():
 
-    def __init__(
-        self,
-        file_name: Optional[str] = None,
-        worker_id: int = 0,
-        base_port: int = 5004,
-        initialization_input: UnityInitializationInputProto = None,
-        no_graphics: bool = False,
-        timeout_wait: int = 60,
-        args: Optional[List[str]] = None,
-    ):
-        """
-        Starts a new unity environment and establishes a connection with the environment.
-        Notice: Currently communication between Unity and Python takes place over an open socket without authentication.
-        Ensure that the network where training takes place is secure.
+    def __init__(self, file_name: Optional[str] = None, worker_id: int = 0, base_port: int = 5000,
+                 initialization_input: UnityInitializationInputProto = None, no_graphics: bool = False, timeout_wait: int = 60):
 
-        :string file_name: Name of Unity environment binary.
-        :int base_port: Baseline port number to connect to Unity environment over. worker_id increments over this.
-        :int worker_id: Number to add to communication port (5005) [0]. Used for asynchronous agent scenarios.
-        :bool docker_training: Informs this class whether the process is being run within a container.
-        :bool no_graphics: Whether to run the Unity simulator in no-graphics mode
-        :int timeout_wait: Time (in seconds) to wait for connection from environment
-        :list args: Addition Unity command line arguments
-        """
-        args = args or []
         atexit.register(self._close)
         self.port = base_port + worker_id
         self.worker_id = worker_id
-        # If true, this means the environment was successfully loaded
         self._loaded = False
-        # The process that is started. If None, no process was started
         self.proc1 = None
         self.timeout_wait: int = timeout_wait
         self.communicator = RpcCommunicator(self.worker_id, self.port, self.timeout_wait)
         self.external_brains = {}
 
-
         if file_name is None and worker_id != 0:
             raise UnityEnvironmentException("If the environment name is None, the worker-id must be 0 in order to connect with the Editor.")
 
         if file_name is not None:
-            self.executable_launcher(file_name, no_graphics, args)
+            self.executable_launcher(file_name, no_graphics)
         else:
             logger.info("Start training by pressing the Play button in the Unity Editor.")
         self._loaded = True
@@ -83,26 +55,92 @@ class UnityEnvironment():
             self._close()
             raise
 
-        self._academy_name = initialization_output.name
+        self.memory = Memory(self.port)
+        self.academy_name = initialization_output.name
         # self._log_path = aca_params.log_path
-        self._defaultResetParameters = dict(initialization_output.default_reset_parameters)
+        self.defaultResetParameters = dict(initialization_output.default_reset_parameters)
 
-        logger.info(
-            "\n'{0}' started successfully!\n{1}".format(self._academy_name, str(self))
-        )
+        logger.info("\n'{0}' started successfully!\n{1}".format(self.academy_name, str(self)))
 
-    @property
-    def academy_name(self):
-        return self._academy_name
 
     def get_external_brains(self):
         return self.external_brains
 
-    @property
-    def reset_parameters(self):
-        return self._resetParameters
+    def reset(self, custom_reset_parameters: Dict = None):
+        if not self._loaded:
+            raise UnityEnvironmentException("No Unity environment is loaded.")
 
-    def executable_launcher(self, file_name, no_graphics, args):
+        unity_input = UnityInputProto()
+        unity_input.command = 1
+
+        if custom_reset_parameters is not None:
+            logger.info("Academy \"{0}\" reset with custom parameters parameters: {1}".format(self.academy_name,
+                    ", ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
+
+            for key, value in custom_reset_parameters.items():
+                unity_input.initialization_input.custom_reset_parameters[key] = value
+
+
+        self.communicator.exchange(unity_input)
+        unity_output = self.communicator.exchange()
+
+        if unity_output is None:
+            raise UnityCommunicationException("Communicator has stopped.")
+
+        for brain in unity_output.initialization_output.brain_parameters:
+            self.external_brains[brain.brain_name] = BrainParameters(brain)
+
+    def step_receive_observations(self):
+        unity_output = self.communicator.receive()
+
+        # Read observations from memory
+        state = self.memory.ReadAgentsObservations(self.external_brains)
+
+        if unity_output is None:
+            raise UnityCommunicationException("Communicator has stopped.")
+        return state
+
+    def step_send_actions(self, agents_actions: Dict[str, np.ndarray] = None):
+
+        # Write actions to memory
+        self.memory.WriteAgentsActions(self.external_brains, agents_actions)
+
+        unity_input = UnityInputProto()
+        unity_input.command = 0
+
+        self.communicator.send(unity_input)
+
+    def episode_completed(self):
+        self.communicator.receive()
+        unity_input = UnityInputProto()
+        unity_input.command = 3
+        self.communicator.send(unity_input)
+
+        self.communicator.receive()
+        self.communicator.send(unity_input)
+
+        fitness = self.memory.ReadAgentsFitness(self.external_brains)
+
+        return fitness
+
+    def run_single_episode(self, model, num_steps, custom_reset_parameters):
+        self.reset(custom_reset_parameters)
+
+        for step in range(num_steps):
+            # s = timer()
+            agent_observations = self.step_receive_observations()
+            prey_observations = agent_observations['prey']
+
+            prey_actions = model["prey"](agent_observations['prey'])
+            agent_actions = {'prey': prey_actions}
+
+            self.step_send_actions(agent_actions)
+            # print(timer() - s)
+
+        fitness = self.episode_completed()
+        return fitness
+
+    def executable_launcher(self, file_name, no_graphics):
         launch_string = file_name
         logger.debug("This is the launch string {}".format(launch_string))
 
@@ -111,7 +149,6 @@ class UnityEnvironment():
         if no_graphics:
             subprocess_args += ["-nographics", "-batchmode"]
         subprocess_args += ["--port", str(self.port)]
-        subprocess_args += args
         try:
             self.proc1 = subprocess.Popen(
                 subprocess_args,
@@ -134,129 +171,16 @@ class UnityEnvironment():
         reset_params_str = (
             "\n\t\t".join(
                 [
-                    str(k) + " -> " + str(self._defaultResetParameters[k])
-                    for k in self._defaultResetParameters
+                    str(k) + " -> " + str(self.defaultResetParameters[k])
+                    for k in self.defaultResetParameters
                 ]
             )
-            if self._defaultResetParameters
+            if self.defaultResetParameters
             else "{}"
         )
-        return f"""Unity Academy name: {self._academy_name}
-        Default Reset Parameters : {reset_params_str}"""
-
-    def reset(self, custom_reset_parameters: Dict = None):
-        if not self._loaded:
-            raise UnityEnvironmentException("No Unity environment is loaded.")
-
-        unity_input = UnityInputProto()
-        unity_input.command = 1
-
-        if custom_reset_parameters is not None:
-            logger.info(
-                "Academy \"{0}\" reset with custom parameters parameters: {1}".format(self.academy_name,
-                    ", ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])
-                )
-            )
-            for key, value in custom_reset_parameters.items():
-                unity_input.initialization_input.custom_reset_parameters[key] = value
-
-
-        self.communicator.exchange(unity_input)
-        unity_output = self.communicator.exchange()
-
-        if unity_output is None:
-            raise UnityCommunicationException("Communicator has stopped.")
-
-        initialization_output = unity_output.initialization_output
-        for brain in initialization_output.brain_parameters:
-            self.external_brains[brain.brain_name] = BrainParameters(brain)
-
-    # @timed
-    # def step(self, vector_action: Dict[str, np.ndarray] = None):
-    #     # Check that environment is loaded, and episode is currently running.
-    #     if not self._loaded:
-    #         raise UnityEnvironmentException("No Unity environment is loaded.")
-    #
-    #     # Write actions to memory
-    #     start = timer()
-    #     for brain in self.external_brains.values():
-    #         mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
-    #         if vector_action:
-    #             byteArray = vector_action['prey'].tobytes()
-    #             mm.seek(brain.mmf_offset_actions)
-    #             mm.write(byteArray)
-    #     # print(timer() - start)
-    #
-    #     step_input = self._generate_step_input()
-    #     unity_output = self.communicator.exchange(step_input)
-    #
-    #     # Read observations from memory
-    #     state = {}
-    #     start = timer()
-    #     for brain in self.external_brains.values():
-    #         mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
-    #         mm.seek(brain.mmf_offset_observations)
-    #         observations = np.fromstring(mm.read(brain.mmf_size_observations), dtype='f')
-    #         state[brain.brain_name] = observations.reshape(brain.agents_count, brain.observation_vector_size)
-    #     # print(timer() - start)
-    #
-    #     if unity_output is None:
-    #         raise UnityCommunicationException("Communicator has stopped.")
-    #     return state
-
-    def step_receive_observations(self):
-        unity_output = self.communicator.receive()
-
-        # Read observations from memory
-        state = {}
-        for brain in self.external_brains.values():
-            mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_output')
-            mm.seek(brain.mmf_offset_observations)
-            observations = np.fromstring(mm.read(brain.mmf_size_observations), dtype='f')
-            state[brain.brain_name] = observations.reshape(brain.agents_count, brain.observation_vector_size)
-
-        if unity_output is None:
-            raise UnityCommunicationException("Communicator has stopped.")
-        return state
-
-    def step_send_actions(self, vector_action: Dict[str, np.ndarray] = None):
-
-        # Write actions to memory
-        for brain in self.external_brains.values():
-            mm = mmap.mmap(fileno=-1, length=200000, tagname='unity_input')
-            if vector_action:
-                byteArray = vector_action['prey'].tobytes()
-                mm.seek(brain.mmf_offset_actions)
-                mm.write(byteArray)
-
-        unity_input = UnityInputProto()
-        unity_input.command = 0
-
-        self.communicator.send(unity_input)
-
-    def episode_completed(self):
-        self.communicator.receive()
-        unity_input = UnityInputProto()
-        unity_input.command = 3
-        self.communicator.send(unity_input)
-
-        self.communicator.receive()
-        self.communicator.send(unity_input)
-
-        fitness = {}
-        with open(r"C:\Users\adek1\Desktop\fitness.txt", 'r') as file:
-            for line in file.readlines():
-                splitted = line.split(' ')
-                if len(splitted) > 1:
-                    f_list = [float(i) for i in splitted[1:-1]]
-                    fitness[splitted[0]] = f_list
-
-        return fitness
+        return f"Unity Academy name: {self.academy_name}\n\tDefault Reset Parameters:\n\t\t{reset_params_str}"
 
     def close(self):
-        """
-        Sends a shutdown signal to the unity environment, and closes the socket connection.
-        """
         if self._loaded:
             self._close()
         else:
@@ -278,11 +202,6 @@ class UnityEnvironment():
                 self.proc1.kill()
             # Set to None so we don't try to close multiple times.
             self.proc1 = None
-
-    def send_academy_parameters(self, initialization_input: UnityInitializationInputProto) -> UnityOutputProto:
-        inputs = UnityInputProto()
-        inputs.initialization_input.CopyFrom(initialization_input)
-        return self.communicator.initialize(inputs)
 
     @staticmethod
     def returncode_to_signal_name(returncode: int) -> Optional[str]:

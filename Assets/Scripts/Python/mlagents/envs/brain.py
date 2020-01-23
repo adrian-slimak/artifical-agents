@@ -13,3 +13,5 @@ class BrainParameters:
         self.mmf_size_observations = brain.mmf_size_observations
         self.mmf_offset_actions = brain.mmf_offset_actions
         self.mmf_size_actions = brain.mmf_size_actions
+        self.mmf_offset_fitness = brain.mmf_offset_fitness
+        self.mmf_size_fitness = brain.mmf_size_fitness

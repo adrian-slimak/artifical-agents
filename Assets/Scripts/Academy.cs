@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine.Serialization;
 using UnityEditor;
 using MLAgents.CommunicatorObjects;
-using System.IO.MemoryMappedFiles;
 using System;
 using System.IO;
 
@@ -66,8 +65,11 @@ namespace MLAgents
         EngineConfiguration m_EngineConfiguration = new EngineConfiguration(80, 80, 1, 100.0f, -1);
 
         public RpcCommunicator Communicator;
+        int m_Port = 5000;
         public bool IsCommunicatorOn
         { get { return Communicator != null; } }
+
+        Memory m_Memory;
 
         bool m_FirstAcademyReset;
 
@@ -78,11 +80,10 @@ namespace MLAgents
         public List<Brain> brains;
         public Dictionary<string, Brain> m_Brains;
 
+        [HideInInspector]
         public int m_EpisodeCount;
+        [HideInInspector]
         public int m_StepCount;
-
-        MemoryMappedFile m_UnityOutputMemory;
-        MemoryMappedFile m_UnityInputMemory;
 
         void Awake()
         {
@@ -99,8 +100,7 @@ namespace MLAgents
             ConfigureEngine();
             AcademyInitialization();
 
-            m_UnityOutputMemory = MemoryMappedFile.CreateNew("unity_output", 200000);
-            m_UnityInputMemory = MemoryMappedFile.CreateNew("unity_input", 200000);
+            m_Memory = new Memory(m_Port);
         }
 
         // Used to read Python-provided environment parameters
@@ -124,11 +124,12 @@ namespace MLAgents
             // Try to launch the communicator by using the arguments passed at launch
             try
             {
-                Communicator = new RpcCommunicator(port: ReadArgs());
+                m_Port = ReadArgs();
+                Communicator = new RpcCommunicator(port: m_Port);
             }
             catch
             {
-                Communicator = new RpcCommunicator(port: 5004);
+                Communicator = new RpcCommunicator(port: m_Port);
             }
 
             if (Communicator != null)
@@ -187,9 +188,9 @@ namespace MLAgents
                 using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
                 {
                     AgentUpdateObservations?.Invoke();
-
-                    MemoryWrite(brains);
                 }
+
+                m_Memory.WriteAgentsObservations(brains);
             }
 
             using (TimerStack.Instance.Scoped("CommunicateWithPython"))
@@ -200,7 +201,7 @@ namespace MLAgents
 
         void OnStepCommandReceived()
         {
-            MemoryRead(brains);
+            m_Memory.ReadAgentsActions(brains);
 
             using (TimerStack.Instance.Scoped("AgentUpdateMovement"))
             {
@@ -213,17 +214,10 @@ namespace MLAgents
         public void OnEpisodeCompletedCommandReceived()
         {
             m_FirstAcademyReset = false;
+
             AgentUpdateFitness?.Invoke();
-            using (StreamWriter sw = new StreamWriter("C:/Users/adek1/Desktop/fitness.txt"))
-            {
-                foreach(Brain brain in brains)
-                {
-                    sw.Write(brain.brainName+" ");
-                    foreach (float value in brain.agentsFitness)
-                        sw.Write(value.ToString(System.Globalization.CultureInfo.InvariantCulture) +" ");
-                    sw.WriteLine();
-                }
-            }
+
+            m_Memory.WriteAgentsFitness(brains);
         }
 
         void OnResetCommandReceived(ResetParameters customResetParameters)
@@ -233,8 +227,18 @@ namespace MLAgents
             m_EpisodeCount++;
 
             AcademyReset();
+            PlantsSpawner.Instance.OnReset();
 
             m_FirstAcademyReset = true;
+        }
+
+        static void OnQuitCommandReceived()
+        {
+#if UNITY_EDITOR
+
+            EditorApplication.isPlaying = false;
+#endif
+            Application.Quit();
         }
 
         public float? GetResetParameter(string key)
@@ -254,68 +258,7 @@ namespace MLAgents
         {
             EnvironmentStep();
         }
-
-        static void OnQuitCommandReceived()
-        {
-#if UNITY_EDITOR
-
-            EditorApplication.isPlaying = false;
-#endif
-            Application.Quit();
-        }
-
-        void MemoryWrite(List<Brain> brains)
-        {
-            int byteObservationsArraySize = 0;
-            foreach (Brain brain in brains)
-            {
-                byteObservationsArraySize += brain.mmf_size_observations;
-            }
-
-            using (TimerStack.Instance.Scoped("MemoryWrite"))
-            {
-                using (MemoryMappedViewAccessor viewAccessor = m_UnityOutputMemory.CreateViewAccessor())
-                {
-
-                    var byteArray = new byte[byteObservationsArraySize];
-                    foreach (Brain brain in brains)
-                        Buffer.BlockCopy(brain.stackedObservations, 0, byteArray, brain.mmf_offset_observations, brain.mmf_size_observations);
-
-                    viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
-                }
-            }
-
-            //float sum = 0f;
-            //foreach (float f in brains[0].stackedObservations)
-            //    sum += f;
-            //Debug.Log($"{m_StepCount}   Current observations: {sum}");
-        }
-
-        void MemoryRead(List<Brain> brains)
-        {
-            int byteActionsArraySize = 0;
-            foreach (Brain brain in brains)
-            {
-                byteActionsArraySize += brain.mmf_size_actions;
-            }
-
-            using (TimerStack.Instance.Scoped("MemoryRead"))
-            {
-                using (MemoryMappedViewAccessor viewAccessor = m_UnityInputMemory.CreateViewAccessor())
-                {
-                    byte[] byteArray = new byte[byteActionsArraySize];
-                    viewAccessor.ReadArray(0, byteArray, 0, byteArray.Length);
-                    foreach (Brain brain in brains)
-                        Buffer.BlockCopy(byteArray, brain.mmf_offset_actions, brain.stackedActions, 0, brain.mmf_size_actions);
-                }
-            }
-
-            //float sum = 0f;
-            //foreach (float f in brains[0].stackedActions)
-            //    sum += f;
-            //Debug.Log($"{m_StepCount}   Acting for: {sum}");
-        }
-
+               
         void OnApplicationQuit()
         {
             //Communicator.Dispose();

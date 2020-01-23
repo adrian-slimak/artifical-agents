@@ -13,13 +13,13 @@ public class Animal : MonoBehaviour
     public float energyDrainPerStep = 0.1f;
     public float maxEnergyDrainPerSpeed = 0.1f;
 
-    Vector2 velocity;
+    public int collectedFood = 0;
+
     float moveSpeed;
     float angularVelocity;
     float energyDrainSpeed;
 
     MLAgents.Agent agent;
-    Vision vision;
 
     Transform nearFood;
     Transform nearMate;
@@ -30,16 +30,12 @@ public class Animal : MonoBehaviour
     void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
-        vision = GetComponent<Vision>();
         agent = GetComponent<MLAgents.Agent>();
 
     }
 
     public void AnimalStep()
     {
-        rigidBody2D.angularVelocity = angularVelocity;
-        rigidBody2D.velocity = velocity;
-
         TryEat();
 
         energy -= (energyDrainSpeed + energyDrainPerStep);
@@ -49,18 +45,22 @@ public class Animal : MonoBehaviour
 
     public void SetMovement(float vel, float angVel)
     {
+        Vector2 pos = transform.position;
+        if (pos.x > 50f) pos.x -= 100f;
+        if (pos.x < -50f) pos.x += 100f;
+        if (pos.y > 50f) pos.y -= 100f;
+        if (pos.y < -50f) pos.y += 100f;
+        transform.position = pos;
+
         if (angVel != 0f)
             angularVelocity = (angVel / Mathf.Abs(angVel)) * turnSpeed;
-        else
-            angularVelocity = 0f;
+        if (Mathf.Abs(vel) > 1)
+            vel = vel / Mathf.Abs(vel);
 
-        moveSpeed = vel * maxMoveSpeed;
-
-        energyDrainSpeed = Mathf.Pow(moveSpeed / maxMoveSpeed, 2f)* maxEnergyDrainPerSpeed;
-        velocity = transform.up * moveSpeed;
+        energyDrainSpeed = Mathf.Pow(moveSpeed / maxMoveSpeed, 2f) * maxEnergyDrainPerSpeed;
 
         rigidBody2D.angularVelocity = angularVelocity;
-        rigidBody2D.velocity = velocity;
+        rigidBody2D.velocity = transform.up * (vel * maxMoveSpeed);
     }
 
 
@@ -97,6 +97,7 @@ public class Animal : MonoBehaviour
         {
             // Eat effect
             energy += 50f;
+            collectedFood++;
             Destroy(nearFood.gameObject);
             nearFood = null;
         }

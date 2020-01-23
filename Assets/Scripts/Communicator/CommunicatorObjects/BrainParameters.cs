@@ -25,18 +25,19 @@ namespace MLAgents.CommunicatorObjects {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "CjltbGFnZW50cy9lbnZzL2NvbW11bmljYXRvcl9vYmplY3RzL2JyYWluX3Bh",
-            "cmFtZXRlcnMucHJvdG8SFGNvbW11bmljYXRvcl9vYmplY3RzIvUBChRCcmFp",
+            "cmFtZXRlcnMucHJvdG8SFGNvbW11bmljYXRvcl9vYmplY3RzIqsCChRCcmFp",
             "blBhcmFtZXRlcnNQcm90bxISCgpicmFpbl9uYW1lGAEgASgJEhQKDGFnZW50",
             "c19jb3VudBgCIAEoBRIgChhvYnNlcnZhdGlvbnNfdmVjdG9yX3NpemUYAyAB",
             "KAUSGwoTYWN0aW9uc192ZWN0b3Jfc2l6ZRgEIAEoBRIfChdtbWZfb2Zmc2V0",
             "X29ic2VydmF0aW9ucxgFIAEoBRIdChVtbWZfc2l6ZV9vYnNlcnZhdGlvbnMY",
             "BiABKAUSGgoSbW1mX29mZnNldF9hY3Rpb25zGAcgASgFEhgKEG1tZl9zaXpl",
-            "X2FjdGlvbnMYCCABKAVCH6oCHE1MQWdlbnRzLkNvbW11bmljYXRvck9iamVj",
-            "dHNiBnByb3RvMw=="));
+            "X2FjdGlvbnMYCCABKAUSGgoSbW1mX29mZnNldF9maXRuZXNzGAkgASgFEhgK",
+            "EG1tZl9zaXplX2ZpdG5lc3MYCiABKAVCH6oCHE1MQWdlbnRzLkNvbW11bmlj",
+            "YXRvck9iamVjdHNiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.BrainParametersProto), global::MLAgents.CommunicatorObjects.BrainParametersProto.Parser, new[]{ "BrainName", "AgentsCount", "ObservationsVectorSize", "ActionsVectorSize", "MmfOffsetObservations", "MmfSizeObservations", "MmfOffsetActions", "MmfSizeActions" }, null, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::MLAgents.CommunicatorObjects.BrainParametersProto), global::MLAgents.CommunicatorObjects.BrainParametersProto.Parser, new[]{ "BrainName", "AgentsCount", "ObservationsVectorSize", "ActionsVectorSize", "MmfOffsetObservations", "MmfSizeObservations", "MmfOffsetActions", "MmfSizeActions", "MmfOffsetFitness", "MmfSizeFitness" }, null, null, null, null)
           }));
     }
     #endregion
@@ -76,6 +77,8 @@ namespace MLAgents.CommunicatorObjects {
       mmfSizeObservations_ = other.mmfSizeObservations_;
       mmfOffsetActions_ = other.mmfOffsetActions_;
       mmfSizeActions_ = other.mmfSizeActions_;
+      mmfOffsetFitness_ = other.mmfOffsetFitness_;
+      mmfSizeFitness_ = other.mmfSizeFitness_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -172,6 +175,28 @@ namespace MLAgents.CommunicatorObjects {
       }
     }
 
+    /// <summary>Field number for the "mmf_offset_fitness" field.</summary>
+    public const int MmfOffsetFitnessFieldNumber = 9;
+    private int mmfOffsetFitness_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int MmfOffsetFitness {
+      get { return mmfOffsetFitness_; }
+      set {
+        mmfOffsetFitness_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "mmf_size_fitness" field.</summary>
+    public const int MmfSizeFitnessFieldNumber = 10;
+    private int mmfSizeFitness_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int MmfSizeFitness {
+      get { return mmfSizeFitness_; }
+      set {
+        mmfSizeFitness_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as BrainParametersProto);
@@ -193,6 +218,8 @@ namespace MLAgents.CommunicatorObjects {
       if (MmfSizeObservations != other.MmfSizeObservations) return false;
       if (MmfOffsetActions != other.MmfOffsetActions) return false;
       if (MmfSizeActions != other.MmfSizeActions) return false;
+      if (MmfOffsetFitness != other.MmfOffsetFitness) return false;
+      if (MmfSizeFitness != other.MmfSizeFitness) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -207,6 +234,8 @@ namespace MLAgents.CommunicatorObjects {
       if (MmfSizeObservations != 0) hash ^= MmfSizeObservations.GetHashCode();
       if (MmfOffsetActions != 0) hash ^= MmfOffsetActions.GetHashCode();
       if (MmfSizeActions != 0) hash ^= MmfSizeActions.GetHashCode();
+      if (MmfOffsetFitness != 0) hash ^= MmfOffsetFitness.GetHashCode();
+      if (MmfSizeFitness != 0) hash ^= MmfSizeFitness.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -252,6 +281,14 @@ namespace MLAgents.CommunicatorObjects {
         output.WriteRawTag(64);
         output.WriteInt32(MmfSizeActions);
       }
+      if (MmfOffsetFitness != 0) {
+        output.WriteRawTag(72);
+        output.WriteInt32(MmfOffsetFitness);
+      }
+      if (MmfSizeFitness != 0) {
+        output.WriteRawTag(80);
+        output.WriteInt32(MmfSizeFitness);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -283,6 +320,12 @@ namespace MLAgents.CommunicatorObjects {
       }
       if (MmfSizeActions != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(MmfSizeActions);
+      }
+      if (MmfOffsetFitness != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(MmfOffsetFitness);
+      }
+      if (MmfSizeFitness != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(MmfSizeFitness);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -318,6 +361,12 @@ namespace MLAgents.CommunicatorObjects {
       }
       if (other.MmfSizeActions != 0) {
         MmfSizeActions = other.MmfSizeActions;
+      }
+      if (other.MmfOffsetFitness != 0) {
+        MmfOffsetFitness = other.MmfOffsetFitness;
+      }
+      if (other.MmfSizeFitness != 0) {
+        MmfSizeFitness = other.MmfSizeFitness;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -360,6 +409,14 @@ namespace MLAgents.CommunicatorObjects {
           }
           case 64: {
             MmfSizeActions = input.ReadInt32();
+            break;
+          }
+          case 72: {
+            MmfOffsetFitness = input.ReadInt32();
+            break;
+          }
+          case 80: {
+            MmfSizeFitness = input.ReadInt32();
             break;
           }
         }

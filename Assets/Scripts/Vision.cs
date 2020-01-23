@@ -25,7 +25,7 @@ public class Vision : MonoBehaviour
         cellAngle = visionAngle / visionCellsNum;
     }
 
-    public void SetObservationsVectorArray(ArraySegment<float> arraySegment)
+    public void SetVisionObservationsVectorArray(ArraySegment<float> arraySegment)
     {
         observationsVector = arraySegment;
         visionCellsNum = arraySegment.Count;
@@ -66,12 +66,15 @@ public class Vision : MonoBehaviour
                         if ((1f-distance) * visionDistance < 0.3f) animal.SetNearObject(hits[i].transform);
 
                         if (hits[i].tag == "Plant")
-                            distance += 1f;
+                        {
+                            //distance += 1f;
+                            observationsVector.Array[observationsVector.Offset + cellNum] = distance;
+                        }
 
                         if (hits[i].tag == "Prey")
                             distance += 2f;
 
-                        observationsVector.Array[observationsVector.Offset + cellNum] = distance;
+                        //observationsVector.Array[observationsVector.Offset + cellNum] = distance;
                     }
                 }
             }

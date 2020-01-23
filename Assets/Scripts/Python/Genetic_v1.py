@@ -20,11 +20,11 @@ class Genotype():
         newone = type(self)(self.shapes, self.lengths)
         return newone
 
-    def random_init(self, min, max):
-        percentOfGenes = random.randrange(min, max)/100
+    def random_init(self, min=0.45, max=0.7, loc=0., scale=10.):
+        percentOfGenes = random.uniform(min, max)
         numOfGenes = int(sum(self.lengths) * percentOfGenes)
         genesIdx = random.sample(range(0, sum(self.lengths) - 1), numOfGenes)
-        genesVals = np.random.normal(size=(sum(self.lengths) - 1))
+        genesVals = np.random.normal(loc=loc, scale=scale, size=(sum(self.lengths)))
         for id in genesIdx:
             self.genotype[id] = genesVals[id]
 
@@ -37,7 +37,7 @@ class Genotype():
         return numpies
 
 class GeneticAlgorithm:
-    def __init__(self, input_dim, lstm_units, output_dim, population_size, use_bias=True):
+    def __init__(self, input_dim, lstm_units, output_dim, population_size, use_bias=False):
         self.population = []
         if use_bias:
             self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (1, lstm_units * 4), (lstm_units, output_dim), (1, output_dim)]
@@ -45,14 +45,14 @@ class GeneticAlgorithm:
         else:
             self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (lstm_units, output_dim)]
             self.lengths = [input_dim * lstm_units * 4, lstm_units * lstm_units * 4, lstm_units * output_dim]
-        # self.shapes = [(1, input_dim)]
-        # self.lengths = [input_dim]
+
         self.population_size = population_size
+        self.use_bias = use_bias
 
     def initial_population(self):
         self.population = [Genotype(self.shapes, self.lengths) for i in range(self.population_size)]
         for individual in self.population:
-            individual.random_init(30, 70)
+            individual.random_init(min=0.25, max=0.5, loc=0., scale=10.)
 
     def calc_fitness(self, fitness):
         for idx, value in enumerate(fitness):
@@ -62,24 +62,25 @@ class GeneticAlgorithm:
         self.population = sorted_by_fitness
         best = max(self.population, key=lambda individual: individual.fitness)
         fitness_list = [i.fitness for i in self.population]
-        # print(f"avg fitness: {sum(fitness_list)/len(fitness_list)}")
+        print(f"avg fitness: {sum(fitness_list)/len(fitness_list)}")
         print(f"best fitness: {max(fitness_list)}")
 
     def next_generation(self):
-        elit_individual = self.population.pop(-1)
+        # elit_individual = self.population.pop(-1)
         selected_individuals = GeneticAlgorithm.selection(self.population)
 
-        parents = GeneticAlgorithm.pairing(elit_individual, selected_individuals)
+        parents = GeneticAlgorithm.pairing(selected_individuals)
 
         offsprings = [GeneticAlgorithm.mating(parents[x]) for x in range(len(parents))]
         offsprings = [individual for sublist in offsprings for individual in sublist]
 
-        unmutated = selected_individuals + offsprings
-        for individual in unmutated:
-            GeneticAlgorithm.mutation(individual, 0.01, 0., 0.)
-        mutated = unmutated
+        next_gen = selected_individuals + offsprings
+        for individual in next_gen:
+            GeneticAlgorithm.mutation(individual, gen_mutation_chance=0.01, gen_remove_chance=0.01, gen_appear_chance=0.01, sigma=1.)
 
-        next_gen = mutated + [elit_individual]
+        if len(next_gen) != self.population_size:
+            raise Exception("Next Gen size different than expected")
+
         self.population = next_gen
 
     @staticmethod
@@ -89,8 +90,8 @@ class GeneticAlgorithm:
             return selected_individuals
 
     @staticmethod
-    def pairing(elit, selected, method='Fittest'):
-        individuals = [elit] + selected
+    def pairing(selected, method='Fittest'):
+        individuals = selected
         parents = []
 
         if method == 'Fittest':
@@ -99,13 +100,13 @@ class GeneticAlgorithm:
         return parents
 
     @staticmethod
-    def mating(parents, maxPercentLength=60, method='Two Points Per Part'):
+    def mating(parents, maxPercentLength=0.6, method='Two Points Per Part'):
         offsprings = [parents[0].copy(), parents[1].copy()]
 
         if method=='Two Points Per Part':
             partStart=0
             for partLength in parents[0].lengths:
-                l = int(random.randrange(0, maxPercentLength)/100 * (partLength-1))
+                l = int(random.uniform(0, maxPercentLength) * (partLength-1))
                 s = random.randrange(partStart, partStart + partLength)
                 if s+l>=len(parents[0].genotype):
                     l-=(s+l)-len(parents[0].genotype)
@@ -116,16 +117,16 @@ class GeneticAlgorithm:
         return offsprings
 
     @staticmethod
-    def mutation(individual, gen_mutation_chance, gen_remove_chance, gen_appear_chance, standard_deviation=0.1):
+    def mutation(individual, gen_mutation_chance, gen_remove_chance, gen_appear_chance, sigma=1.):
         for id in range(len(individual.genotype)):
             if individual.genotype[id] == 0.:
                 if random.random() <= gen_appear_chance:
-                    individual.genotype[id] = random.gauss(mu=0., sigma=standard_deviation)
+                    individual.genotype[id] = random.gauss(mu=0., sigma=sigma)
             else:
                 if random.random() <= gen_remove_chance:
                     individual.genotype[id] = 0.
                 if random.random() <= gen_mutation_chance:
-                    individual.genotype[id] += random.gauss(mu=0., sigma=standard_deviation)
+                    individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
 
     def to_lstm_model(self):
         weights = [[],[],[]]
@@ -134,9 +135,12 @@ class GeneticAlgorithm:
             numpies = indyvidual.to_numpy()
             weights[0].append(numpies[0])
             weights[1].append(numpies[1])
-            biases[0].append(numpies[2])
-            weights[2].append(numpies[3])
-            biases[1].append(numpies[4])
+            if self.use_bias:
+                biases[0].append(numpies[2])
+                weights[2].append(numpies[3])
+                biases[1].append(numpies[4])
+            else:
+                weights[2].append(numpies[2])
 
         weights = [np.array(weight, dtype='f') for weight in weights]
         biases = [np.array(bias, dtype='f') for bias in biases]

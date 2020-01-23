@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 1736914657236933669}
   - component: {fileID: 8752870191489578874}
   - component: {fileID: 2458119146003361092}
-  - component: {fileID: 8756675883617140096}
   - component: {fileID: 6143707805166682195}
+  - component: {fileID: 8756675883617140096}
   - component: {fileID: -1906410475071066707}
   m_Layer: 8
   m_Name: Prey
@@ -74,6 +74,22 @@ CircleCollider2D:
   m_Offset: {x: 0, y: -0.05}
   serializedVersion: 2
   m_Radius: 0.2
+--- !u!114 &6143707805166682195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6127257329547458512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef0dd629f85df3e4a98868b90c6399ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visionAngle: 220
+  visionDistance: 10
+  visionCellsNum: 15
+  drawGizmo: 0
 --- !u!114 &8756675883617140096
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91,23 +107,8 @@ MonoBehaviour:
   maxMoveSpeed: 5
   turnSpeed: 100
   energy: 100
-  energyDrainPerStep: 0.1
---- !u!114 &6143707805166682195
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6127257329547458512}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef0dd629f85df3e4a98868b90c6399ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  visionAngle: 240
-  visionDistance: 5
-  visionCellsNum: 20
-  drawGizmo: 0
+  energyDrainPerStep: 0.15
+  maxEnergyDrainPerSpeed: 0.15
 --- !u!114 &-1906410475071066707
 MonoBehaviour:
   m_ObjectHideFlags: 0

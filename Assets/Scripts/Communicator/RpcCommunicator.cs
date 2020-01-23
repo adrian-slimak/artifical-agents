@@ -129,7 +129,7 @@ namespace MLAgents
             UnityInputProto unityInput;
 
 
-            using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
+            //using (TimerStack.Instance.Scoped("UnityPythonCommunication"))
             {
                 unityInput = Exchange(unityOutput);
             }
@@ -219,8 +219,10 @@ namespace MLAgents
                     ActionsVectorSize = brain.actionsVectorSize,
                     MmfOffsetObservations = brain.mmf_offset_observations,
                     MmfOffsetActions = brain.mmf_offset_actions,
+                    MmfOffsetFitness = brain.mmf_offset_fitness,
                     MmfSizeObservations = brain.mmf_size_observations,
-                    MmfSizeActions = brain.mmf_size_actions
+                    MmfSizeActions = brain.mmf_size_actions,
+                    MmfSizeFitness = brain.mmf_size_fitness
                 };
 
                 output.BrainParameters.Add(brainParametersProto);
