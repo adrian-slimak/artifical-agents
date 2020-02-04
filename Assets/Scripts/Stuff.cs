@@ -7,28 +7,28 @@ namespace UPC
     public class MMArray : IEnumerator, IEnumerable
     {
         unsafe float* arrayPointer;
-        public readonly int length;
+        public readonly int Length;
 
         int position = -1;
 
         public unsafe MMArray(float* arrayPointer, int length)
         {
             this.arrayPointer = arrayPointer;
-            this.length = length;
+            this.Length = length;
         }
 
         public unsafe float this[int index]
         {
             get
             {
-                if (index >= this.length)
+                if (index >= this.Length)
                     throw new IndexOutOfRangeException();
                 return *(arrayPointer + index);
             }
 
             set
             {
-                if (index >= this.length)
+                if (index >= this.Length)
                     throw new IndexOutOfRangeException();
                 *(arrayPointer + index) = value;
             }
@@ -44,7 +44,7 @@ namespace UPC
         public bool MoveNext()
         {
             this.position++;
-            return (this.position < this.length);
+            return (this.position < this.Length);
         }
 
         //IEnumerable

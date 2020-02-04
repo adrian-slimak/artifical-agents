@@ -23,6 +23,7 @@ public class Vision : MonoBehaviour
     {
         animal = GetComponent<Animal>();
         //observationsVector = new ArraySegment<float>(new float[visionCellsNum]);
+        //observationsVector = new float[visionCellsNum];
         cellAngle = visionAngle / visionCellsNum;
     }
 
@@ -36,7 +37,7 @@ public class Vision : MonoBehaviour
     public void SetVisionObservationsVectorArray(UPC.MMArray arraySegment)
     {
         observationsVector = arraySegment;
-        visionCellsNum = arraySegment.length;
+        visionCellsNum = arraySegment.Length;
         cellAngle = visionAngle / visionCellsNum;
     }
 
@@ -49,7 +50,7 @@ public class Vision : MonoBehaviour
     void DetectVision()
     {
         hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hits);
-        for (int j = 0; j < observationsVector.length; j++)
+        for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
         animal.ResetNearObject();
@@ -67,7 +68,7 @@ public class Vision : MonoBehaviour
                     float distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
 
-                    distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.99f);
+                    distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.999f);
 
                     if (observationsVector[cellNum] % 1 < distance)
                     {
@@ -82,7 +83,7 @@ public class Vision : MonoBehaviour
                         if (hits[i].tag == "Prey")
                             distance += 2f;
 
-                        //observationsVector.Array[observationsVector.Offset + cellNum] = distance;
+                        //observationsVector[cellNum] = distance;
                     }
                 }
             }
@@ -107,7 +108,7 @@ public class Vision : MonoBehaviour
         UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionDistance);
 
-        for (int i = 0; i < observationsVector.length; i++)
+        for (int i = 0; i < observationsVector.Length; i++)
         {
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
             UnityEditor.Handles.DrawLine(transform.position,

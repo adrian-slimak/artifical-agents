@@ -1,76 +1,62 @@
 using Grpc.Core;
 using UPC.CommunicatorObjects;
 using System;
-using UnityEditor;
-using UnityEngine;
+using System.IO.Pipes;
+using Google.Protobuf;
 
 namespace UPC
 {
-    /// Responsible for communication with External using gRPC.
-    public class RpcCommunicator
+    /// Responsible for communication with Python process using Named Pipes.
+    public class NPCommunicator
     {
-        bool m_IsOpen;
-        int m_Port;
+        int m_WorkerID;
+        string m_PipeName;
 
         public event QuitCommandHandler QuitCommandReceived;
         public event ResetCommandHandler ResetCommandReceived;
         public event StepCommandHandler StepCommandReceived;
         public event EpisodeCompletedCommandHandler EpisodeCompletedCommandReceived;
 
-        UnityToExternalProto.UnityToExternalProtoClient m_Client;
+        NamedPipeClientStream m_Pipe;
+        bool m_IsOpen = false;
 
-        public RpcCommunicator(int port)
+        public NPCommunicator(int workerID)
         {
-            m_Port = port;
+            m_WorkerID = workerID;
+            m_PipeName = $"\\\\.\\pipe\\named_pipe_{workerID}";
+
+            //CreatePipe();
         }
 
-        #region Initialization
-
-        public UnityInitializationParameters Initialize(string name, ResetParameters resetParameters)
+        void CreatePipe()
         {
-            UnityOutputProto unity_output = new UnityOutputProto {
-                InitializationOutput = GetUnityInitializationOutput(name, resetParameters)
-            };
-
-            UnityInputProto unity_input;
             try
             {
-                unity_input = Initialize(unity_output);
+                m_Pipe = new NamedPipeClientStream(".", m_PipeName, PipeDirection.InOut);
+                m_Pipe.Connect();
+                m_Pipe.ReadMode = PipeTransmissionMode.Message;
+                m_IsOpen = true;
             }
             catch
             {
-                var exceptionMessage = "The Communicator was unable to connect. Please make sure the External " +
-                    "process is ready to accept communication with Unity.";
-
-                // Check for common error condition and add details to the exception message.
-                var httpProxy = Environment.GetEnvironmentVariable("HTTP_PROXY");
-                var httpsProxy = Environment.GetEnvironmentVariable("HTTPS_PROXY");
-                if (httpProxy != null || httpsProxy != null)
-                {
-                    exceptionMessage += " Try removing HTTP_PROXY and HTTPS_PROXY from the" +
-                        "environment variables and try again.";
-                }
-                throw new Exception(exceptionMessage);
+                throw new Exception($"Cannot connect to Named Pipe \"{m_PipeName}\"");
             }
+        }
+
+        public UnityInitializationParameters Initialize(string academyName, ResetParameters resetParameters)
+        {
+            UnityOutputProto unity_output = new UnityOutputProto
+            {
+                InitializationOutput = GetUnityInitializationOutput(academyName, resetParameters)
+            };
+
+            UnityInputProto unity_input = Exchange(unity_output);
 
             var initializationParameters = new UnityInitializationParameters { seed = unity_input.InitializationInput.Seed };
             if (unity_input.InitializationInput.EngineConfiguration != null)
                 initializationParameters.engine_configuration = new EngineConfiguration(unity_input.InitializationInput.EngineConfiguration);
 
             return initializationParameters;
-        }
-
-        UnityInputProto Initialize(UnityOutputProto unityOutput)
-        {
-            m_IsOpen = true;
-            var channel = new Channel("localhost:" + m_Port, ChannelCredentials.Insecure);
-            m_Client = new UnityToExternalProto.UnityToExternalProtoClient(channel);
-            UnityMessageProto initializationMessage = m_Client.Exchange(WrapMessage(unityOutput, 200));
-
-#if UNITY_EDITOR
-            EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
-#endif
-            return initializationMessage.UnityInput;
         }
 
         public void Reset(UnityInputProto unity_input)
@@ -96,9 +82,6 @@ namespace UPC
             var unity = m_Client.Exchange(WrapMessage(null, 200));
         }
 
-        #endregion
-
-        #region Destruction
 
         /// <summary>
         /// Close the communicator gracefully on both sides of the communication.
@@ -118,10 +101,6 @@ namespace UPC
                 // ignored
             }
         }
-
-        #endregion
-
-        #region Sending and retreiving data
 
         public void CommunicateWithPython()
         {
@@ -160,39 +139,36 @@ namespace UPC
             }
         }
 
-        /// <summary>
-        /// Send a UnityOutput and receives a UnityInput.
-        /// </summary>
-        /// <returns>The next UnityInput.</returns>
-        /// <param name="unityOutput">The UnityOutput to be sent.</param>
-        UnityInputProto Exchange(UnityOutputProto unityOutput)
+        void Send(UnityOutputProto unityOutput)
         {
             if (!m_IsOpen)
-            {
+                return;
+
+            UnityMessageProto message = WrapMessage(unityOutput, 200);
+
+            byte[] encodedMessage = message.ToByteArray();
+            m_Pipe.Write(encodedMessage, 0, encodedMessage.Length);
+        }
+
+        byte[] buffer = new byte[10000];
+        UnityInputProto Receive()
+        {
+            if (!m_IsOpen)
                 return null;
-            }
+
             try
             {
-                var outputMessage = WrapMessage(unityOutput, 200);
-                UnityMessageProto inputMessage;
+                int dataLength = m_Pipe.Read(buffer, 0, buffer.Length);
+                UnityMessageProto unityMessage = UnityMessageProto.Parser.ParseFrom(buffer, 0, dataLength);
 
-                using (TimerStack.Instance.Scoped("UnityPython"))
+                if (unityMessage.Header.Status == 200)
                 {
-                    inputMessage = m_Client.Exchange(outputMessage);
-                }
-
-
-                if (inputMessage.Header.Status == 200)
-                {
-                    return inputMessage.UnityInput;
+                    return unityMessage.UnityInput;
                 }
 
                 m_IsOpen = false;
-                // Not sure if the quit command is actually sent when a
-                // non 200 message is received.  Notify that we are indeed
-                // quitting.
                 QuitCommandReceived?.Invoke();
-                return inputMessage.UnityInput;
+                return unityMessage.UnityInput;
             }
             catch
             {
@@ -200,6 +176,20 @@ namespace UPC
                 QuitCommandReceived?.Invoke();
                 return null;
             }
+        }
+
+        UnityInputProto Exchange(UnityOutputProto unityOutput)
+        {
+            UnityInputProto unityInput;
+
+            using (TimerStack.Instance.Scoped("UnityPython"))
+            {
+                Send(unityOutput);
+
+                unityInput = Receive();
+            }
+
+            return unityInput;
         }
 
         static UnityMessageProto WrapMessage(UnityOutputProto content, int status)
@@ -241,7 +231,7 @@ namespace UPC
         {
             var output = new UnityInitializationOutputProto();
             output.Name = name;
- 
+
 
             foreach (string key in resetParameters.Keys)
             {
@@ -250,20 +240,5 @@ namespace UPC
 
             return output;
         }
-
-
-
-        #endregion
-
-#if UNITY_EDITOR
-        void HandleOnPlayModeChanged(PlayModeStateChange state)
-        {
-            // This method is run whenever the playmode state is changed.
-            if (state == PlayModeStateChange.ExitingPlayMode)
-            {
-                Dispose();
-            }
-        }
-#endif
     }
 }

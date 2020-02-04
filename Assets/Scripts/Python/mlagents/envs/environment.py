@@ -128,15 +128,16 @@ class UnityEnvironment():
         self.reset(custom_reset_parameters)
 
         for step in range(num_steps):
+
             # s = timer()
             agent_observations = self.step_receive_observations()
+            # print(timer() - s)
             prey_observations = agent_observations['prey']
 
             prey_actions = model["prey"](agent_observations['prey'])
             agent_actions = {'prey': prey_actions}
 
             self.step_send_actions(agent_actions)
-            # print(timer() - s)
 
         fitness = self.episode_completed()
         return fitness

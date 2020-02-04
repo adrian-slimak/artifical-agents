@@ -18,6 +18,7 @@ class Genotype():
 
     def copy(self):
         newone = type(self)(self.shapes, self.lengths)
+        newone.genotype = self.genotype.copy()
         return newone
 
     def random_init(self, min=0.45, max=0.7, loc=0., scale=10.):
@@ -52,31 +53,33 @@ class GeneticAlgorithm:
     def initial_population(self):
         self.population = [Genotype(self.shapes, self.lengths) for i in range(self.population_size)]
         for individual in self.population:
-            individual.random_init(min=0.25, max=0.5, loc=0., scale=10.)
+            individual.random_init(min=0.25, max=0.5, loc=0., scale=15.)
 
     def calc_fitness(self, fitness):
         for idx, value in enumerate(fitness):
             self.population[idx].fitness = value
 
-        sorted_by_fitness = sorted(self.population, key=lambda individual: individual.fitness)
+        sorted_by_fitness = sorted(self.population, key=lambda individual: individual.fitness, reverse=True)
         self.population = sorted_by_fitness
-        best = max(self.population, key=lambda individual: individual.fitness)
-        fitness_list = [i.fitness for i in self.population]
-        print(f"avg fitness: {sum(fitness_list)/len(fitness_list)}")
-        print(f"best fitness: {max(fitness_list)}")
+        print(f"avg fitness: {np.average(fitness)}")
+        print(f"best fitness: {np.max(fitness)}")
+        return np.max(fitness), np.average(fitness)
 
     def next_generation(self):
-        # elit_individual = self.population.pop(-1)
         selected_individuals = GeneticAlgorithm.selection(self.population)
 
         parents = GeneticAlgorithm.pairing(selected_individuals)
 
-        offsprings = [GeneticAlgorithm.mating(parents[x]) for x in range(len(parents))]
+        offsprings = [GeneticAlgorithm.mating(parents[x], maxPercentLength=0.2) for x in range(len(parents))]
         offsprings = [individual for sublist in offsprings for individual in sublist]
+
+        elite_individuals = selected_individuals[:3]
+        selected_individuals = selected_individuals[3:]
 
         next_gen = selected_individuals + offsprings
         for individual in next_gen:
-            GeneticAlgorithm.mutation(individual, gen_mutation_chance=0.01, gen_remove_chance=0.01, gen_appear_chance=0.01, sigma=1.)
+            GeneticAlgorithm.mutation(individual, gen_mutation_chance=0.05, gen_remove_chance=0.01, gen_appear_chance=0.02, sigma=0.2)
+        next_gen.extend(elite_individuals)
 
         if len(next_gen) != self.population_size:
             raise Exception("Next Gen size different than expected")
@@ -86,7 +89,7 @@ class GeneticAlgorithm:
     @staticmethod
     def selection(population, method='Fittest Half'):
         if method == 'Fittest Half':
-            selected_individuals = [population[-x - 1] for x in range(len(population) // 2)]
+            selected_individuals = [population[i] for i in range(len(population) // 2)]
             return selected_individuals
 
     @staticmethod
@@ -100,18 +103,18 @@ class GeneticAlgorithm:
         return parents
 
     @staticmethod
-    def mating(parents, maxPercentLength=0.6, method='Two Points Per Part'):
+    def mating(parents, maxPercentLength, method='Two Points Per Part'):
         offsprings = [parents[0].copy(), parents[1].copy()]
 
-        if method=='Two Points Per Part':
-            partStart=0
+        if method == 'Two Points Per Part':
+            partStart = 0
             for partLength in parents[0].lengths:
                 l = int(random.uniform(0, maxPercentLength) * (partLength-1))
                 s = random.randrange(partStart, partStart + partLength)
                 if s+l>=len(parents[0].genotype):
                     l-=(s+l)-len(parents[0].genotype)
-                offsprings[1].genotype[s:s+l] = parents[0].genotype[s:s+l].copy()
                 offsprings[0].genotype[s:s+l] = parents[1].genotype[s:s+l].copy()
+                offsprings[1].genotype[s:s+l] = parents[0].genotype[s:s+l].copy()
                 partStart = partLength
 
         return offsprings

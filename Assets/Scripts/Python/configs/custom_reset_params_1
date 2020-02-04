@@ -1,5 +1,5 @@
 {
-"preys_count": 10,
+"preys_count": 60,
 "#prey_vision_observations_vector_size": 10,
 "#prey_actions_vector_size": 10,
 
