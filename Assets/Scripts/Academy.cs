@@ -61,10 +61,10 @@ namespace UPC
         [Tooltip("The engine-level settings which correspond to rendering quality and engine speed during Training.")]
         EngineConfiguration m_EngineConfiguration = new EngineConfiguration(80, 80, 1, 100.0f, -1);
 
-        public RpcCommunicator Communicator;
-        int m_Port = 5000;
+        public NPCommunicator m_Communicator;
+        int m_WorkerID = 0;
         public bool IsCommunicatorOn
-        { get { return Communicator != null; } }
+        { get { return m_Communicator != null; } }
 
         public Memory m_Memory;
 
@@ -97,7 +97,7 @@ namespace UPC
             ConfigureEngine();
             AcademyInitialization();
 
-            m_Memory = new Memory(m_Port);
+            m_Memory = new Memory(m_WorkerID);
         }
 
         // Used to read Python-provided environment parameters
@@ -121,34 +121,34 @@ namespace UPC
             // Try to launch the communicator by using the arguments passed at launch
             try
             {
-                m_Port = ReadArgs();
-                Communicator = new RpcCommunicator(port: m_Port);
+                m_WorkerID = ReadArgs();
+                m_Communicator = new NPCommunicator(workerID: m_WorkerID);
             }
             catch
             {
-                Communicator = new RpcCommunicator(port: m_Port);
+                m_Communicator = new NPCommunicator(workerID: m_WorkerID);
             }
 
-            if (Communicator != null)
+            if (m_Communicator != null)
             {
                 try
                 {
-                    var unityInitializationInput = Communicator.Initialize(name: gameObject.name, resetParameters: m_ResetParameters);
+                    var unityInitializationInput = m_Communicator.Initialize(academyName: gameObject.name, resetParameters: m_ResetParameters);
 
                     UnityEngine.Random.InitState(unityInitializationInput.seed);
                     m_EngineConfiguration = unityInitializationInput.engine_configuration;
                 }
                 catch
                 {
-                    Communicator = null;
+                    m_Communicator = null;
                 }
 
-                if (Communicator != null)
+                if (m_Communicator != null)
                 {
-                    Communicator.QuitCommandReceived += OnQuitCommandReceived;
-                    Communicator.ResetCommandReceived += OnResetCommandReceived;
-                    Communicator.StepCommandReceived += OnStepCommandReceived;
-                    Communicator.EpisodeCompletedCommandReceived += OnEpisodeCompletedCommandReceived;
+                    m_Communicator.QuitCommandReceived += OnQuitCommandReceived;
+                    m_Communicator.ResetCommandReceived += OnResetCommandReceived;
+                    m_Communicator.StepCommandReceived += OnStepCommandReceived;
+                    m_Communicator.EpisodeCompletedCommandReceived += OnEpisodeCompletedCommandReceived;
                 }
             }
         }
@@ -186,13 +186,11 @@ namespace UPC
                 {
                     AgentUpdateObservations?.Invoke();
                 }
-
-                //m_Memory.WriteAgentsObservations(brains);
             }
 
             using (TimerStack.Instance.Scoped("CommunicateWithPython"))
             {
-                Communicator?.CommunicateWithPython();
+                m_Communicator?.CommunicateWithPython();
             }
         }
 

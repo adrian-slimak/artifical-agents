@@ -3,6 +3,7 @@ using UPC.CommunicatorObjects;
 using System;
 using System.IO.Pipes;
 using Google.Protobuf;
+using UnityEngine;
 
 namespace UPC
 {
@@ -23,9 +24,9 @@ namespace UPC
         public NPCommunicator(int workerID)
         {
             m_WorkerID = workerID;
-            m_PipeName = $"\\\\.\\pipe\\named_pipe_{workerID}";
+            m_PipeName = $"named_pipe_{workerID}";
 
-            //CreatePipe();
+            CreatePipe();
         }
 
         void CreatePipe()
@@ -39,7 +40,7 @@ namespace UPC
             }
             catch
             {
-                throw new Exception($"Cannot connect to Named Pipe \"{m_PipeName}\"");
+                throw new Exception($"Cannot connect to Named Pipe \"\\\\.\\pipe\\{m_PipeName}\"");
             }
         }
 
@@ -73,13 +74,13 @@ namespace UPC
                 InitializationOutput = GetUnityResetOutput()
             };
 
-            m_Client.Exchange(WrapMessage(reset_output, 200));
+            Send(reset_output);
         }
 
         public void EpisodeCompleted()
         {
             EpisodeCompletedCommandReceived?.Invoke();
-            var unity = m_Client.Exchange(WrapMessage(null, 200));
+            //var unity = m_Client.Exchange(WrapMessage(null, 200));
         }
 
 
@@ -93,7 +94,7 @@ namespace UPC
 
             try
             {
-                m_Client.Exchange(WrapMessage(null, 400));
+                Send(null, 400);
                 m_IsOpen = false;
             }
             catch
@@ -104,13 +105,12 @@ namespace UPC
 
         public void CommunicateWithPython()
         {
-            var unityOutput = new UnityOutputProto();
             UnityInputProto unityInput;
-
 
             using (TimerStack.Instance.Scoped("UnityPythonExchange"))
             {
-                unityInput = Exchange(unityOutput);
+                Send(null);
+                unityInput = Receive();
             }
 
             if (unityInput == null)
@@ -133,18 +133,18 @@ namespace UPC
                     StepCommandReceived?.Invoke();
                     break;
 
-                case CommandProto.EpisodeCompleted:
+                case CommandProto.EpisodeComplete:
                     EpisodeCompleted();
                     break;
             }
         }
 
-        void Send(UnityOutputProto unityOutput)
+        void Send(UnityOutputProto unityOutput, int status=200)
         {
             if (!m_IsOpen)
                 return;
 
-            UnityMessageProto message = WrapMessage(unityOutput, 200);
+            UnityMessageProto message = WrapMessage(unityOutput, status);
 
             byte[] encodedMessage = message.ToByteArray();
             m_Pipe.Write(encodedMessage, 0, encodedMessage.Length);
@@ -161,7 +161,7 @@ namespace UPC
                 int dataLength = m_Pipe.Read(buffer, 0, buffer.Length);
                 UnityMessageProto unityMessage = UnityMessageProto.Parser.ParseFrom(buffer, 0, dataLength);
 
-                if (unityMessage.Header.Status == 200)
+                if (unityMessage.Status == 200)
                 {
                     return unityMessage.UnityInput;
                 }
@@ -196,7 +196,7 @@ namespace UPC
         {
             return new UnityMessageProto
             {
-                Header = new HeaderProto { Status = status },
+                Status = status,
                 UnityOutput = content
             };
         }
