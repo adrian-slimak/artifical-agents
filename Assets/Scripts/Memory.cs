@@ -37,33 +37,6 @@ public class Memory
         return new UPC.MMArray((float*) (pointer + offset*4), length);
     }
 
-    internal void WriteAgentsObservations(List<Brain> brains)
-    {
-        int byteObservationsArraySize = 0;
-        foreach (Brain brain in brains)
-        {
-            byteObservationsArraySize += brain.mmf_size_observations;
-        }
-
-        using (UPC.TimerStack.Instance.Scoped("MemoryWrite"))
-        {
-            using (MemoryMappedViewAccessor viewAccessor = m_AgentsObservationsMemory.CreateViewAccessor())
-            {
-
-                var byteArray = new byte[byteObservationsArraySize];
-                foreach (Brain brain in brains)
-                    Buffer.BlockCopy(brain.stackedObservations, 0, byteArray, brain.mmf_offset_observations, brain.mmf_size_observations);
-
-                viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
-            }
-        }
-
-        //float sum = 0f;
-        //foreach (float f in brains[0].stackedObservations)
-        //    sum += f;
-        //Debug.Log($"{m_StepCount}   Current observations: {sum}");
-    }
-
     internal void WriteAgentsFitness(List<Brain> brains)
     {
         int byteFitnessArraySize = 0;

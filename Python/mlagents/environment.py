@@ -132,7 +132,7 @@ class UnityEnvironment():
             # s = timer()
             agent_observations = self.step_receive_observations()
             # print(timer() - s)
-            prey_observations = agent_observations['prey']
+            # prey_observations = agent_observations['prey']
 
             prey_actions = model["prey"](agent_observations['prey'])
             agent_actions = {'prey': prey_actions}
