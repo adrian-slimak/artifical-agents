@@ -89,15 +89,17 @@ namespace UPC
             else
                 Destroy(this);
 
-            m_Brains = new Dictionary<string, Brain>();
-            foreach (Brain brain in brains)
-                m_Brains.Add(brain.brainName, brain);
-
             InitializeCommunicator();
             ConfigureEngine();
-            AcademyInitialization();
 
-            m_Memory = new Memory(m_WorkerID);
+            m_Brains = new Dictionary<string, Brain>();
+            foreach (Brain brain in brains)
+            {
+                m_Brains.Add(brain.brainName, brain);
+                brain.InitMemory(m_WorkerID);
+            }
+
+            AcademyInitialization();
         }
 
         // Used to read Python-provided environment parameters
@@ -196,8 +198,6 @@ namespace UPC
 
         void OnStepCommandReceived()
         {
-            m_Memory.ReadAgentsActions(brains);
-
             using (TimerStack.Instance.Scoped("AgentUpdateMovement"))
             {
                 AgentUpdateMovement?.Invoke();
@@ -211,10 +211,8 @@ namespace UPC
             m_FirstAcademyReset = false;
 
             AgentUpdateFitness?.Invoke();
-
-            m_Memory.WriteAgentsFitness(brains);
         }
-
+        
         void OnResetCommandReceived(ResetParameters customResetParameters)
         {
             m_CustomResetParameters = customResetParameters;

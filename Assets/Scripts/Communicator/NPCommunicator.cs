@@ -213,12 +213,12 @@ namespace UPC
                     AgentsCount = brain.agentsCount,
                     ObservationsVectorSize = brain.observationsVectorSize,
                     ActionsVectorSize = brain.actionsVectorSize,
-                    MmfOffsetObservations = brain.mmf_offset_observations,
-                    MmfOffsetActions = brain.mmf_offset_actions,
-                    MmfOffsetFitness = brain.mmf_offset_fitness,
-                    MmfSizeObservations = brain.mmf_size_observations,
-                    MmfSizeActions = brain.mmf_size_actions,
-                    MmfSizeFitness = brain.mmf_size_fitness
+                    //MmfOffsetObservations = brain.mmf_offset_observations,
+                    //MmfOffsetActions = brain.mmf_offset_actions,
+                    //MmfOffsetFitness = brain.mmf_offset_fitness,
+                    //MmfSizeObservations = brain.m_Memory.mmf_size_observations,
+                    //MmfSizeActions = brain.m_Memory.mmf_size_actions,
+                    //MmfSizeFitness = brain.m_Memory.mmf_size_fitness
                 };
 
                 output.BrainParameters.Add(brainParametersProto);

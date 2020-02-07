@@ -8,7 +8,8 @@ using System;
 public class HUD : MonoBehaviour
 {
     public Text m_FPSText;
-    public Text text;
+    public Text EnvInfo;
+    public Text PopInfo;
     float deltaTime = 0.0f;
     Academy m_Academy;
 
@@ -20,8 +21,18 @@ public class HUD : MonoBehaviour
 
     public void Update()
     {
-        text.text = string.Format($"Episode: {m_Academy.m_EpisodeCount}\n" +
-                                  $"Steps: {m_Academy.m_StepCount}");
+        EnvInfo.text = string.Format($"Episode: {m_Academy.m_EpisodeCount}\n" +
+                                     $"Steps: {m_Academy.m_StepCount}");
+
+        string text = "";
+        string text1 = "\n";
+        foreach (Brain brain in m_Academy.brains)
+        {
+            text += $"{brain.brainName} alive: {brain.agentsAlive}/{brain.agentsCount}\n";
+            text1 += $"Best {brain.brainName}: {brain.bestAgentFitness}";
+        }
+
+        PopInfo.text = text+text1;
     }
 
     private IEnumerator FPS()
@@ -39,14 +50,5 @@ public class HUD : MonoBehaviour
             float fps = deltaSteps / (deltaTime/1000f);
             m_FPSText.text = string.Format("{0:0.0} steps/s", fps);
         }
-    }
-
-    void UpdateFPS()
-    {
-        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
-        float fps = 1.0f / deltaTime;
-        float msec = deltaTime * 1000.0f;
-        string text = string.Format("{0:0.0} ms ({1:0.0} fps)", msec, fps);
-        m_FPSText.text = text;
     }
 }

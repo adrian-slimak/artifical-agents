@@ -11,12 +11,9 @@ namespace UPC
         Brain m_Brain;
         int m_Id;
 
-        //public ArraySegment<float> m_ActionsVector;
-        //public ArraySegment<float> m_VisionObservationsVectorArray;
         MMArray m_ActionsVector;
         MMArray m_VisionObservationsVectorArray;
-
-        public 
+        MMArray m_FitnessArray;
 
         int m_StepCount;
 
@@ -33,6 +30,7 @@ namespace UPC
         {
             m_Brain = Academy.Instance.m_Brains[m_BrainName];
             m_Id = m_Brain.SubscribeAgent();
+
             Academy.Instance.AgentUpdateObservations += UpdateObservations;
             Academy.Instance.AgentUpdateMovement += AgentStep;
             Academy.Instance.AgentUpdateFitness += UpdateFitness;
@@ -42,6 +40,7 @@ namespace UPC
         {
             m_VisionObservationsVectorArray = m_Brain.GetVisionObservationsArray(m_Id);
             m_ActionsVector = m_Brain.GetActionsVector(m_Id);
+            m_FitnessArray = m_Brain.GetFitnessArray(m_Id);
 
             m_Vision.SetVisionObservationsVectorArray(m_VisionObservationsVectorArray);
         }
@@ -57,8 +56,13 @@ namespace UPC
 
         public void UpdateFitness()
         {
-            float fitness = m_Animal.collectedFood*10;
-            Academy.Instance.m_Brains[m_BrainName].agentsFitness[m_Id] = fitness;
+            float fitness = m_Animal.collectedFood;
+            m_FitnessArray[0] = fitness;
+            if(fitness>m_Brain.bestAgentFitness)
+            {
+                m_Brain.bestAgentFitness = fitness;
+                m_Brain.bestAgent = this;
+            }
         }
 
         void AgentStep()
@@ -68,6 +72,14 @@ namespace UPC
             if (m_ActionsVector == null) return;
             m_Animal.SetMovement(m_ActionsVector[0], m_ActionsVector[1]);
             m_Animal.AnimalStep();
+
+            UpdateFitness();
+        }
+
+        internal void OnDie()
+        {
+            m_Brain.agentsAlive--;
+            Destroy(this.gameObject);
         }
 
         private void OnDestroy()

@@ -25,16 +25,10 @@ public class VirtualAcademy : Academy
 
         List<Agent> agents = SpawnAgents();
         foreach (Agent agent in agents)
-            agent.Subscribe();
+            agent.Subscribe();// Can this be onStart in Agent???
 
-        int[] offset = { 0, 0, 0};
         foreach (Brain brain in brains)
-        {
-            int[] size = brain.Init(offset);
-            offset[0] += size[0];
-            offset[1] += size[1];
-            offset[2] += size[2];
-        }
+            brain.Init();
 
         foreach (Agent agent in agents)
             agent.Init();

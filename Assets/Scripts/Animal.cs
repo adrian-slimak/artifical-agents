@@ -88,7 +88,7 @@ public class Animal : MonoBehaviour
     void Die()
     {
         agent.UpdateFitness();
-        Destroy(this.gameObject);
+        agent.OnDie();
     }
 
     void TryEat()

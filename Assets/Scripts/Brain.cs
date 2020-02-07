@@ -16,25 +16,20 @@ public class Brain
 
     [HideInInspector]
     public int agentsCount;
-    [HideInInspector]
-    public int mmf_offset_observations;
-    [HideInInspector]
-    public int mmf_size_observations;
-    [HideInInspector]
-    public int mmf_offset_actions;
-    [HideInInspector]
-    public int mmf_size_actions;
-    [HideInInspector]
-    public int mmf_offset_fitness;
-    [HideInInspector]
-    public int mmf_size_fitness;
 
     [HideInInspector]
-    public float[] stackedObservations;
+    public int agentsAlive;
     [HideInInspector]
-    public float[] stackedActions;
+    public float bestAgentFitness;
     [HideInInspector]
-    public float[] agentsFitness;
+    public Agent bestAgent;
+
+    Memory m_Memory;
+
+    public void InitMemory(int workerID)
+    {
+        m_Memory = new Memory(brainName, workerID);
+    }
 
     public void Reset()
     {
@@ -42,31 +37,20 @@ public class Brain
         actionsVectorSize = (int)(Academy.Instance.GetResetParameter(brainName + "_actions_vector_size") ?? actionsVectorSize);
         observationsVectorSize = visionObservationsVectorSize;
         agentsCount = 0;
-        mmf_offset_actions = -1;
-        mmf_offset_observations = -1;
-        mmf_offset_fitness = -1;
-        mmf_size_actions = -1;
-        mmf_size_observations = -1;
-        mmf_size_fitness = -1;
-        stackedActions = null;
-        stackedObservations = null;
+
+        m_Memory.Reset();
     }
 
-    public int[] Init(int[] offset)
+    public void Init()
     {
-        stackedObservations = new float[agentsCount * observationsVectorSize];
-        stackedActions = new float[agentsCount * actionsVectorSize];
-        agentsFitness = new float[agentsCount];
+        agentsAlive = agentsCount;
+        bestAgentFitness = -1;
+        bestAgent = null;
+        m_Memory.mmf_size_observations = 4 * agentsCount * observationsVectorSize;
+        m_Memory.mmf_size_actions = 4 * agentsCount * actionsVectorSize;
+        m_Memory.mmf_size_fitness = 4 * agentsCount;
 
-        mmf_size_observations = 4 * stackedObservations.Length;
-        mmf_size_actions = 4 * stackedActions.Length;
-        mmf_size_fitness = 4 * agentsCount;
-
-        mmf_offset_observations = offset[0];
-        mmf_offset_actions = offset[1];
-        mmf_offset_fitness = offset[2];
-
-        return new int[] { mmf_size_observations, mmf_size_actions, mmf_size_fitness};
+        m_Memory.Init();
     }
 
     public int SubscribeAgent()
@@ -76,14 +60,16 @@ public class Brain
 
     public MMArray GetVisionObservationsArray(int agent_id)
     {
-        //return new ArraySegment<float>(stackedObservations, agent_id * observationsVectorSize, visionObservationsVectorSize);
-        return Academy.Instance.m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize, visionObservationsVectorSize);
+        return m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize, visionObservationsVectorSize);
     }
 
     public MMArray GetActionsVector(int agent_id)
     {
-        //return new ArraySegment<float>(stackedActions, agent_id * actionsVectorSize, actionsVectorSize);
-        return Academy.Instance.m_Memory.GetActionsMemoryArray(agent_id * actionsVectorSize, actionsVectorSize);
+        return m_Memory.GetActionsMemoryArray(agent_id * actionsVectorSize, actionsVectorSize);
+    }
 
+    internal MMArray GetFitnessArray(int agent_id)
+    {
+        return m_Memory.GetFitnessMemoryArray(agent_id, 1);
     }
 }

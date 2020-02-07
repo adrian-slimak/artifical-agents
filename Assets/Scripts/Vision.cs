@@ -34,10 +34,10 @@ public class Vision : MonoBehaviour
     //    cellAngle = visionAngle / visionCellsNum;
     //}
 
-    public void SetVisionObservationsVectorArray(UPC.MMArray arraySegment)
+    public void SetVisionObservationsVectorArray(UPC.MMArray observationsVectorArray)
     {
-        observationsVector = arraySegment;
-        visionCellsNum = arraySegment.Length;
+        observationsVector = observationsVectorArray;
+        visionCellsNum = observationsVectorArray.Length;
         cellAngle = visionAngle / visionCellsNum;
     }
 

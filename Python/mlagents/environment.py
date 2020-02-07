@@ -3,9 +3,8 @@ import logging
 import numpy as np
 import subprocess
 from typing import Dict, Optional
-from Memory import Memory
 
-from .brain import BrainParameters
+from .brain import Brain
 from .exception import (UnityEnvironmentException, UnityCommunicationException, UnityTimeOutException)
 
 from mlagents.communicator_objects.unity_input_pb2 import UnityInputProto
@@ -16,13 +15,14 @@ from .np_communicator import NPCommunicator
 import signal
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("mlagents.envs")
+logger = logging.getLogger("Environment")
 
 
-class UnityEnvironment():
+class UnityEnvironment:
 
     def __init__(self, file_name: Optional[str] = None, worker_id: int = 0,
-                 initialization_input: UnityInitializationInputProto = None, no_graphics: bool = False, timeout_wait: int = 60):
+                 initialization_input: UnityInitializationInputProto = None,
+                 no_graphics: bool = False, timeout_wait: int = 60):
 
         atexit.register(self._close)
         self.worker_id = worker_id
@@ -30,7 +30,7 @@ class UnityEnvironment():
         self.proc1 = None
         self.timeout_wait: int = timeout_wait
         self.communicator = NPCommunicator(self.worker_id, self.timeout_wait)
-        self.external_brains = {}
+        self.external_brains: Dict[str, Brain] = {}
 
         if file_name is None and worker_id != 0:
             raise UnityEnvironmentException("If the environment name is None, the worker-id must be 0 in order to connect with the Editor.")
@@ -53,13 +53,11 @@ class UnityEnvironment():
             self._close()
             raise
 
-        self.memory = Memory(self.worker_id)
         self.academy_name = initialization_output.name
         # self._log_path = aca_params.log_path
         self.defaultResetParameters = dict(initialization_output.default_reset_parameters)
 
         logger.info("\n'{0}' started successfully!\n{1}".format(self.academy_name, str(self)))
-
 
     def get_external_brains(self):
         return self.external_brains
@@ -73,11 +71,10 @@ class UnityEnvironment():
 
         if custom_reset_parameters is not None:
             logger.info("\n\tAcademy \"{0}\" reset with custom parameters:\n{1}".format(self.academy_name,
-                    "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
+                "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
 
             for key, value in custom_reset_parameters.items():
                 unity_input.initialization_input.custom_reset_parameters[key] = value
-
 
         self.communicator.receive()
         self.communicator.send(unity_input)
@@ -88,23 +85,26 @@ class UnityEnvironment():
             raise UnityCommunicationException("Communicator has stopped.")
 
         for brain in unity_output.initialization_output.brain_parameters:
-            self.external_brains[brain.brain_name] = BrainParameters(brain)
+            if brain.brain_name not in self.external_brains:
+                self.external_brains[brain.brain_name] = Brain(brain, self.worker_id)
+            else:
+                self.external_brains[brain.brain_name].Init(brain)
 
     def step_receive_observations(self):
         self.communicator.receive()
-        # unity_output = self.communicator.receive()
 
         # Read observations from memory
-        state = self.memory.ReadAgentsObservations(self.external_brains)
+        state = {}
+        for brain_name, brain in self.external_brains.items():
+            state[brain_name] = brain.getAgentsObservations()
 
-        # if unity_output is None:
-        #     raise UnityCommunicationException("Communicator has stopped.")
         return state
 
     def step_send_actions(self, agents_actions: Dict[str, np.ndarray] = None):
 
         # Write actions to memory
-        self.memory.WriteAgentsActions(self.external_brains, agents_actions)
+        for brain_name, actions in agents_actions.items():
+            self.external_brains[brain_name].setAgentsActions(actions)
 
         unity_input = UnityInputProto()
         unity_input.command = 0
@@ -114,13 +114,15 @@ class UnityEnvironment():
     def episode_completed(self):
         self.communicator.receive()
         unity_input = UnityInputProto()
-        unity_input.command = 3
+        unity_input.command = 2
         self.communicator.send(unity_input)
 
         self.communicator.receive()
         self.communicator.send(unity_input)
 
-        fitness = self.memory.ReadAgentsFitness(self.external_brains)
+        fitness = {}
+        for brain_name, brain in self.external_brains.items():
+            fitness[brain_name] = brain.getAgentsFitness()
 
         return fitness
 

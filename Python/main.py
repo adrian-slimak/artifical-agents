@@ -5,14 +5,15 @@ from Genetic_v1 import GeneticAlgorithm
 import json
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 from mlagents.communicator_objects.engine_configuration_pb2 import EngineConfigurationProto
+from LivePlotting import LivePlot
 
 def get_initialization_input():
     engine_config = EngineConfigurationProto()
     engine_config.width = 1080
     engine_config.height = 720
     engine_config.quality_level = 1
-    engine_config.time_scale = 1
-    engine_config.target_frame_rate = 60
+    engine_config.time_scale = 5
+    engine_config.target_frame_rate = -1
     engine_config.show_monitor = False
     return UnityInitializationInputProto(seed=1, engine_configuration=engine_config)
 
@@ -62,7 +63,7 @@ def main():
         # with open('results.pickle', 'wb') as file:
         #     pickle.dump(results, file)
         max, avg = GA.calc_fitness(fitness)
-        # livePlot.update([max/10,avg])
+        # livePlot.update([max,avg])
         GA.next_generation()
 
     unity_environment.close()

@@ -6,81 +6,55 @@ using UnityEngine;
 
 public class Memory
 {
-    MemoryMappedFile m_AgentsObservationsMemory;
-    MemoryMappedFile m_AgentsActionsMemory;
-    MemoryMappedFile m_AgentsFitnessMemory;
+    MemoryMappedFile m_MMF;
+    unsafe byte* m_Pointer;
 
-    public Memory(int m_Port)
+    unsafe byte* mmf_observations_pointer;
+    internal int mmf_size_observations;
+
+    unsafe byte* mmf_actions_pointer;
+    internal int mmf_size_actions;
+
+    unsafe byte* mmf_fitness_pointer;
+    internal int mmf_size_fitness;
+
+    public unsafe Memory(string brainName, int workerID)
     {
-        m_AgentsObservationsMemory = MemoryMappedFile.CreateOrOpen("agents_observations_" + m_Port, 200000);
-        m_AgentsActionsMemory = MemoryMappedFile.CreateOrOpen("agents_actions_" + m_Port, 200000);
-        m_AgentsFitnessMemory = MemoryMappedFile.CreateOrOpen("agents_fitness_" + m_Port, 200000);
+        m_MMF = MemoryMappedFile.CreateOrOpen($"{brainName}_brain_{workerID}", 200000);
+
+        using (MemoryMappedViewAccessor viewAccessor = m_MMF.CreateViewAccessor())
+            viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref m_Pointer);
+    }
+
+    public unsafe void Init()
+    {
+        mmf_observations_pointer = m_Pointer;
+        mmf_actions_pointer = m_Pointer + mmf_size_observations;
+        mmf_fitness_pointer = m_Pointer + mmf_size_observations + mmf_size_actions;
     }
 
     public unsafe UPC.MMArray GetObservationsMemoryArray(int offset, int length)
     {
-        byte* pointer = null;
-
-        using (MemoryMappedViewAccessor viewAccessor = m_AgentsObservationsMemory.CreateViewAccessor())
-            viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
-
-        return new UPC.MMArray((float*) (pointer + offset*4), length);
+        return new UPC.MMArray((float*) (mmf_observations_pointer + offset*4), length);
     }
 
     public unsafe UPC.MMArray GetActionsMemoryArray(int offset, int length)
     {
-        byte* pointer = null;
-
-        using (MemoryMappedViewAccessor viewAccessor = m_AgentsActionsMemory.CreateViewAccessor())
-            viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
-
-        return new UPC.MMArray((float*) (pointer + offset*4), length);
+        return new UPC.MMArray((float*) (mmf_actions_pointer + offset*4), length);
     }
 
-    internal void WriteAgentsFitness(List<Brain> brains)
+    public unsafe UPC.MMArray GetFitnessMemoryArray(int offset, int length)
     {
-        int byteFitnessArraySize = 0;
-        foreach (Brain brain in brains)
-        {
-            byteFitnessArraySize += brain.mmf_size_fitness;
-        }
-
-        using (UPC.TimerStack.Instance.Scoped("MemoryWrite"))
-        {
-            using (MemoryMappedViewAccessor viewAccessor = m_AgentsFitnessMemory.CreateViewAccessor())
-            {
-
-                var byteArray = new byte[byteFitnessArraySize];
-                foreach (Brain brain in brains)
-                    Buffer.BlockCopy(brain.agentsFitness, 0, byteArray, brain.mmf_offset_fitness, brain.mmf_size_fitness);
-
-                viewAccessor.WriteArray(0, byteArray, 0, byteArray.Length);
-            }
-        }
+        return new UPC.MMArray((float*)(mmf_fitness_pointer + offset*4), length);
     }
 
-    internal void ReadAgentsActions(List<Brain> brains)
+    public unsafe void Reset()
     {
-        int byteActionsArraySize = 0;
-        foreach (Brain brain in brains)
-        {
-            byteActionsArraySize += brain.mmf_size_actions;
-        }
-
-        using (UPC.TimerStack.Instance.Scoped("MemoryRead"))
-        {
-            using (MemoryMappedViewAccessor viewAccessor = m_AgentsActionsMemory.CreateViewAccessor())
-            {
-                byte[] byteArray = new byte[byteActionsArraySize];
-                viewAccessor.ReadArray(0, byteArray, 0, byteArray.Length);
-                foreach (Brain brain in brains)
-                    Buffer.BlockCopy(byteArray, brain.mmf_offset_actions, brain.stackedActions, 0, brain.mmf_size_actions);
-            }
-        }
-
-        //float sum = 0f;
-        //foreach (float f in brains[0].stackedActions)
-        //    sum += f;
-        //Debug.Log($"{m_StepCount}   Acting for: {sum}");
+        mmf_observations_pointer = null;
+        mmf_actions_pointer = null;
+        mmf_fitness_pointer = null;
+        mmf_size_actions = -1;
+        mmf_size_observations = -1;
+        mmf_size_fitness = -1;
     }
 }
