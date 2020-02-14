@@ -15,7 +15,7 @@ class LivePlot:
         self.ax.set_xlabel(xLabel)
         self.ax.set_ylabel(yLabel)
         self.ax.set_xlim(0, 200)
-        self.ax.set_ylim(0, 60)
+        self.ax.set_ylim(0, 30)
 
         colors = ['r', 'b']
         for line, color in zip(lines, colors):

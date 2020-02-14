@@ -155,15 +155,7 @@ class UnityEnvironment:
             subprocess_args += ["-nographics", "-batchmode"]
         subprocess_args += ["--port", str(self.worker_id)]
         try:
-            self.proc1 = subprocess.Popen(
-                subprocess_args,
-                # start_new_session=True means that signals to the parent python process
-                # (e.g. SIGINT from keyboard interrupt) will not be sent to the new process on POSIX platforms.
-                # This is generally good since we want the environment to have a chance to shutdown,
-                # but may be undesirable in come cases; if so, we'll add a command-line toggle.
-                # Note that on Windows, the CTRL_C signal will still be sent.
-                start_new_session=True,
-            )
+            self.proc1 = subprocess.Popen(subprocess_args, start_new_session=True)
         except PermissionError as perm:
             # This is likely due to missing read or execute permissions on file.
             raise UnityEnvironmentException(

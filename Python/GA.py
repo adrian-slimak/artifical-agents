@@ -1,175 +1,174 @@
+# from LSTM import LSTMModel
 import numpy as np
-from numpy.random import randint
-from random import random as rnd
-from random import gauss, randrange
+import random
+from timeit import default_timer as timer
 
-def individual(number_of_genes, upper_limit, lower_limit):
-    individual=[round(rnd() * (upper_limit-lower_limit) + lower_limit, 1) for x in range(number_of_genes)]
-    return individual
+# self.lstm_kernel = np.ones((input_dim, lstm_units * 4))
+# self.lstm_recurrent_kernel = np.ones((lstm_units, lstm_units * 4))
+# self.lstm_bias = np.ones((1, lstm_units * 4))
+# self.dense_kernel = np.ones((lstm_units, dense_units))
+# self.dense_bias = np.ones((1, dense_units))
 
-def population(number_of_individuals, number_of_genes, upper_limit, lower_limit):
-    return [individual(number_of_genes, upper_limit, lower_limit) for x in range(number_of_individuals)]
+class Genotype():
+    def __init__(self, shapes, lengths):
+        self.shapes = shapes
+        self.lengths = lengths
+        self.genotype = np.zeros((sum(self.lengths)), dtype='f')
+        self.fitness = None
 
-def fitness_calculation(individual):
-    fitness_value = sum(individual)
-    return fitness_value
+    def copy(self):
+        newone = type(self)(self.shapes, self.lengths)
+        newone.genotype = self.genotype.copy()
+        return newone
 
-def roulette(cum_sum, chance):
-    veriable = list(cum_sum.copy())
-    veriable.append(chance)
-    veriable = sorted(veriable)
-    return veriable.index(chance)
+    def random_init(self, min, max, loc, scale):
+        percentOfGenes = random.uniform(min, max)
+        numOfGenes = int(sum(self.lengths) * percentOfGenes)
+        genesIdx = random.sample(range(0, sum(self.lengths) - 1), numOfGenes)
+        genesVals = np.random.normal(loc=loc, scale=scale, size=(sum(self.lengths)))
+        for id in genesIdx:
+            self.genotype[id] = genesVals[id]
 
-def selection(generation, method='Fittest Half'):
-    generation['Normalized Fitness'] = sorted([generation['Fitness'][x]/sum(generation['Fitness']) for x in range(len(generation['Fitness']))], reverse = True)
-    generation['Cumulative Sum'] = np.array(generation['Normalized Fitness']).cumsum()
+    def to_numpy(self):
+        numpies = []
+        s = 0
+        for shape, length in zip(self.shapes, self.lengths):
+            numpies.append(np.reshape(self.genotype[s:s+length], shape))
+            s = length
+        return numpies
 
-    if method == 'Roulette Wheel':
-        selected = []
-        for x in range(len(generation['Individuals'])//2):
-            selected.append(roulette(generation
-                ['Cumulative Sum'], rnd()))
-            while len(set(selected)) != len(selected):
-                selected[x] = \
-                    (roulette(generation['Cumulative Sum'], rnd()))
-        selected = {'Individuals': [generation['Individuals'][int(selected[x])] for x in range(len(generation['Individuals'])//2)]
-                ,'Fitness': [generation['Fitness'][int(selected[x])] for x in range(len(generation['Individuals'])//2)]}
+class GeneticAlgorithm:
+    def __init__(self, input_dim, lstm_units, output_dim, population_size, use_bias=False):
+        self.population = []
+        if use_bias:
+            self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (1, lstm_units * 4), (lstm_units, output_dim), (1, output_dim)]
+            self.lengths = [input_dim * lstm_units * 4, lstm_units * lstm_units * 4, lstm_units * 4, lstm_units * output_dim, output_dim]
+        else:
+            self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (lstm_units, output_dim)]
+            self.lengths = [input_dim * lstm_units * 4, lstm_units * lstm_units * 4, lstm_units * output_dim]
 
-    elif method == 'Fittest Half':
-        selected_individuals = [generation['Individuals'][-x-1] for x in range(int(len(generation['Individuals'])//2))]
-        selected_fitnesses = [generation['Fitness'][-x-1] for x in range(int(len(generation['Individuals'])//2))]
-        selected = {'Individuals': selected_individuals, 'Fitness': selected_fitnesses}
+        self.population_size = population_size
+        self.use_bias = use_bias
 
-    elif method == 'Random':
-        selected_individuals = [generation['Individuals'][randint(1,len(generation['Fitness']))] for x in range(int(len(generation['Individuals'])//2))]
-        selected_fitnesses = [generation['Fitness'][-x-1] for x in range(int(len(generation['Individuals'])//2))]
-        selected = {'Individuals': selected_individuals, 'Fitness': selected_fitnesses}
-    return selected
+    def initial_population(self):
+        self.population = [Genotype(self.shapes, self.lengths) for i in range(self.population_size)]
+        for individual in self.population:
+            individual.random_init(min=0.25, max=0.7, loc=0., scale=10.)
 
-def pairing(elit, selected, method = 'Fittest'):
-    individuals = [elit['Individuals']]+selected['Individuals']
-    fitness = [elit['Fitness']]+selected['Fitness']
+    def calc_fitness(self, fitness):
+        for idx, value in enumerate(fitness):
+            self.population[idx].fitness = value
 
-    if method == 'Fittest':
-        parents = [[individuals[x],individuals[x+1]] for x in range(len(individuals)//2)]
+        sorted_by_fitness = sorted(self.population, key=lambda individual: individual.fitness, reverse=True)
+        self.population = sorted_by_fitness
+        print(f"avg fitness: {np.average(fitness)}")
+        print(f"best fitness: {np.max(fitness)}")
+        return np.max(fitness), np.average(fitness)
 
-    if method == 'Random':
+    def next_generation(self):
+        selected_individuals = GeneticAlgorithm.selection(self.population)
+
+        parents = GeneticAlgorithm.pairing(selected_individuals)
+
+        offsprings = [GeneticAlgorithm.mating(parents[x], maxPercentLength=0.2) for x in range(len(parents))]
+        offsprings = [individual for sublist in offsprings for individual in sublist]
+
+        elite_individuals = selected_individuals[:3]
+        selected_individuals = selected_individuals[3:]
+
+        next_gen = selected_individuals + offsprings
+        for individual in next_gen:
+            GeneticAlgorithm.mutation(individual, gen_mutation_chance=0.08, gen_remove_chance=0.03, gen_appear_chance=0.03, sigma=0.1)
+        next_gen.extend(elite_individuals)
+
+        if len(next_gen) != self.population_size:
+            raise Exception("Next Gen size different than expected")
+
+        self.population = next_gen
+
+    @staticmethod
+    def selection(population, method='Fittest Half'):
+        if method == 'Fittest Half':
+            selected_individuals = [population[i] for i in range(len(population) // 2)]
+            return selected_individuals
+
+    @staticmethod
+    def pairing(selected, method='Fittest'):
+        individuals = selected
         parents = []
-        for x in range(len(individuals)//2):
-            parents.append([individuals[randint(0,(len(individuals)-1))], individuals[randint(0,(len(individuals)-1))]])
-            while parents[x][0] == parents[x][1]:
-                parents[x][1] = individuals[randint(0,(len(individuals)-1))]
 
-    if method == 'Weighted Random':
-        normalized_fitness = sorted([fitness[x] /sum(fitness) for x in range(len(individuals)//2)], reverse = True)
-        cummulitive_sum = np.array(normalized_fitness).cumsum()
-        parents = []
+        if method == 'Fittest':
+            parents = [[individuals[x], individuals[x + 1]] for x in range(len(individuals) // 2)]
 
-        for x in range(len(individuals)//2):
-            parents.append([individuals[roulette(cummulitive_sum,rnd())], individuals[roulette(cummulitive_sum,rnd())]])
-            while parents[x][0] == parents[x][1]:
-                parents[x][1] = individuals[roulette(cummulitive_sum,rnd())]
+        return parents
 
-    return parents
+    @staticmethod
+    def mating(parents, maxPercentLength, method='Two Points Per Part'):
+        offsprings = [parents[0].copy(), parents[1].copy()]
 
-def mating(parents, method='Single Point'):
-    if method == 'Single Point':
-        pivot_point = randint(1, len(parents[0]))
-        offsprings = [parents[0][0:pivot_point]+parents[1][pivot_point:]]
-        offsprings.append(parents[1][0:pivot_point]+parents[0][pivot_point:])
+        if method == 'Two Points Per Part':
+            partStart = 0
+            for partLength in parents[0].lengths:
+                l = int(random.uniform(0, maxPercentLength) * (partLength-1))
+                s = random.randrange(partStart, partStart + partLength)
+                if s+l>=len(parents[0].genotype):
+                    l-=(s+l)-len(parents[0].genotype)
+                offsprings[0].genotype[s:s+l] = parents[1].genotype[s:s+l].copy()
+                offsprings[1].genotype[s:s+l] = parents[0].genotype[s:s+l].copy()
+                partStart = partLength
 
-    if method == 'Two Pionts':
-        pivot_point_1 = randint(1, len(parents[0]-1))
-        pivot_point_2 = randint(1, len(parents[0]))
+        return offsprings
 
-        while pivot_point_2<pivot_point_1:
-            pivot_point_2 = randint(1, len(parents[0]))
+    @staticmethod
+    def mutation(individual, gen_mutation_chance, gen_remove_chance, gen_appear_chance, sigma=1.):
+        for id in range(len(individual.genotype)):
+            if individual.genotype[id] == 0.:
+                if random.random() <= gen_appear_chance:
+                    individual.genotype[id] = random.gauss(mu=0., sigma=sigma)
+            else:
+                if random.random() <= gen_remove_chance:
+                    individual.genotype[id] = 0.
+                if random.random() <= gen_mutation_chance:
+                    individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
 
-        offsprings = [parents[0][0:pivot_point_1] + parents[1][pivot_point_1:pivot_point_2] + [parents[0][pivot_point_2:]]]
-        offsprings.append([parents[1][0:pivot_point_1] + parents[0][pivot_point_1:pivot_point_2] + [parents[1][pivot_point_2:]]])
+    def to_lstm_model(self):
+        weights = [[],[],[]]
+        biases = [[],[]]
+        for indyvidual in self.population:
+            numpies = indyvidual.to_numpy()
+            weights[0].append(numpies[0])
+            weights[1].append(numpies[1])
+            if self.use_bias:
+                biases[0].append(numpies[2])
+                weights[2].append(numpies[3])
+                biases[1].append(numpies[4])
+            else:
+                weights[2].append(numpies[2])
 
-    return offsprings
-
-def mutation(individual, upper_limit, lower_limit, muatation_rate=2, method='Reset', standard_deviation = 0.001):
-    gene = [randint(0, 7)]
-
-    for x in range(muatation_rate-1):
-        gene.append(randint(0, 7))
-        while len(set(gene)) < len(gene):
-            gene[x] = randint(0, 7)
-
-    mutated_individual = individual.copy()
-
-    if method == 'Gauss':
-        for x in range(muatation_rate):
-            mutated_individual[x] = round(individual[x]+gauss(0, standard_deviation), 1)
-
-    if method == 'Reset':
-        for x in range(muatation_rate):
-            mutated_individual[x] = round(rnd() * (upper_limit-lower_limit)+lower_limit, 1)
-
-    return mutated_individual
-
-def next_generation(gen, upper_limit, lower_limit):
-    elit = {}
-    next_gen = {}
-    elit['Individuals'] = gen['Individuals'].pop(-1)
-    elit['Fitness'] = gen['Fitness'].pop(-1)
-    selected = selection(gen)
-    parents = pairing(elit, selected)
-
-    offsprings = [[
-        [mating(parents[x]) for x in range(len(parents))]
-                    [y][z] for z in range(2)]
-                    for y in range(len(parents))]
-
-    offsprings1 = [offsprings[x][0] for x in range(len(parents))]
-    offsprings2 = [offsprings[x][1] for x in range(len(parents))]
-
-    unmutated = selected['Individuals']+offsprings1+offsprings2
-    mutated = [mutation(unmutated[x], upper_limit, lower_limit) for x in range(len(gen['Individuals']))]
-
-    unsorted_individuals = mutated + [elit['Individuals']]
-    unsorted_fitness = [fitness_calculation(mutated[x]) for x in range(len(mutated))] + [elit['Fitness']]
-    sorted_next_gen = sorted([[unsorted_individuals[x], unsorted_fitness[x]] for x in range(len(unsorted_individuals))], key=lambda x: x[1])
-
-    next_gen['Individuals'] = [sorted_next_gen[x][0] for x in range(len(sorted_next_gen))]
-    next_gen['Fitness'] = [sorted_next_gen[x][1] for x in range(len(sorted_next_gen))]
-    gen['Individuals'].append(elit['Individuals'])
-    gen['Fitness'].append(elit['Fitness'])
-    return next_gen
+        weights = [np.array(weight, dtype='f') for weight in weights]
+        biases = [np.array(bias, dtype='f') for bias in biases]
+        return weights, biases
 
 
 
-# Generations and fitness values will be written to this file
-Result_file = 'GA_Results.txt'
-# Creating the First Generation
-def first_generation(pop):
-    fitness = [fitness_calculation(pop[x]) for x in range(len(pop))]
-    sorted_fitness = sorted([[pop[x], fitness[x]] for x in range(len(pop))], key=lambda x: x[1])
-    population = [sorted_fitness[x][0] for x in range(len(sorted_fitness))]
-    fitness = [sorted_fitness[x][1] for x in range(len(sorted_fitness))]
-
-    return {'Individuals': population, 'Fitness': sorted(fitness)}
-
-pop = population(20,8,1,0)
-gen = []
-gen.append(first_generation(pop))
-fitness_avg = np.array([sum(gen[0]['Fitness']) / len(gen[0]['Fitness'])])
-fitness_max = np.array([max(gen[0]['Fitness'])])
-res = open(Result_file, 'a')
-res.write('\n'+str(gen)+'\n')
-res.close()
-finish = False
-while finish == False:
-    if max(fitness_max) > 6:
-        break
-    if max(fitness_avg) > 5:
-        break
-
-    gen.append(next_generation(gen[-1], 1, 0))
-    fitness_avg = np.append(fitness_avg, sum(gen[-1]['Fitness'])/len(gen[-1]['Fitness']))
-    fitness_max = np.append(fitness_max, max(gen[-1]['Fitness']))
-    res = open(Result_file, 'a')
-    res.write('\n'+str(gen[-1])+'\n')
-    res.close()
+# from LSTM import LSTMModel
+#
+# input_size = 20
+# lstm_units = 32
+# output_size = 2
+# models = 100
+# ga = GeneticAlgorithm(input_size, lstm_units, output_size, 100)
+# ga.initial_population()
+#
+# start = timer()
+# for i in range(1000):
+#     # print(i)
+#     w, b = ga.to_lstm_model()
+#     model = LSTMModel(lstm_units, output_size, models)
+#     model.build((1,input_size), w, b)
+#
+#     output = model.call(np.ones((models, 1, input_size), dtype='f'))
+#     fitness = np.sum(output, axis=1)
+#     ga.calc_fitness(fitness)
+#     ga.next_generation()
+# print(timer() - start)
