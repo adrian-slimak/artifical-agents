@@ -78,7 +78,7 @@ def worker(parent_conn: Connection, worker_id: int) -> None:
             if cmd.name == "run_single_episode":
                 weights = cmd.payload
 
-                prey_model = LSTMModel(8, 2, 60)
+                prey_model = LSTMModel(10, 2, 60)
                 prey_model.build(input_shape=(1, 15), weights=weights)  # , biases=biases)
 
                 fitness = unity_environment.run_single_episode({"prey": prey_model}, 1000,

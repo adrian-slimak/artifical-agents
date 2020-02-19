@@ -1,6 +1,6 @@
 from mlagents.environment import UnityEnvironment
 import tensorflow as tf
-tf.debugging.set_log_device_placement(True)
+# tf.debugging.set_log_device_placement(True)
 from LSTM import LSTMModel
 from GA import GeneticAlgorithm
 from LivePlotting import LivePlot
@@ -30,7 +30,7 @@ def main():
     GA = GeneticAlgorithm(preys_brain.observation_vector_size, 8, preys_brain.action_vector_size, preys_brain.agents_count)
     GA.initial_population()
 
-    # livePlot = LivePlot(lines=['max', 'avg'])
+    livePlot = LivePlot(lines=['max', 'avg'])
 
     for generation in range(1000):
         weights, _ = GA.to_lstm_model()
@@ -41,7 +41,7 @@ def main():
         fitness = unity_environment.run_single_episode({"prey": prey_model}, 1000, load_custom_reset_parameters())['prey']
 
         max, avg = GA.calc_fitness(fitness)
-        # livePlot.update([max,avg])
+        livePlot.update([max,avg])
         GA.next_generation()
 
     unity_environment.close()

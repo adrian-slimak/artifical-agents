@@ -4,8 +4,8 @@ from mlagents.communicator_objects.engine_configuration_pb2 import EngineConfigu
 
 def get_initialization_input():
     engine_config = EngineConfigurationProto()
-    engine_config.width = 1080
-    engine_config.height = 720
+    engine_config.width = 800
+    engine_config.height = 600
     engine_config.quality_level = 1
     engine_config.time_scale = 5
     engine_config.target_frame_rate = -1

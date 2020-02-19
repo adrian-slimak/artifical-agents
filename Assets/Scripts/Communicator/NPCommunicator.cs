@@ -1,9 +1,7 @@
-using Grpc.Core;
 using UPC.CommunicatorObjects;
 using System;
 using System.IO.Pipes;
 using Google.Protobuf;
-using UnityEngine;
 
 namespace UPC
 {

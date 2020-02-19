@@ -9,10 +9,10 @@ unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
 
 def main():
-    numberOfEnvironments = 3
+    numberOfEnvironments = 2
     env_manager = SubprocessEnvManager(numberOfEnvironments)
 
-    prey_GA = GeneticAlgorithm(15, 8, 2, 60)
+    prey_GA = GeneticAlgorithm(15, 10, 2, 60)
     prey_GA.initial_population()
 
     livePlot = LivePlot(lines=['max', 'avg'])

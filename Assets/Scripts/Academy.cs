@@ -137,7 +137,7 @@ namespace UPC
                 {
                     var unityInitializationInput = m_Communicator.Initialize(academyName: gameObject.name, resetParameters: m_ResetParameters);
 
-                    UnityEngine.Random.InitState(unityInitializationInput.seed);
+                    //UnityEngine.Random.InitState(unityInitializationInput.seed);
                     m_EngineConfiguration = unityInitializationInput.engine_configuration;
                 }
                 catch
