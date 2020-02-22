@@ -42,7 +42,7 @@ namespace UPC
             m_ActionsVector = m_Brain.GetActionsVector(m_Id);
             m_FitnessArray = m_Brain.GetFitnessArray(m_Id);
 
-            m_Vision.SetVisionObservationsVectorArray(m_VisionObservationsVectorArray);
+            //m_Vision.SetVisionObservationsVectorArray(m_VisionObservationsVectorArray);
         }
 
         void UpdateObservations()

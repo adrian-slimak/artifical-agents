@@ -1,9 +1,11 @@
 import mmap
 from numpy import fromstring
 
+MMF_SIZE = 15000  # number of bytes
+
 class Memory:
     def __init__(self, brain_name, worker_id, brain):
-        self._mmf = mmap.mmap(fileno=-1, length=200000, tagname=f'{brain_name}_brain_{worker_id}')
+        self._mmf = mmap.mmap(fileno=-1, length=MMF_SIZE, tagname=f'{brain_name}_brain_{worker_id}')
         self._brain = brain
 
         self.mmf_offset_observations = -1
@@ -22,6 +24,10 @@ class Memory:
         self.mmf_offset_observations = 0
         self.mmf_offset_actions = self.mmf_size_observations
         self.mmf_offset_fitness = self.mmf_size_observations + self.mmf_size_actions
+
+        size_needed = self.mmf_size_observations+self.mmf_offset_actions+self.mmf_size_fitness
+        if MMF_SIZE < size_needed:
+            raise Exception(f"Memory Mapped File not large enough! {MMF_SIZE}<{size_needed}")
 
     def ReadAgentsObservations(self):
         self._mmf.seek(self.mmf_offset_observations)

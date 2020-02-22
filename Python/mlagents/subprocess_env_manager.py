@@ -5,10 +5,11 @@ from mlagents.environment import UnityEnvironment
 from mlagents.exception import UnityCommunicationException, UnityTimeOutException
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
-from utils import get_initialization_input, load_custom_reset_parameters
+from utils import get_initialization_input, load_custom_reset_parameters, setup_tensorflow
 from LSTM import LSTMModel
-
-import tensorflow as tf
+import configs.custom_reset_parameters as custom_params
+import multiprocessing
+multiprocessing.set_start_method('forkserver')
 
 logger = logging.getLogger("mlagents.envs")
 
@@ -31,7 +32,6 @@ class UnityEnvWorker:
         self.process = process
         self.worker_id = worker_id
         self.conn = conn
-        self.waiting = False
 
     def send(self, name: str, payload: Any = None) -> None:
         try:
@@ -55,18 +55,6 @@ class UnityEnvWorker:
         logger.debug(f"UnityEnvWorker {self.worker_id} joining process.")
         self.process.join()
 
-def setup_tensorflow():
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-      # Create N virtual GPUs with 128MB memory each
-      try:
-        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=128)])
-        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-        # print(len(gpus), "Physical GPU,", len(logical_gpus), "Logical GPUs")
-      except RuntimeError as e:
-        # Virtual devices must be set before GPUs have been initialized
-        print(e)
-
 def worker(parent_conn: Connection, worker_id: int) -> None:
     unity_environment: UnityEnvironment = UnityEnvironment(file_name=unity_env_path, worker_id=worker_id, initialization_input=get_initialization_input())
     setup_tensorflow()
@@ -76,13 +64,20 @@ def worker(parent_conn: Connection, worker_id: int) -> None:
             cmd: EnvironmentCommand = parent_conn.recv()
 
             if cmd.name == "run_single_episode":
-                weights = cmd.payload
+                models = cmd.payload
+                prey_weights, prey_parameters = models['prey']
+                input_dims = prey_parameters[0]
+                prey_parameters = tuple(prey_parameters[-3:])
+                prey_model = LSTMModel(*prey_parameters)
+                prey_model.build(input_shape=(1, input_dims), model_weights=prey_weights)
 
-                prey_model = LSTMModel(10, 2, 60)
-                prey_model.build(input_shape=(1, 15), weights=weights)  # , biases=biases)
+                # predator_weights, predator_parameters = models['predator']
+                # input_dims = predator_parameters[0]
+                # predator_parameters = tuple(predator_parameters[-3:])
+                # predator_model = LSTMModel(*predator_parameters)
+                # predator_model.build(input_shape=(1, input_dims), model_weights=predator_weights)
 
-                fitness = unity_environment.run_single_episode({"prey": prey_model}, 1000,
-                                                               load_custom_reset_parameters())
+                fitness = unity_environment.run_single_episode({'prey': prey_model}, 1000, custom_params.custom_reset_parameters_1)
 
                 parent_conn.send(EnvironmentResponse("fitness_response", worker_id, fitness))
 
@@ -91,10 +86,6 @@ def worker(parent_conn: Connection, worker_id: int) -> None:
     except (KeyboardInterrupt, UnityCommunicationException, UnityTimeOutException):
         logger.info(f"UnityEnvironment worker {worker_id}: environment stopping.")
     finally:
-        # If this worker has put an item in the step queue that hasn't been processed by the EnvManager, the process
-        # will hang until the item is processed. We avoid this behavior by using Queue.cancel_join_thread()
-        # See https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue.cancel_join_thread for
-        # more info.
         logger.debug(f"UnityEnvironment worker {worker_id} closing.")
         unity_environment.close()
         logger.debug(f"UnityEnvironment worker {worker_id} done.")
@@ -114,10 +105,10 @@ class SubprocessEnvManager:
         child_process.start()
         return UnityEnvWorker(child_process, worker_id, parent_conn)
 
-    def run_episode(self, weights, biases=None):
+    def run_episode(self, models):
 
         for env_worker in self.env_workers:
-            env_worker.send("run_single_episode", weights)
+            env_worker.send("run_single_episode", models)
 
         fitness = {}
         for env_worker in self.env_workers:

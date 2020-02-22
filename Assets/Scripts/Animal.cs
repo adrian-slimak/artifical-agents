@@ -7,17 +7,15 @@ public class Animal : MonoBehaviour
     public AnimalType Type;
     public bool steer = false;
     public float maxMoveSpeed = 5f;
-    public float turnSpeed = 100f;
+    public float maxTurnSpeed = 100f;
 
     public float energy = 100f;
     public float energyDrainPerStep = 0.1f;
-    public float maxEnergyDrainPerSpeed = 0.1f;
+    public float speedEnergyDrain = 0.1f;
 
     public int collectedFood = 0;
 
-    float moveSpeed;
-    float angularVelocity;
-    float energyDrainSpeed;
+    float energyDrain;
 
     UPC.Agent agent;
 
@@ -38,7 +36,7 @@ public class Animal : MonoBehaviour
     {
         TryEat();
 
-        energy -= (energyDrainSpeed + energyDrainPerStep);
+        energy -= (energyDrain + energyDrainPerStep);
 
         if (energy <= 0) Die();
     }
@@ -52,15 +50,27 @@ public class Animal : MonoBehaviour
         if (pos.y < -50f) pos.y += 100f;
         transform.position = pos;
 
-        if (angVel != 0f)
-            angularVelocity = (angVel / Mathf.Abs(angVel)) * turnSpeed;
-        if (Mathf.Abs(vel) > 1)
+        if (Mathf.Abs(angVel) > 1f)
+            angVel = angVel / Mathf.Abs(angVel);
+        if (Mathf.Abs(vel) > 1f)
             vel = vel / Mathf.Abs(vel);
 
-        energyDrainSpeed = Mathf.Pow(moveSpeed / maxMoveSpeed, 2f) * maxEnergyDrainPerSpeed;
+        energyDrain = Mathf.Pow(Mathf.Abs(vel), 2f) * speedEnergyDrain;
 
-        rigidBody2D.angularVelocity = angularVelocity;
+        rigidBody2D.angularVelocity = angVel * maxTurnSpeed;
         rigidBody2D.velocity = transform.up * (vel * maxMoveSpeed);
+    }
+
+    private void FixedUpdate()
+    {
+        if (steer)
+        {
+            float s = Input.GetAxis("Vertical");
+            float r = -Input.GetAxis("Horizontal");
+
+            SetMovement(s, r);
+            AnimalStep();
+        }
     }
 
 

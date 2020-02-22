@@ -23,7 +23,7 @@ namespace UPC
         {
             LazyInitializeParameters(property);
             if(_Foldout)
-                return (m_Parameters.Count + 2) * k_LineHeight;
+                return (m_Parameters.m_DefaultResetParameters.Count + 2) * k_LineHeight;
             return k_LineHeight;
         }
 
@@ -52,7 +52,7 @@ namespace UPC
             DrawAddRemoveButtons(keyRect, valueRect);
 
             EditorGUI.BeginProperty(position, label, property);
-            foreach (var parameter in m_Parameters)
+            foreach (var parameter in m_Parameters.m_DefaultResetParameters)
             {
                 var key = parameter.Key;
                 var value = parameter.Value;
@@ -65,8 +65,8 @@ namespace UPC
                     MarkSceneAsDirty();
                     try
                     {
-                        m_Parameters.Remove(key);
-                        m_Parameters.Add(newKey, value);
+                        m_Parameters.m_DefaultResetParameters.Remove(key);
+                        m_Parameters.m_DefaultResetParameters.Add(newKey, value);
                     }
                     catch (Exception e)
                     {
@@ -95,7 +95,7 @@ namespace UPC
         void DrawAddRemoveButtons(Rect addRect, Rect removeRect)
         {
             // This is the Add button
-            if (m_Parameters.Count == 0)
+            if (m_Parameters.m_DefaultResetParameters.Count == 0)
             {
                 addRect.width *= 2;
             }
@@ -108,7 +108,7 @@ namespace UPC
             }
 
             // If there are no items in the ResetParameters, Hide the Remove button
-            if (m_Parameters.Count == 0)
+            if (m_Parameters.m_DefaultResetParameters.Count == 0)
             {
                 return;
             }
@@ -160,10 +160,10 @@ namespace UPC
         /// </summary>
         void RemoveLastParameter()
         {
-            if (m_Parameters.Count > 0)
+            if (m_Parameters.m_DefaultResetParameters.Count > 0)
             {
-                var key = m_Parameters.Keys.ToList()[m_Parameters.Count - 1];
-                m_Parameters.Remove(key);
+                var key = m_Parameters.m_DefaultResetParameters.Keys.ToList()[m_Parameters.m_DefaultResetParameters.Count - 1];
+                m_Parameters.m_DefaultResetParameters.Remove(key);
             }
         }
 
@@ -172,11 +172,11 @@ namespace UPC
         /// </summary>
         void AddParameter()
         {
-            var key = k_NewKeyPrefix + m_Parameters.Count;
+            var key = k_NewKeyPrefix + m_Parameters.m_DefaultResetParameters.Count;
             var value = default(float);
             try
             {
-                m_Parameters.Add(key, value);
+                m_Parameters.m_DefaultResetParameters.Add(key, value);
             }
             catch (Exception e)
             {

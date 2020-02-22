@@ -14,7 +14,7 @@ namespace UPC
     public delegate void QuitCommandHandler();
 
 
-    public delegate void ResetCommandHandler(ResetParameters customResetParameters);
+    public delegate void ResetCommandHandler(Dictionary<string, float> customResetParameters);
 
 
     public delegate void StepCommandHandler();

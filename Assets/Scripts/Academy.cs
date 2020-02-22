@@ -54,8 +54,6 @@ namespace UPC
 
         [SerializeField]
         public ResetParameters m_ResetParameters = new ResetParameters();
-        [HideInInspector]
-        public ResetParameters m_CustomResetParameters;
 
         [SerializeField]
         [Tooltip("The engine-level settings which correspond to rendering quality and engine speed during Training.")]
@@ -65,8 +63,6 @@ namespace UPC
         int m_WorkerID = 0;
         public bool IsCommunicatorOn
         { get { return m_Communicator != null; } }
-
-        public Memory m_Memory;
 
         bool m_FirstAcademyReset;
 
@@ -205,24 +201,24 @@ namespace UPC
 
             m_StepCount += 1;
         }
+        
+        void OnResetCommandReceived(Dictionary<string, float> customResetParameters)
+        {
+            m_ResetParameters.SetCustomParameters(customResetParameters);
+            m_EpisodeCount++;
+            m_StepCount = 0;
+
+            AcademyReset();
+            PlantsSpawner.Instance.OnReset();
+
+            m_FirstAcademyReset = true;
+        }
 
         public void OnEpisodeCompletedCommandReceived()
         {
             m_FirstAcademyReset = false;
 
             AgentUpdateFitness?.Invoke();
-        }
-        
-        void OnResetCommandReceived(ResetParameters customResetParameters)
-        {
-            m_CustomResetParameters = customResetParameters;
-            m_StepCount = 0;
-            m_EpisodeCount++;
-
-            AcademyReset();
-            PlantsSpawner.Instance.OnReset();
-
-            m_FirstAcademyReset = true;
         }
 
         static void OnQuitCommandReceived()
@@ -232,19 +228,6 @@ namespace UPC
             EditorApplication.isPlaying = false;
 #endif
             Application.Quit();
-        }
-
-        public float? GetResetParameter(string key)
-        {
-            if (m_CustomResetParameters.ContainsKey(key))
-                return m_CustomResetParameters[key];
-
-            if (m_ResetParameters.ContainsKey(key))
-                return m_ResetParameters[key];
-
-            Debug.LogWarning($"Reset parameter '{key}' not found.");
-
-            return null;
         }
 
         void FixedUpdate()

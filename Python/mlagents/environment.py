@@ -70,8 +70,9 @@ class UnityEnvironment:
         unity_input.command = 1
 
         if custom_reset_parameters is not None:
-            logger.info("\n\tAcademy \"{0}\" reset with custom parameters:\n{1}".format(self.academy_name,
-                "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
+            logger.info("\n\tAcademy \"{0}_{1}\" reset.".format(self.academy_name, self.worker_id))
+            # logger.info("\n\tAcademy \"{0}_{1}\" reset with custom parameters:\n{2}".format(self.academy_name, self.worker_id,
+            #     "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
 
             for key, value in custom_reset_parameters.items():
                 unity_input.initialization_input.custom_reset_parameters[key] = value
@@ -130,13 +131,12 @@ class UnityEnvironment:
         self.reset(custom_reset_parameters)
 
         for step in range(num_steps):
-
             # s = timer()
             agent_observations = self.step_receive_observations()
             # print(timer() - s)
-            # prey_observations = agent_observations['prey']
 
-            prey_actions = model["prey"](agent_observations['prey'])
+            prey_actions = model['prey'](agent_observations['prey'])
+            # predator_actions = model['predator'](agent_observations['predator'])
             agent_actions = {'prey': prey_actions}
 
             self.step_send_actions(agent_actions)

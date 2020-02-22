@@ -7,28 +7,37 @@ from LivePlotting import LivePlot
 
 unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
-
+prey_parameters = (15, 10, 2, 60)
+# predator_parameters = (12, 10, 2, 4)
 def main():
-    numberOfEnvironments = 2
+    livePlot = LivePlot(lines=[['max', 'avg']])
+
+    numberOfEnvironments = 3
     env_manager = SubprocessEnvManager(numberOfEnvironments)
 
-    prey_GA = GeneticAlgorithm(15, 10, 2, 60)
+    prey_GA = GeneticAlgorithm(*prey_parameters)
     prey_GA.initial_population()
 
-    livePlot = LivePlot(lines=['max', 'avg'])
+    # predator_GA = GeneticAlgorithm(*predator_parameters)
+    # predator_GA.initial_population()
 
     for generation in range(1000):
-        preys_weights, _ = prey_GA.to_lstm_model()
+        prey_model_weights = prey_GA.to_lstm_model()
+        # predator_model_weights = predator_GA.to_lstm_model()
 
-        all_fitness = env_manager.run_episode(preys_weights)
+        models = {'prey': (prey_model_weights, prey_parameters)}#, 'predator': (predator_model_weights, predator_parameters)}
 
-        prey_fitness = [fitness['prey'] for fitness in all_fitness.values()]
-        prey_fitness = np.mean(prey_fitness, axis=0)
+        all_fitness = env_manager.run_episode(models=models)
 
-        max, avg = prey_GA.calc_fitness(prey_fitness)
-        livePlot.update([max,avg])
+        prey_fitness = np.mean([fitness['prey'] for fitness in all_fitness.values()], axis=0)
+        predator_fitness = np.mean([fitness['predator'] for fitness in all_fitness.values()], axis=0)
+
+        max1, avg1 = prey_GA.calc_fitness(prey_fitness)
+        # max2, avg2 = predator_GA.calc_fitness(predator_fitness)
+        livePlot.update([[max1, avg1]])
 
         prey_GA.next_generation()
+        # predator_GA.next_generation()
 
     env_manager.close()
 

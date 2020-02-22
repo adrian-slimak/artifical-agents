@@ -168,7 +168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 1
+  m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1080, y: 720}
@@ -213,7 +213,7 @@ RectTransform:
   - {fileID: 1330373864}
   - {fileID: 566157132}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -314,7 +314,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &732138171
 GameObject:
@@ -472,6 +472,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 739719766}
   m_CullTransparentMesh: 0
+--- !u!1 &1043086549
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1043086550}
+  m_Layer: 0
+  m_Name: Predators Holder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1043086550
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1043086549}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 711.3493, y: 549.2202, z: -539}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1330373863
 GameObject:
   m_ObjectHideFlags: 0
@@ -541,7 +571,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 0.56078434}
+  m_Color: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 0.8745098}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -594,13 +624,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_ResetParameters:
-    m_ResetParameters:
-    - key: preys_count
-      value: 60
-    - key: predators_count
+    m_ResetParametersList:
+    - key: prey_count
+      value: 100
+    - key: predator_count
       value: 0
-  m_CustomResetParameters:
-    m_ResetParameters: []
   m_EngineConfiguration:
     width: 80
     height: 80
@@ -616,11 +644,22 @@ MonoBehaviour:
     agentsAlive: 0
     bestAgentFitness: 0
     bestAgent: {fileID: 0}
+  - brainName: predator
+    observationsVectorSize: 15
+    visionObservationsVectorSize: 12
+    actionsVectorSize: 2
+    agentsCount: 0
+    agentsAlive: 0
+    bestAgentFitness: 0
+    bestAgent: {fileID: 0}
   m_EpisodeCount: 0
   m_StepCount: 0
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
     type: 3}
   PreysHolder: {fileID: 582284023}
+  PredatorAgentInstance: {fileID: 6127257329547458512, guid: 3474258af231b274abc08128d32afedc,
+    type: 3}
+  PredatorsHolder: {fileID: 1043086549}
 --- !u!4 &1361722398
 Transform:
   m_ObjectHideFlags: 0
@@ -633,7 +672,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1409096676
 GameObject:
@@ -966,7 +1005,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2047284397
 MonoBehaviour:
@@ -993,11 +1032,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 531324865189825927}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 7, y: 38.3, z: -7.7}
+  m_LocalPosition: {x: -4.4, y: 2.9, z: -7.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &531324865189825924
 Camera:
@@ -1076,7 +1115,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 531324865189825927}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a23039e61305ef14b8d75623c23b2213, type: 3}
   m_Name: 

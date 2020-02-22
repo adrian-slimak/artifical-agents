@@ -28,8 +28,8 @@ public class HUD : MonoBehaviour
         string text1 = "\n";
         foreach (Brain brain in m_Academy.brains)
         {
-            text += $"{brain.brainName} alive: {brain.agentsAlive}/{brain.agentsCount}\n";
-            text1 += $"Best {brain.brainName}: {brain.bestAgentFitness}";
+            text += $"Alive {brain.brainName}: {brain.agentsAlive}/{brain.agentsCount}\n";
+            text1 += $"Best {brain.brainName}: {brain.bestAgentFitness}\n";
         }
 
         PopInfo.text = text+text1;

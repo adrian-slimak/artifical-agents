@@ -8,10 +8,10 @@ public class Vision : MonoBehaviour
     public int visionCellsNum = 10;
     public bool drawGizmo = false;
 
-    Animal animal;
+    Animal m_Animal;
 
-    //ArraySegment<float> observationsVector;
-    UPC.MMArray observationsVector;
+    float[] observationsVector;
+    //UPC.MMArray observationsVector;
     Vector3 arcStart;
     float cellAngle;
 
@@ -21,25 +21,17 @@ public class Vision : MonoBehaviour
 
     private void Awake()
     {
-        animal = GetComponent<Animal>();
-        //observationsVector = new ArraySegment<float>(new float[visionCellsNum]);
-        //observationsVector = new float[visionCellsNum];
+        m_Animal = GetComponent<Animal>();
+        observationsVector = new float[visionCellsNum];
         cellAngle = visionAngle / visionCellsNum;
     }
 
-    //public void SetVisionObservationsVectorArray(ArraySegment<float> arraySegment)
+    //public void SetVisionObservationsVectorArray(UPC.MMArray observationsVectorArray)
     //{
-    //    observationsVector = arraySegment;
-    //    visionCellsNum = arraySegment.Count;
+    //    observationsVector = observationsVectorArray;
+    //    visionCellsNum = observationsVectorArray.Length;
     //    cellAngle = visionAngle / visionCellsNum;
     //}
-
-    public void SetVisionObservationsVectorArray(UPC.MMArray observationsVectorArray)
-    {
-        observationsVector = observationsVectorArray;
-        visionCellsNum = observationsVectorArray.Length;
-        cellAngle = visionAngle / visionCellsNum;
-    }
 
     public void UpdateVisionObservations()
     {
@@ -53,7 +45,7 @@ public class Vision : MonoBehaviour
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
-        animal.ResetNearObject();
+        m_Animal.ResetNearObject();
 
         for (int i = 0; i < hitsNum; i++)
         {
@@ -72,16 +64,23 @@ public class Vision : MonoBehaviour
 
                     if (observationsVector[cellNum] % 1 < distance)
                     {
-                        if ((1f-distance) * visionDistance < 0.3f) animal.SetNearObject(hits[i].transform);
+                        if ((1f-distance) * visionDistance < 0.3f) m_Animal.SetNearObject(hits[i].transform);
 
-                        if (hits[i].tag == "Plant")
-                        {
-                            //distance += 1f;
-                            observationsVector[cellNum] = distance;
-                        }
+                        if (m_Animal.Type == Animal.AnimalType.Prey)
+                            if (hits[i].tag == "Plant")
+                                observationsVector[cellNum] = distance;
 
-                        if (hits[i].tag == "Prey")
-                            distance += 2f;
+                        if (m_Animal.Type == Animal.AnimalType.Predator)
+                            if (hits[i].tag == "Prey")
+                                observationsVector[cellNum] = distance;
+                        ////if (hits[i].tag == "Prey")
+                        ////    distance += 0f;
+                        ////else
+                        //if (hits[i].tag == "Plant")
+                        //    distance += 1f;
+                        //else
+                        //if (hits[i].tag == "Predator")
+                        //    distance += 2f;
 
                         //observationsVector[cellNum] = distance;
                     }
@@ -116,9 +115,9 @@ public class Vision : MonoBehaviour
 
             if (observationsVector[i] > 0)
             {
-                UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
+                UnityEditor.Handles.color = new Color(0f, 0f, 1f, 0.15f);
                 if (observationsVector[i] > 2)
-                    UnityEditor.Handles.color = new Color(0f, 0f, 1f, 0.15f);
+                    UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
                 else if (observationsVector[i] > 1)
                     UnityEditor.Handles.color = new Color(0f, 1f, 0f, 0.15f);
 

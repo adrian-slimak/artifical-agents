@@ -1,75 +1,77 @@
-import numpy as np
-import seaborn as sns
-sns.set_style()
+from multiprocessing import Process, Queue
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('TkAgg')
-import pickle
-import time
-import random
-
+from matplotlib import use
+plt.style.use('ggplot')
+use('TkAgg')
+from collections.abc import Iterable
 
 class LivePlot:
-    def __init__(self, xLabel='X', yLabel='Y', lines=['line']):
-        self.fig, self.ax = plt.subplots(1,1)
-        self.ax.set_xlabel(xLabel)
-        self.ax.set_ylabel(yLabel)
-        self.ax.set_xlim(0, 200)
-        self.ax.set_ylim(0, 30)
+    def __init__(self, labels={'prey': ['epochs', 'fitness']}, lines={'prey': ['max', 'avg']}, figsize=(10, 8)):
+        self.fig, self.ax = plt.subplots(2, 1, figsize=figsize)
+        if not isinstance(self.ax, Iterable):
+            self.ax = [self.ax]
+        else:
+            self.ax = self.ax.tolist()
+
+        for ax, (key, lbs) in zip(self.ax, labels.items()):
+            ax.set_title(key)
+            ax.set_xlabel(lbs[0])
+            ax.set_ylabel(lbs[1])
+            ax.set_xlim(0, 200)
+            ax.set_ylim(0, 30)
 
         colors = ['r', 'b']
-        for line, color in zip(lines, colors):
-            self.ax.plot([], [], color, label=line)
+        for ax, ls in zip(self.ax, lines.values()):
+            for l, color in zip(ls, colors):
+                ax.plot([], [], color, label=l)
 
-        plt.ion()
+        for ax in self.ax:
+            ax.legend()
+
+        self.linePlotX = []
+        self.linePlotY = {key: {k: [] for k in lines[key]} for key in labels.keys()}
+
+        self._start_process()
+
+    def _start_process(self):
+        self.plot_queue = Queue()
+        self.plot_process = Process(target=self, daemon=True)
+        self.plot_process.start()
+
+    def __call__(self):
+        timer = self.fig.canvas.new_timer(interval=1000)
+        timer.add_callback(self._call_back)
+        timer.start()
         plt.show()
-        self.X = []
-        self.Y = [[] for i in range(len(lines))]
 
-    def update(self, y):
-        for Yi, yi in zip(self.Y, y):
-            Yi.append(yi)
-        self.X = list(range(len(self.Y[0])))
+    def _call_back(self):
+        while not self.plot_queue.empty():
+            data = self.plot_queue.get()
+            if data is None:  # Terminate
+                plt.close('all')
+                return False
+            else:
+                self._update(data)
+        return True
 
-        for line, values in zip(self.ax.lines, self.Y):
-            line.set_xdata(self.X)
-            line.set_ydata(values)
+    def _update(self, data):
+        self.linePlotX = list(range(len(self.linePlotX)+1))
+
+        for key, value in data.items():
+            for k, v in zip(self.linePlotY[key].keys(), value):
+                self.linePlotY[key][k].append(v)
+
+        for ax, Y in zip(self.ax, self.linePlotY.values()):
+            for line, values in zip(ax.lines, Y.values()):
+                line.set_xdata(self.linePlotX)
+                print(values)
+                line.set_ydata(values)
+
         self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
+        # self.fig.canvas.flush_events()
 
+    def update(self, data):
+        self.plot_queue.put(data)
 
-# with open('results.pickle', 'rb') as file:
-#     results = np.array(pickle.load(file))[:100]/10.
-#
-# # with open('60-x3-8units_2.pickle', 'rb') as file:
-# #     results2 = np.array(pickle.load(file))[:100]/10.
-# #
-# # with open('60-x3-8units_1.pickle', 'rb') as file:
-# #     results3 = np.array(pickle.load(file))[:100]/10.
-#
-# # mean1, mean2, mean3 = np.mean(results1, axis=1), np.mean(results2, axis=1), np.mean(results3, axis=1)
-# # max1, max2, max3 = np.max(results1, axis=1), np.max(results2, axis=1), np.max(results3, axis=1)
-# # mean = (mean1+mean2+mean3)/3.
-# # max = (max1+max2+max3)/3.
-#
-# mean = np.mean(results, axis=1)
-# max = np.max(results, axis=1)
-#
-# fig, axes = plt.subplots(1,2, figsize=(15,7))
-# sns.lineplot(data=mean, ax=axes[0])
-# axes[0].set(ylim=(0, 10))
-# axes[0].axhline(5, ls='--')
-# axes[0].set_title("Średnia liczba zdobytego pożywienia", fontsize=15)
-# axes[0].set_ylabel("Liczba pożywienia", fontsize=13)
-# axes[0].set_xlabel("Populacja", fontsize=13)
-#
-# sns.lineplot(data=max, ax=axes[1], color='orange')
-# axes[1].set(ylim=(0, 30))
-# axes[1].axhline(15, ls='--')
-# axes[1].set_title("Maksymalna liczba zdobytego pożywienia (najlepszy osobnik)", fontsize=15)
-# axes[1].set_ylabel("Liczba pożywienia", fontsize=13)
-# axes[1].set_xlabel("Populacja", fontsize=13)
-#
-# plt.show()
-
-
+    def close(self):
+        self.plot_queue.put(None)

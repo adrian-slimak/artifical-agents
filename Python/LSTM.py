@@ -2,8 +2,6 @@ import tensorflow as tf
 import numpy as np
 from timeit import default_timer as timer
 
-const = 100
-
 class StackedLSTMCell(tf.keras.layers.Layer):
     def __init__(self, units, models, use_bias=False, **kwargs):
         super(StackedLSTMCell, self).__init__(**kwargs)
@@ -20,14 +18,14 @@ class StackedLSTMCell(tf.keras.layers.Layer):
                                           name='kernel', initializer=tf.constant_initializer(kernel))
         else:
             self.kernel = self.add_weight(shape=(self.models, input_dim, self.units * 4),
-                                          name='kernel', initializer='random_normal') * const
+                                          name='kernel', initializer='random_normal')
 
         if recurrent_kernel is not None:
             self.recurrent_kernel = self.add_weight(shape=(self.models, self.units, self.units * 4),
                                           name='recurrent_kernel', initializer=tf.constant_initializer(recurrent_kernel))
         else:
             self.recurrent_kernel = self.add_weight(shape=(self.models, self.units, self.units * 4),
-                                                    name='recurrent_kernel', initializer='random_normal') * const
+                                                    name='recurrent_kernel', initializer='random_normal')
 
         if bias is not None:
             self.bias = self.add_weight(shape=(self.models, 1, self.units * 4),
@@ -35,7 +33,7 @@ class StackedLSTMCell(tf.keras.layers.Layer):
         else:
             if self.use_bias:
                 self.bias = self.add_weight(shape=(self.models, 1, self.units * 4),
-                                            name='bias', initializer='random_normal') * const
+                                            name='bias', initializer='random_normal')
             else:
                 self.bias = None
 
@@ -83,7 +81,7 @@ class DenseLayer(tf.keras.layers.Layer):
                                           name='kernel', initializer=tf.constant_initializer(kernel))
         else:
             self.kernel = self.add_weight(shape=(self.models, input_dim, self.units),
-                                          name='kernel', initializer='random_normal') * const
+                                          name='kernel', initializer='random_normal')
 
         if bias is not None:
             self.bias = self.add_weight(shape=(self.models, 1, self.units),
@@ -91,7 +89,7 @@ class DenseLayer(tf.keras.layers.Layer):
         else:
             if self.use_bias:
                 self.bias = self.add_weight(shape=(self.models, 1, self.units),
-                                            name='bias', initializer='random_normal') * const
+                                            name='bias', initializer='random_normal')
             else:
                 self.bias = None
 
@@ -112,8 +110,9 @@ class LSTMModel:
         self.stacked_cell_states = None
         self.dense_layer = DenseLayer(dense_units, numOfSubModels, use_bias)
 
-    def build(self, input_shape, weights=None, biases=None):
-        batch_size = input_shape[-2]
+    def build(self, input_shape, model_weights):
+        weights, biases = model_weights
+        batch_size = 1
 
         self.stacked_cell_states = [tf.zeros((self.numOfSubModels, batch_size, self.lstm_units)),
                                     tf.zeros((self.numOfSubModels, batch_size, self.lstm_units))]
@@ -142,16 +141,6 @@ class LSTMModel:
         output = tf.squeeze(output, 1)
         return output
 
-# model = tf.keras.layers.LSTMCell(units=32, kernel_initializer='random_normal', recurrent_initializer='random_normal', bias_initializer='random_normal', use_bias=True)
-# dense = tf.keras.layers.Dense(units=2, kernel_initializer='random_normal', bias_initializer='random_normal', use_bias=True, activation='sigmoid')
-#
-#
-# states = [tf.zeros((1, 32)), tf.zeros((1, 32))]
-# for i in range(5):
-#     inputs = np.random.rand(1, 100)
-#     output, states = model(inputs, states=states)
-#     output = dense(output)
-#     print(states)
-#
-#
-# output = model(inputs)
+
+# lstm = LSTMModel(16, 4, 100, True)
+# lstm.build()

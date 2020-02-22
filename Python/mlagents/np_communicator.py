@@ -6,14 +6,14 @@ from mlagents.communicator_objects.unity_input_pb2 import UnityInputProto
 from mlagents.communicator_objects.unity_output_pb2 import UnityOutputProto
 from .exception import UnityWorkerInUseException, UnityCommunicationException
 
-class NPCommunicator():
+
+class NPCommunicator:
     def __init__(self, worker_id=0, timeout_wait=60):
         self.worker_id = worker_id
         self.pipe_name = f'\\\\.\\pipe\\named_pipe_{worker_id}'
         self.timeout_wait = timeout_wait
         self._pipe = None
         self.is_open = False
-
 
     def create_pipe_connect(self):
         """
@@ -29,7 +29,6 @@ class NPCommunicator():
         except Exception:
             raise UnityWorkerInUseException(self.worker_id)
 
-
     def initialize(self, unity_input: UnityInputProto) -> UnityOutputProto:
         if not self.is_open:
             raise UnityCommunicationException()
@@ -40,8 +39,7 @@ class NPCommunicator():
 
         return unity_output
 
-
-    def send(self, unity_input: UnityInputProto=None) -> Optional[UnityOutputProto]:
+    def send(self, unity_input: UnityInputProto = None) -> Optional[UnityOutputProto]:
         message = UnityMessageProto()
         message.status = 200
         if unity_input:

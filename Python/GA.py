@@ -169,7 +169,10 @@ class GeneticAlgorithm:
 
     def to_lstm_model(self):
         weights = [[],[],[]]
-        biases = [[],[]]
+        biases = None
+        if self.use_bias:
+            biases = [[], []]
+
         for indyvidual in self.population:
             numpies = indyvidual.to_numpy()
             weights[0].append(numpies[0])
@@ -182,8 +185,10 @@ class GeneticAlgorithm:
                 weights[2].append(numpies[2])
 
         weights = [np.array(weight, dtype='f') for weight in weights]
-        biases = [np.array(bias, dtype='f') for bias in biases]
-        return weights, biases
+        if self.use_bias:
+            biases = [np.array(bias, dtype='f') for bias in biases]
+
+        return (weights, biases)
 
 
 

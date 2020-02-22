@@ -1,6 +1,7 @@
 import json
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 from mlagents.communicator_objects.engine_configuration_pb2 import EngineConfigurationProto
+import tensorflow as tf
 
 def get_initialization_input():
     engine_config = EngineConfigurationProto()
@@ -45,6 +46,18 @@ def unityLogo():
         )
     except Exception:
         print("\n\n\tUnity Technologies\n")
+
+def setup_tensorflow():
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+      # Create N virtual GPUs with 256MB memory each
+      try:
+        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=256)])
+        # logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        # print(len(gpus), "Physical GPU,", len(logical_gpus), "Logical GPUs")
+      except RuntimeError as e:
+        # Virtual devices must be set before GPUs have been initialized
+        print(e)
 
 # import tensorflow as tf
 # gpus = tf.config.experimental.list_physical_devices('GPU')

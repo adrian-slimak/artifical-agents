@@ -26,6 +26,7 @@ public class Brain
 
     Memory m_Memory;
 
+
     public void InitMemory(int workerID)
     {
         m_Memory = new Memory(brainName, workerID);
@@ -33,8 +34,8 @@ public class Brain
 
     public void Reset()
     {
-        visionObservationsVectorSize = (int)(Academy.Instance.GetResetParameter(brainName + "_vision_observations_vector_size") ?? visionObservationsVectorSize);
-        actionsVectorSize = (int)(Academy.Instance.GetResetParameter(brainName + "_actions_vector_size") ?? actionsVectorSize);
+        visionObservationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_vision_observations_vector_size"] ?? visionObservationsVectorSize);
+        actionsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_actions_vector_size"] ?? actionsVectorSize);
         observationsVectorSize = visionObservationsVectorSize;
         agentsCount = 0;
 

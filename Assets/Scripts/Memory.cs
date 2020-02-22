@@ -20,7 +20,7 @@ public class Memory
 
     public unsafe Memory(string brainName, int workerID)
     {
-        m_MMF = MemoryMappedFile.CreateOrOpen($"{brainName}_brain_{workerID}", 200000);
+        m_MMF = MemoryMappedFile.CreateOrOpen($"{brainName}_brain_{workerID}", 15000);
 
         using (MemoryMappedViewAccessor viewAccessor = m_MMF.CreateViewAccessor())
             viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref m_Pointer);

@@ -2,6 +2,7 @@ using UPC.CommunicatorObjects;
 using System;
 using System.IO.Pipes;
 using Google.Protobuf;
+using System.Collections.Generic;
 
 namespace UPC
 {
@@ -60,7 +61,7 @@ namespace UPC
 
         public void Reset(UnityInputProto unity_input)
         {
-            ResetParameters customResetParameters = new ResetParameters();
+            Dictionary<string, float> customResetParameters = new Dictionary<string, float>();
             if (unity_input.InitializationInput?.CustomResetParameters != null)
                 foreach (string key in unity_input.InitializationInput.CustomResetParameters.Keys)
                     customResetParameters[key] = unity_input.InitializationInput.CustomResetParameters[key];
@@ -73,12 +74,6 @@ namespace UPC
             };
 
             Send(reset_output);
-        }
-
-        public void EpisodeCompleted()
-        {
-            EpisodeCompletedCommandReceived?.Invoke();
-            //var unity = m_Client.Exchange(WrapMessage(null, 200));
         }
 
 
@@ -132,7 +127,7 @@ namespace UPC
                     break;
 
                 case CommandProto.EpisodeComplete:
-                    EpisodeCompleted();
+                    EpisodeCompletedCommandReceived?.Invoke();
                     break;
             }
         }
@@ -211,12 +206,6 @@ namespace UPC
                     AgentsCount = brain.agentsCount,
                     ObservationsVectorSize = brain.observationsVectorSize,
                     ActionsVectorSize = brain.actionsVectorSize,
-                    //MmfOffsetObservations = brain.mmf_offset_observations,
-                    //MmfOffsetActions = brain.mmf_offset_actions,
-                    //MmfOffsetFitness = brain.mmf_offset_fitness,
-                    //MmfSizeObservations = brain.m_Memory.mmf_size_observations,
-                    //MmfSizeActions = brain.m_Memory.mmf_size_actions,
-                    //MmfSizeFitness = brain.m_Memory.mmf_size_fitness
                 };
 
                 output.BrainParameters.Add(brainParametersProto);
@@ -231,10 +220,10 @@ namespace UPC
             output.Name = name;
 
 
-            foreach (string key in resetParameters.Keys)
-            {
-                output.DefaultResetParameters[key] = resetParameters[key];
-            }
+            //foreach (string key in resetParameters.Keys)
+            //{
+            //    output.DefaultResetParameters[key] = resetParameters[key];
+            //}
 
             return output;
         }

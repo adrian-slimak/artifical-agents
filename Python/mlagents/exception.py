@@ -27,22 +27,6 @@ class UnityCommunicationException(UnityException):
     pass
 
 
-class UnityActionException(UnityException):
-    """
-    Related to errors with sending actions.
-    """
-
-    pass
-
-
-class SamplerException(UnityException):
-    """
-    Related to errors with the sampler actions.
-    """
-
-    pass
-
-
 class UnityTimeOutException(UnityException):
     """
     Related to errors with communication timeouts.
