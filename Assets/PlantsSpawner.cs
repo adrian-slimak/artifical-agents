@@ -22,27 +22,35 @@ public class PlantsSpawner : MonoBehaviour
             Destroy(this.gameObject);
     }
 
-    private void Start()
-    {
-        //OnReset();
-    }
+    //private void Start()
+    //{
+    //    OnReset();
+    //}
 
     public void OnReset()
     {
         foreach (Transform child in plantsHolder.transform)
             Destroy(child.gameObject);
 
-        SpawnGrid();
+        int method = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_method"] ?? 0);
+        plantsPerStep = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_per_step"] ?? plantsPerStep);
+        plantsOnReset = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_amount_reset"] ?? plantsOnReset);
+        gridStep = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_grid_step"] ?? plantsPerStep);
+
+        if (method == 0)
+            SpawnGrid();
+        if (method == 1)
+            Spawn(plantsOnReset);
     }
 
     private void FixedUpdate()
     {
-        //plantsToSpawn += plantsPerStep;
-        //if (plantsToSpawn >= 1f)
-        //{
-        //    Spawn((int)plantsToSpawn);
-        //    plantsToSpawn -= (int)plantsToSpawn;
-        //}
+        plantsToSpawn += plantsPerStep;
+        if (plantsToSpawn >= 1f)
+        {
+            Spawn((int)plantsToSpawn);
+            plantsToSpawn -= (int)plantsToSpawn;
+        }
     }
 
     void Spawn(int amount)
@@ -56,7 +64,6 @@ public class PlantsSpawner : MonoBehaviour
 
     void SpawnGrid()
     {
-        int count = 0;
         for (float y=-50f; y<50f; y+=gridStep)
         {
 
@@ -64,11 +71,9 @@ public class PlantsSpawner : MonoBehaviour
             {
                 float noiseX = (Random.value - 0.5f)*0.6f;
                 float noiseY = (Random.value - 0.5f)*0.6f;
-                count++;
                 Vector2 randomPosition = new Vector2(x+noiseX, y+noiseY);
                 GameObject agent = Instantiate(plantPrefab, randomPosition, Quaternion.identity, plantsHolder.transform);
             }
         }
-        //Debug.Log(count);
     }
 }

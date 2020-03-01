@@ -3,6 +3,7 @@ using System;
 using System.IO.Pipes;
 using Google.Protobuf;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UPC
 {
@@ -53,18 +54,22 @@ namespace UPC
             UnityInputProto unity_input = Exchange(unity_output);
 
             var initializationParameters = new UnityInitializationParameters { seed = unity_input.InitializationInput.Seed };
-            if (unity_input.InitializationInput.EngineConfiguration != null)
+
+            if (unity_input.InitializationInput?.EngineConfiguration != null)
                 initializationParameters.engine_configuration = new EngineConfiguration(unity_input.InitializationInput.EngineConfiguration);
+
+            if (unity_input.InitializationInput?.CustomResetParameters != null)
+                initializationParameters.custom_reset_parameters = new Dictionary<string, float>(unity_input.InitializationInput.CustomResetParameters);
 
             return initializationParameters;
         }
 
         public void Reset(UnityInputProto unity_input)
         {
-            Dictionary<string, float> customResetParameters = new Dictionary<string, float>();
+            Dictionary<string, float> customResetParameters = null;
             if (unity_input.InitializationInput?.CustomResetParameters != null)
-                foreach (string key in unity_input.InitializationInput.CustomResetParameters.Keys)
-                    customResetParameters[key] = unity_input.InitializationInput.CustomResetParameters[key];
+                customResetParameters = new Dictionary<string, float>(unity_input.InitializationInput.CustomResetParameters);
+
 
             ResetCommandReceived?.Invoke(customResetParameters);
 
@@ -100,9 +105,12 @@ namespace UPC
         {
             UnityInputProto unityInput;
 
-            using (TimerStack.Instance.Scoped("UnityPythonExchange"))
+            using (TimerStack.Instance.Scoped("UnityPythonSend"))
             {
                 Send(null);
+            }
+            using (TimerStack.Instance.Scoped("UnityPythonReceive"))
+            {
                 unityInput = Receive();
             }
 

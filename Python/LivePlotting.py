@@ -1,37 +1,55 @@
 from multiprocessing import Process, Queue
+from os import listdir
+from re import findall
 import matplotlib.pyplot as plt
-from matplotlib import use
+import matplotlib
+from pickle import dump
 plt.style.use('ggplot')
-use('TkAgg')
+matplotlib.use('tkagg')
 from collections.abc import Iterable
 
+
 class LivePlot:
-    def __init__(self, labels={'prey': ['epochs', 'fitness']}, lines={'prey': ['max', 'avg']}, figsize=(10, 8)):
-        self.fig, self.ax = plt.subplots(2, 1, figsize=figsize)
+    def __init__(self, plots={'fig1': (['xLabel', 'yLabel'], ['line1', 'line2'])}, figsize=(10, 8)):
+        self.fig, self.ax = plt.subplots(len(plots.keys()), 1, figsize=figsize)
+        self.ID = None
+        self.plots = {}
+
         if not isinstance(self.ax, Iterable):
             self.ax = [self.ax]
-        else:
-            self.ax = self.ax.tolist()
 
-        for ax, (key, lbs) in zip(self.ax, labels.items()):
-            ax.set_title(key)
-            ax.set_xlabel(lbs[0])
-            ax.set_ylabel(lbs[1])
+        colors = ['r', 'b']
+        for (plot_name, plot_params), ax in zip(plots.items(), self.ax):
+            self.plots[plot_name] = {'ax': ax}
+            ax.set_title(plot_name)
+            ax.set_xlabel(plot_params[0][0])
+            ax.set_ylabel(plot_params[0][1])
             ax.set_xlim(0, 200)
             ax.set_ylim(0, 30)
 
-        colors = ['r', 'b']
-        for ax, ls in zip(self.ax, lines.values()):
-            for l, color in zip(ls, colors):
-                ax.plot([], [], color, label=l)
+            self.plots[plot_name]['Y'] = {}
+            for line_name, color in zip(plot_params[1], colors):
+                ax.plot([], [], color, label=line_name)
+                self.plots[plot_name]['Y'][line_name] = []
 
-        for ax in self.ax:
             ax.legend()
 
-        self.linePlotX = []
-        self.linePlotY = {key: {k: [] for k in lines[key]} for key in labels.keys()}
+        self.X = []
 
         self._start_process()
+
+    def _onkey(self, event):
+        if event.key == 'alt+f':
+            if self.ID is None:
+                self.ID = 0
+                IDs = [int(findall('\d+', i)[0]) for i in listdir('results/plots')]
+                if len(IDs) > 0:
+                    self.ID = max(IDs)+1
+
+            plt.savefig(f'results/plots/plot_{self.ID}.png')
+            with open(f'results/plots/data_{self.ID}.pkl', 'wb') as file:
+                copy = {key: item['Y'] for key, item in self.plots.items()}
+                dump(copy, file)
 
     def _start_process(self):
         self.plot_queue = Queue()
@@ -39,6 +57,7 @@ class LivePlot:
         self.plot_process.start()
 
     def __call__(self):
+        self.fig.canvas.mpl_connect('key_press_event', self._onkey)
         timer = self.fig.canvas.new_timer(interval=1000)
         timer.add_callback(self._call_back)
         timer.start()
@@ -55,17 +74,14 @@ class LivePlot:
         return True
 
     def _update(self, data):
-        self.linePlotX = list(range(len(self.linePlotX)+1))
+        self.X = list(range(len(self.X)+1))
 
         for key, value in data.items():
-            for k, v in zip(self.linePlotY[key].keys(), value):
-                self.linePlotY[key][k].append(v)
-
-        for ax, Y in zip(self.ax, self.linePlotY.values()):
-            for line, values in zip(ax.lines, Y.values()):
-                line.set_xdata(self.linePlotX)
-                print(values)
-                line.set_ydata(values)
+            plot = self.plots[key]
+            for line, Ys, v in zip(plot['ax'].lines, plot['Y'].values(), value):
+                Ys.append(v)
+                line.set_xdata(self.X)
+                line.set_ydata(Ys)
 
         self.fig.canvas.draw()
         # self.fig.canvas.flush_events()

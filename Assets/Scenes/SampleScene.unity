@@ -635,6 +635,7 @@ MonoBehaviour:
     qualityLevel: 1
     timeScale: 1
     targetFrameRate: 60
+  m_WorkerID: 0
   brains:
   - brainName: prey
     observationsVectorSize: 15
@@ -1022,8 +1023,8 @@ MonoBehaviour:
   plantsHolder: {fileID: 2047284396}
   plantPrefab: {fileID: 5116160921917775520, guid: 759c92fc2b5c64560800ae5575b15aa1,
     type: 3}
-  plantsOnReset: 300
-  plantsPerStep: 0.01
+  plantsOnReset: 400
+  plantsPerStep: 0.1
 --- !u!4 &531324865189825915
 Transform:
   m_ObjectHideFlags: 0
@@ -1115,7 +1116,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 531324865189825927}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a23039e61305ef14b8d75623c23b2213, type: 3}
   m_Name: 

@@ -27,16 +27,18 @@ public class Brain
     Memory m_Memory;
 
 
-    public void InitMemory(int workerID)
+    public void CreateMemory(int workerID)
     {
         m_Memory = new Memory(brainName, workerID);
     }
 
     public void Reset()
     {
-        visionObservationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_vision_observations_vector_size"] ?? visionObservationsVectorSize);
+        visionObservationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_observations_vision_vector_size"] ?? visionObservationsVectorSize);
+        observationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_observations_vector_size"]);
+
         actionsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_actions_vector_size"] ?? actionsVectorSize);
-        observationsVectorSize = visionObservationsVectorSize;
+
         agentsCount = 0;
 
         m_Memory.Reset();
@@ -47,11 +49,8 @@ public class Brain
         agentsAlive = agentsCount;
         bestAgentFitness = -1;
         bestAgent = null;
-        m_Memory.mmf_size_observations = 4 * agentsCount * observationsVectorSize;
-        m_Memory.mmf_size_actions = 4 * agentsCount * actionsVectorSize;
-        m_Memory.mmf_size_fitness = 4 * agentsCount;
 
-        m_Memory.Init();
+        m_Memory.Init(agentsCount, observationsVectorSize, actionsVectorSize);
     }
 
     public int SubscribeAgent()
@@ -64,7 +63,7 @@ public class Brain
         return m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize, visionObservationsVectorSize);
     }
 
-    public MMArray GetActionsVector(int agent_id)
+    public MMArray GetActionsArray(int agent_id)
     {
         return m_Memory.GetActionsMemoryArray(agent_id * actionsVectorSize, actionsVectorSize);
     }

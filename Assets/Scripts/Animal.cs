@@ -17,7 +17,7 @@ public class Animal : MonoBehaviour
 
     float energyDrain;
 
-    UPC.Agent agent;
+    public UPC.Agent agent;
 
     Transform nearFood;
     Transform nearMate;

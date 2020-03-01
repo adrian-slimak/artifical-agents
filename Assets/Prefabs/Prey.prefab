@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1736914657236933669}
   - component: {fileID: 8752870191489578874}
-  - component: {fileID: 2458119146003361092}
+  - component: {fileID: 7322115277717276439}
   - component: {fileID: 6143707805166682195}
   - component: {fileID: 8756675883617140096}
   - component: {fileID: -1906410475071066707}
@@ -58,7 +58,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!58 &2458119146003361092
+--- !u!58 &7322115277717276439
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -105,10 +105,12 @@ MonoBehaviour:
   Type: 0
   steer: 0
   maxMoveSpeed: 5
-  turnSpeed: 100
+  maxTurnSpeed: 100
   energy: 100
   energyDrainPerStep: 0.15
-  maxEnergyDrainPerSpeed: 0.15
+  speedEnergyDrain: 0.1
+  collectedFood: 0
+  agent: {fileID: 0}
 --- !u!114 &-1906410475071066707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,6 +124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainName: prey
+  m_Id: 0
 --- !u!1 &7447736276596515859
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +137,7 @@ GameObject:
   - component: {fileID: 7447736276596515857}
   m_Layer: 0
   m_Name: Body
-  m_TagString: Untagged
+  m_TagString: Prey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

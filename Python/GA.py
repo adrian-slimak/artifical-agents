@@ -1,9 +1,8 @@
 # from LSTM import LSTMModel
 import numpy as np
 import random
-from timeit import default_timer as timer
 
-class Genotype():
+class Genotype:
     def __init__(self, shapes, lengths):
         self.shapes = shapes
         self.lengths = lengths
@@ -32,23 +31,23 @@ class Genotype():
         return numpies
 
 # Random Init
-_minGenes = 0.8
-_maxGenes = 0.9
+_minGenes = 0.2
+_maxGenes = 0.4
 _loc = 0.
-_scale = 25.
+_scale = 5.
 
 # Selection
-_selectionMethod = 'Roulette Wheel'
-# _selectionMethod = 'Fittest Half'
+# _selectionMethod = 'Roulette Wheel'
+_selectionMethod = 'Fittest Half'
 
 # Mating
 _matingMethod = 'Two Points Per Part'
 # _matingMethod = 'Two Points'
-_maxPercentLength = 0.6
+_maxPercentLength = 0.8
 
 # Mutation
 _genMutationChance = 0.04
-_genRemoveChance = 0.01
+_genRemoveChance = 0.02
 _genAppearChance = 0.02
 _sigma = 0.1
 

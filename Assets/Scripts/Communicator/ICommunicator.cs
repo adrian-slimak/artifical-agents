@@ -9,6 +9,7 @@ namespace UPC
     {
         public int seed;
         public EngineConfiguration engine_configuration;
+        public Dictionary<string, float> custom_reset_parameters;
     }
 
     public delegate void QuitCommandHandler();

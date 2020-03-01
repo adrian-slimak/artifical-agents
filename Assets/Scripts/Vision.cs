@@ -3,17 +3,18 @@ using System;
 
 public class Vision : MonoBehaviour
 {
-    public float visionAngle = 120f;
-    public float visionDistance = 20f;
-    public int visionCellsNum = 10;
+    public float visionAngle = 220f;
+    public float visionDistance = 10f;
+    public int visionCellsNum = 15;
     public bool drawGizmo = false;
 
     Animal m_Animal;
 
-    float[] observationsVector;
-    //UPC.MMArray observationsVector;
+    //float[] observationsVector;
+    UPC.MMArray observationsVector;
     Vector3 arcStart;
     float cellAngle;
+    float nearTargetDistance;
 
     Collider2D[] hits = new Collider2D[20];
     int hitsNum = 0;
@@ -22,16 +23,20 @@ public class Vision : MonoBehaviour
     private void Awake()
     {
         m_Animal = GetComponent<Animal>();
-        observationsVector = new float[visionCellsNum];
-        cellAngle = visionAngle / visionCellsNum;
+
+        //observationsVector = new float[visionCellsNum];
+        //cellAngle = visionAngle / visionCellsNum;
+        //nearTargetDistance = 1f - (0.3f / visionDistance);
     }
 
-    //public void SetVisionObservationsVectorArray(UPC.MMArray observationsVectorArray)
-    //{
-    //    observationsVector = observationsVectorArray;
-    //    visionCellsNum = observationsVectorArray.Length;
-    //    cellAngle = visionAngle / visionCellsNum;
-    //}
+    public void SetVisionVectorArray(UPC.MMArray visionVectorArray)
+    {
+        observationsVector = visionVectorArray;
+        visionCellsNum = visionVectorArray.Length;
+
+        cellAngle = visionAngle / visionCellsNum;
+        nearTargetDistance = 1f - (0.3f / visionDistance);
+    }
 
     public void UpdateVisionObservations()
     {
@@ -41,30 +46,35 @@ public class Vision : MonoBehaviour
 
     void DetectVision()
     {
-        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hits);
+        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hits, layerMask: 1 << 8);
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
         m_Animal.ResetNearObject();
 
+        float angle;
+        int cellNum;
+        float distance;
         for (int i = 0; i < hitsNum; i++)
         {
             if (hits[i].gameObject != this.gameObject)
             {
-                float angle = Vector2.SignedAngle(arcStart, hits[i].transform.position - transform.position);
+                angle = Vector2.SignedAngle(arcStart, hits[i].transform.position - transform.position);
                 if (angle < 0) angle += 360;
 
                 if (angle < visionAngle)
                 {
-                    int cellNum = (int)(angle / cellAngle);
-                    float distance = Vector2.Distance(transform.position, hits[i].transform.position);
+                    cellNum = (int)(angle / cellAngle);
+                    distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
 
-                    distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.999f);
+                    //distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.999f);
+                    distance = 1f - distance / visionDistance;
 
-                    if (observationsVector[cellNum] % 1 < distance)
+                    //if (observationsVector[cellNum] % 1 < distance)
+                    if (observationsVector[cellNum] < distance)
                     {
-                        if ((1f-distance) * visionDistance < 0.3f) m_Animal.SetNearObject(hits[i].transform);
+                        if (distance > nearTargetDistance) m_Animal.SetNearObject(hits[i].transform);
 
                         if (m_Animal.Type == Animal.AnimalType.Prey)
                             if (hits[i].tag == "Plant")

@@ -2,22 +2,22 @@ import tensorflow as tf
 import numpy as np
 from timeit import default_timer as timer
 
-class StackedLSTMCell(tf.keras.layers.Layer):
-    def __init__(self, units, models, use_bias=False, **kwargs):
-        super(StackedLSTMCell, self).__init__(**kwargs)
+class LSTMCell(tf.keras.layers.Layer):
+    def __init__(self, input_dim, units, models, use_bias=False, **kwargs):
+        super(LSTMCell, self).__init__(**kwargs)
 
+        self.input_dim = input_dim
         self.models = models
         self.units = units
         self.use_bias = use_bias
 
-    def build(self, input_shape, kernel=None, recurrent_kernel=None, bias=None):
-        input_dim = input_shape[-1]
+    def build(self, kernel=None, recurrent_kernel=None, bias=None):
 
         if kernel is not None:
-            self.kernel = self.add_weight(shape=(self.models, input_dim, self.units * 4),
+            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units * 4),
                                           name='kernel', initializer=tf.constant_initializer(kernel))
         else:
-            self.kernel = self.add_weight(shape=(self.models, input_dim, self.units * 4),
+            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units * 4),
                                           name='kernel', initializer='random_normal')
 
         if recurrent_kernel is not None:
@@ -66,21 +66,21 @@ class StackedLSTMCell(tf.keras.layers.Layer):
 
 
 class DenseLayer(tf.keras.layers.Layer):
-    def __init__(self, units, models, use_bias=True, **kwargs):
+    def __init__(self, input_dim, units, models, use_bias=True, **kwargs):
         super(DenseLayer, self).__init__()
 
+        self.input_dim = input_dim
         self.models = models
         self.units = units
         self.use_bias = use_bias
 
-    def build(self, input_shape, kernel=None, bias=None):
-        input_dim = input_shape[-1]
+    def build(self, kernel=None, bias=None):
 
         if kernel is not None:
-            self.kernel = self.add_weight(shape=(self.models, input_dim, self.units),
+            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units),
                                           name='kernel', initializer=tf.constant_initializer(kernel))
         else:
-            self.kernel = self.add_weight(shape=(self.models, input_dim, self.units),
+            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units),
                                           name='kernel', initializer='random_normal')
 
         if bias is not None:
@@ -97,35 +97,40 @@ class DenseLayer(tf.keras.layers.Layer):
 
     @tf.function
     def call(self, inputs):
-        z = tf.matmul(inputs, self.kernel) + self.bias
+        z = tf.matmul(inputs, self.kernel)
+
+        if self.use_bias:
+            z = tf.add(z, self.bias)
+
         return tf.nn.tanh(z)
 
 
 class LSTMModel:
-    def __init__(self, lstm_units, dense_units, numOfSubModels, use_bias=True):
+    def __init__(self, input_dim, lstm_units, dense_units, models, envs=1, use_bias=True):
         self.lstm_units = lstm_units
-        self.numOfSubModels = numOfSubModels
+        self.models = models
+        self.envs = envs
 
-        self.stacked_cell = StackedLSTMCell(lstm_units, numOfSubModels, use_bias)
+        self.lstm_cell = LSTMCell(input_dim, lstm_units, models, use_bias)
         self.stacked_cell_states = None
-        self.dense_layer = DenseLayer(dense_units, numOfSubModels, use_bias)
+        self.dense_layer = DenseLayer(lstm_units, dense_units, models, use_bias)
 
-    def build(self, input_shape, model_weights):
+    def build(self, model_weights=(None, None)):
         weights, biases = model_weights
-        batch_size = 1
 
-        self.stacked_cell_states = [tf.zeros((self.numOfSubModels, batch_size, self.lstm_units)),
-                                    tf.zeros((self.numOfSubModels, batch_size, self.lstm_units))]
+        self.stacked_cell_states = [tf.zeros((self.models, self.envs, self.lstm_units)),
+                                    tf.zeros((self.models, self.envs, self.lstm_units))]
+
 
         if weights is not None and biases is not None:
-            self.stacked_cell.build(input_shape, kernel=weights[0], recurrent_kernel=weights[1], bias=biases[0])
-            self.dense_layer.build([self.stacked_cell.units], kernel=weights[2], bias=biases[1])
+            self.lstm_cell.build(kernel=weights[0], recurrent_kernel=weights[1], bias=biases[0])
+            self.dense_layer.build(kernel=weights[2], bias=biases[1])
         elif weights is not None:
-            self.stacked_cell.build(input_shape, kernel=weights[0], recurrent_kernel=weights[1])
-            self.dense_layer.build([self.stacked_cell.units], kernel=weights[2])
+            self.lstm_cell.build(kernel=weights[0], recurrent_kernel=weights[1])
+            self.dense_layer.build(kernel=weights[2])
         else:
-            self.stacked_cell.build(input_shape)
-            self.dense_layer.build([self.stacked_cell.units])
+            self.lstm_cell.build()
+            self.dense_layer.build()
 
         self.built = True
 
@@ -135,12 +140,13 @@ class LSTMModel:
 
     @tf.function
     def call(self, inputs):
-        (output, states) = self.stacked_cell.call(inputs, self.stacked_cell_states)
+        (output, states) = self.lstm_cell.call(inputs, self.stacked_cell_states)
         self.stacked_cell_states = states
         output = self.dense_layer.call(output)
-        output = tf.squeeze(output, 1)
+        if self.envs == 1:
+            output = tf.squeeze(output, 1)
+        else:
+            output = tf.transpose(output, (1, 0, 2))
         return output
 
 
-# lstm = LSTMModel(16, 4, 100, True)
-# lstm.build()

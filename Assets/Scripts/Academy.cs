@@ -60,9 +60,7 @@ namespace UPC
         EngineConfiguration m_EngineConfiguration = new EngineConfiguration(80, 80, 1, 100.0f, -1);
 
         public NPCommunicator m_Communicator;
-        int m_WorkerID = 0;
-        public bool IsCommunicatorOn
-        { get { return m_Communicator != null; } }
+        public int m_WorkerID = 0;
 
         bool m_FirstAcademyReset;
 
@@ -92,7 +90,7 @@ namespace UPC
             foreach (Brain brain in brains)
             {
                 m_Brains.Add(brain.brainName, brain);
-                brain.InitMemory(m_WorkerID);
+                brain.CreateMemory(m_WorkerID);
             }
 
             AcademyInitialization();
@@ -135,6 +133,7 @@ namespace UPC
 
                     //UnityEngine.Random.InitState(unityInitializationInput.seed);
                     m_EngineConfiguration = unityInitializationInput.engine_configuration;
+                    m_ResetParameters.SetCustomParameters(unityInitializationInput.custom_reset_parameters);
                 }
                 catch
                 {
@@ -194,17 +193,16 @@ namespace UPC
 
         void OnStepCommandReceived()
         {
-            using (TimerStack.Instance.Scoped("AgentUpdateMovement"))
-            {
-                AgentUpdateMovement?.Invoke();
-            }
+            AgentUpdateMovement?.Invoke();
 
             m_StepCount += 1;
         }
         
         void OnResetCommandReceived(Dictionary<string, float> customResetParameters)
         {
-            m_ResetParameters.SetCustomParameters(customResetParameters);
+            if (customResetParameters != null)
+                m_ResetParameters.SetCustomParameters(customResetParameters);
+
             m_EpisodeCount++;
             m_StepCount = 0;
 

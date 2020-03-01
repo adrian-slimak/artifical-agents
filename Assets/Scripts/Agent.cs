@@ -9,7 +9,7 @@ namespace UPC
         public string m_BrainName;
 
         Brain m_Brain;
-        int m_Id;
+        public int m_Id;
 
         MMArray m_ActionsVector;
         MMArray m_VisionObservationsVectorArray;
@@ -39,19 +39,15 @@ namespace UPC
         public void Init()
         {
             m_VisionObservationsVectorArray = m_Brain.GetVisionObservationsArray(m_Id);
-            m_ActionsVector = m_Brain.GetActionsVector(m_Id);
+            m_ActionsVector = m_Brain.GetActionsArray(m_Id);
             m_FitnessArray = m_Brain.GetFitnessArray(m_Id);
 
-            //m_Vision.SetVisionObservationsVectorArray(m_VisionObservationsVectorArray);
+            m_Vision.SetVisionVectorArray(m_VisionObservationsVectorArray);
         }
 
         void UpdateObservations()
         {
             m_Vision.UpdateVisionObservations();
-            //float s = 0;
-            //foreach (float f in m_VisionObservationsVectorArray)
-            //    s += f;
-            //Debug.Log(m_Id + ": " + s);
         }
 
         public void UpdateFitness()
