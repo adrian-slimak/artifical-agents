@@ -1,7 +1,7 @@
 from GA import GeneticAlgorithm
 import numpy as np
 
-from mlagents.subprocess_env_manager import SubprocessEnvManager
+from mlagents.multi_env_manager import MultiEnvManager
 from LSTM import LSTMModel
 
 from LivePlotting import LivePlot
@@ -16,7 +16,7 @@ prey_parameters1 = (15, 8, 2, 60, False)
 def main():
     livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['best', 'avg'])}, figsize=(6, 4))
 
-    env_manager = SubprocessEnvManager(n_envs)
+    env_manager = MultiEnvManager(n_envs)
 
     prey_GA = GeneticAlgorithm(*prey_parameters1)
     prey_GA.initial_population()
