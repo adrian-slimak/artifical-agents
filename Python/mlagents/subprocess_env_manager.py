@@ -6,9 +6,7 @@ from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
 from utils import get_initialization_input, get_reset_parameters
 import configs.custom_reset_parameters as custom_params
-from .memory import Memory
 from .brain import Brain
-import multiprocessing
 # multiprocessing.set_start_method('forkserver')
 
 logger = logging.getLogger("mlagents.envs")

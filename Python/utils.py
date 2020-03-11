@@ -9,8 +9,8 @@ def get_initialization_input(reset_parameters = None):
     engine_config.width = 800
     engine_config.height = 600
     engine_config.quality_level = 1
-    engine_config.time_scale = 5
-    engine_config.target_frame_rate = -1
+    engine_config.time_scale = 1
+    engine_config.target_frame_rate = 60
     engine_config.show_monitor = False
 
     if reset_parameters is not None:

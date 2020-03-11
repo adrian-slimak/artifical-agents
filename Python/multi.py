@@ -8,7 +8,7 @@ from LivePlotting import LivePlot
 
 unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
-n_envs = 5
+n_envs = 4
 
 prey_parameters = (15, 8, 2, 60, n_envs, False)
 prey_parameters1 = (15, 8, 2, 60, False)

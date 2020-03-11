@@ -34,8 +34,9 @@ class LivePlot:
 
             ax.legend()
 
-        self.X = []
+        self.X = {plot_name: [] for plot_name in plots.keys()}
 
+        plt.tight_layout()
         self._start_process()
 
     def _onkey(self, event):
@@ -74,13 +75,14 @@ class LivePlot:
         return True
 
     def _update(self, data):
-        self.X = list(range(len(self.X)+1))
+        for key in data.keys():
+            self.X[key] = list(range(len(self.X[key])+1))
 
         for key, value in data.items():
             plot = self.plots[key]
             for line, Ys, v in zip(plot['ax'].lines, plot['Y'].values(), value):
                 Ys.append(v)
-                line.set_xdata(self.X)
+                line.set_xdata(self.X[key])
                 line.set_ydata(Ys)
 
         self.fig.canvas.draw()

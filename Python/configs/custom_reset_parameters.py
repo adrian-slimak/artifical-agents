@@ -9,7 +9,7 @@ custom_reset_parameters_1 = \
                             {
                                 "vector_size": 15,
                                 "angle": 220,
-                                "range": 10
+                                "range": 20
                             },
                     },
                 "actions_vector_size": 2,
@@ -28,7 +28,7 @@ custom_reset_parameters_1 = \
                             {
                                 "vector_size": 12,
                                 "angle": 180,
-                                "range": 15
+                                "range": 25
                             },
                     },
                 "actions_vector_size": 2,
@@ -45,7 +45,7 @@ custom_reset_parameters_1 = \
                         "spawn_method": 1,   # 0 - Grid  1 - Random
                         "spawn_per_step": 0.1,
                         "spawn_amount_reset": 500,  # for Random Spawn
-                        "spawn_grid_step": 5,  # for Grid Spawn
+                        "spawn_grid_step": 4,  # for Grid Spawn
                     }
             }
     }

@@ -167,10 +167,8 @@ class GeneticAlgorithm:
                     individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
 
     def to_lstm_model(self):
-        weights = [[],[],[]]
-        biases = None
-        if self.use_bias:
-            biases = [[], []]
+        weights = [[], [], []]
+        biases = None if self.use_bias is False else [[], []]
 
         for indyvidual in self.population:
             numpies = indyvidual.to_numpy()
@@ -188,27 +186,3 @@ class GeneticAlgorithm:
             biases = [np.array(bias, dtype='f') for bias in biases]
 
         return (weights, biases)
-
-
-
-# from LSTM import LSTMModel
-#
-# input_size = 20
-# lstm_units = 32
-# output_size = 2
-# models = 100
-# ga = GeneticAlgorithm(input_size, lstm_units, output_size, 100)
-# ga.initial_population()
-#
-# start = timer()
-# for i in range(1000):
-#     # print(i)
-#     w, b = ga.to_lstm_model()
-#     model = LSTMModel(lstm_units, output_size, models)
-#     model.build((1,input_size), w, b)
-#
-#     output = model.call(np.ones((models, 1, input_size), dtype='f'))
-#     fitness = np.sum(output, axis=1)
-#     ga.calc_fitness(fitness)
-#     ga.next_generation()
-# print(timer() - start)

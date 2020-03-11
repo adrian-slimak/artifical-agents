@@ -11,28 +11,35 @@ unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
 LSTM_units = 8
 
+BRAINS = ['prey', 'predator']
+
 def main():
     # tf_utils.set_warnings_enabled(False)
-    # livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['best', 'avg'])}, figsize=(7, 4))
+    # livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['best', 'avg']), 'predator': (['episode', 'fitness'], ['best', 'avg'])}, figsize=(7, 9))
 
-    unity_environment = UnityEnvironment(file_name=unity_env_path, worker_id=0, initialization_input=get_initialization_input(custom_params.custom_reset_parameters_1))
+    unity_environment = UnityEnvironment(file_name=None, worker_id=0, initialization_input=get_initialization_input(custom_params.custom_reset_parameters_1))
 
-    prey_brain = unity_environment.external_brains['prey']
+    GAs = {}
+    for brain_name in BRAINS:
+        brain = unity_environment.external_brains[brain_name]
+        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, LSTM_units, brain.actions_vector_size, brain.agents_count, use_bias=False)
+        GAs[brain_name].initial_population()
 
-    prey_GA = GeneticAlgorithm(prey_brain.observations_vector_size, LSTM_units, prey_brain.actions_vector_size, prey_brain.agents_count, use_bias=False)
-    prey_GA.initial_population()
-
+    # Main Loop
     for generation in range(1000):
-        prey_model_weights = prey_GA.to_lstm_model()
+        Models = {}
+        for brain_name in BRAINS:
+            brain = unity_environment.external_brains[brain_name]
+            model_weights = GAs[brain_name].to_lstm_model()
+            Models[brain_name] = LSTMModel(brain.observations_vector_size, LSTM_units, brain.actions_vector_size, brain.agents_count, use_bias=False)
+            Models[brain_name].build(model_weights=model_weights)
 
-        prey_model = LSTMModel(prey_brain.observations_vector_size, LSTM_units, prey_brain.actions_vector_size, prey_brain.agents_count, use_bias=False)
-        prey_model.build(model_weights=prey_model_weights)
+        all_fitness = unity_environment.run_single_episode(Models, 1000)
 
-        all_fitness = unity_environment.run_single_episode({"prey": prey_model}, 1000)
-
-        max1, avg1 = prey_GA.calc_fitness(all_fitness['prey'])
-        # livePlot.update({'prey': [max1, avg1]})
-        prey_GA.next_generation()
+        for brain_name in BRAINS:
+            max, avg = GAs[brain_name].calc_fitness(all_fitness[brain_name])
+            GAs[brain_name].next_generation()
+            # livePlot.update({brain_name: [max, avg]})
 
     unity_environment.close()
     # livePlot.close()

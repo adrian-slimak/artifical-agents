@@ -70,14 +70,16 @@ class UnityEnvironment:
         logger.info("\n'{0}' started successfully!\n{1}".format(self.academy_name, str(self)))
 
 
-    def run_single_episode(self, model, num_steps, reset_parameters=None):
+    def run_single_episode(self, models, num_steps, reset_parameters=None):
         self.reset(reset_parameters)
 
         for step in range(num_steps):
             agent_observations = self.step_receive_observations()
 
-            prey_actions = model['prey'](agent_observations['prey'])
-            agent_actions = {'prey': prey_actions}
+            agent_actions = {}
+            for brain_name in models.keys():
+                actions = models[brain_name](agent_observations[brain_name])
+                agent_actions[brain_name] = actions
 
             self.step_send_actions(agent_actions)
 

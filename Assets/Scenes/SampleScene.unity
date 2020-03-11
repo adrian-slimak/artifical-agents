@@ -1123,6 +1123,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 20
   zoomSpeed: 10
+  dragSpeed: 5
+  zoomSpeedScroll: 40
 --- !u!1 &2676276871127704290
 GameObject:
   m_ObjectHideFlags: 0

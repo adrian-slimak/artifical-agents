@@ -17,13 +17,13 @@ namespace UPC
 
         int m_StepCount;
 
-        Vision m_Vision;
         Animal m_Animal;
+        Vision m_Vision;
 
         void Awake()
         {
-            m_Vision = GetComponent<Vision>();
             m_Animal = GetComponent<Animal>();
+            m_Vision = GetComponent<Vision>();
         }
 
         public void Subscribe()

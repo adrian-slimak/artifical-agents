@@ -7,6 +7,10 @@ public class CameraMovement : MonoBehaviour
     public float speed = 20f;
     public float zoomSpeed = 10f;
 
+    public float dragSpeed = 3f;
+    public float zoomSpeedScroll = 50f;
+    private Vector3 dragOrigin;
+
     void Update()
     {
         Vector3 newPosition = transform.position;
@@ -28,5 +32,21 @@ public class CameraMovement : MonoBehaviour
 
         if (Input.GetKey(KeyCode.KeypadMinus))
             Camera.main.orthographicSize += zoomSpeed * Time.deltaTime;
+
+
+        Camera.main.orthographicSize *= 1f - Input.GetAxis("Mouse ScrollWheel") * zoomSpeedScroll * Time.deltaTime;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            dragOrigin = Input.mousePosition;
+            return;
+        }
+
+        if (!Input.GetMouseButton(0)) return;
+
+        Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - dragOrigin);
+        Vector3 move = new Vector3(pos.x * dragSpeed, pos.y * dragSpeed, 0);
+
+        transform.Translate(move, Space.World);
     }
 }

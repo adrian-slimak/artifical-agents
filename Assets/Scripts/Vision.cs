@@ -4,7 +4,7 @@ using System;
 public class Vision : MonoBehaviour
 {
     public float visionAngle = 220f;
-    public float visionDistance = 10f;
+    public float visionRange = 10f;
     public int visionCellsNum = 15;
     public bool drawGizmo = false;
 
@@ -23,6 +23,14 @@ public class Vision : MonoBehaviour
     private void Awake()
     {
         m_Animal = GetComponent<Animal>();
+        string brainName = GetComponent<UPC.Agent>().m_BrainName;
+
+        visionAngle = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_angle"] ?? visionAngle;
+        visionRange = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_range"] ?? visionRange;
+        visionCellsNum = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_vector_size"] ?? visionCellsNum);
+
+        cellAngle = visionAngle / visionCellsNum;
+        nearTargetDistance = 1f - (0.3f / visionRange);
 
         //observationsVector = new float[visionCellsNum];
         //cellAngle = visionAngle / visionCellsNum;
@@ -32,10 +40,6 @@ public class Vision : MonoBehaviour
     public void SetVisionVectorArray(UPC.MMArray visionVectorArray)
     {
         observationsVector = visionVectorArray;
-        visionCellsNum = visionVectorArray.Length;
-
-        cellAngle = visionAngle / visionCellsNum;
-        nearTargetDistance = 1f - (0.3f / visionDistance);
     }
 
     public void UpdateVisionObservations()
@@ -46,7 +50,7 @@ public class Vision : MonoBehaviour
 
     void DetectVision()
     {
-        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionDistance, hits, layerMask: 1 << 8);
+        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, hits, layerMask: 1 << 8);
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
@@ -69,7 +73,7 @@ public class Vision : MonoBehaviour
 
 
                     //distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.999f);
-                    distance = 1f - distance / visionDistance;
+                    distance = 1f - distance / visionRange;
 
                     //if (observationsVector[cellNum] % 1 < distance)
                     if (observationsVector[cellNum] < distance)
@@ -110,18 +114,18 @@ public class Vision : MonoBehaviour
         }
         UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
         UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, arcStart,
-                                                            visionAngle, visionDistance);
+                                                            visionAngle, visionRange);
         UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
         UnityEditor.Handles.DrawWireArc(transform.position, transform.forward, arcStart,
-                                                            visionAngle, visionDistance);
+                                                            visionAngle, visionRange);
         UnityEditor.Handles.DrawLine(transform.position,
-                transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionDistance);
+                transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionRange);
 
         for (int i = 0; i < observationsVector.Length; i++)
         {
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
             UnityEditor.Handles.DrawLine(transform.position,
-                transform.position + Quaternion.AngleAxis(cellAngle * i, Vector3.forward) * arcStart * visionDistance);
+                transform.position + Quaternion.AngleAxis(cellAngle * i, Vector3.forward) * arcStart * visionRange);
 
             if (observationsVector[i] > 0)
             {
@@ -133,7 +137,7 @@ public class Vision : MonoBehaviour
 
                 UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward,
                     rotateByAngle(arcStart, i * cellAngle),
-                    cellAngle, visionDistance);
+                    cellAngle, visionRange);
             }
         }
 

@@ -17,7 +17,7 @@ public class Animal : MonoBehaviour
 
     float energyDrain;
 
-    public UPC.Agent agent;
+    public UPC.Agent m_Agent;
 
     Transform nearFood;
     Transform nearMate;
@@ -28,7 +28,7 @@ public class Animal : MonoBehaviour
     void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
-        agent = GetComponent<UPC.Agent>();
+        m_Agent = GetComponent<UPC.Agent>();
 
     }
 
@@ -97,8 +97,8 @@ public class Animal : MonoBehaviour
 
     void Die()
     {
-        agent.UpdateFitness();
-        agent.OnDie();
+        m_Agent.UpdateFitness();
+        m_Agent.OnDie();
     }
 
     void TryEat()
