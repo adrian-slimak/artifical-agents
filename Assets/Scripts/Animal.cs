@@ -1,104 +1,72 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Animal : MonoBehaviour
 {
-    public AnimalType Type;
-    public bool steer = false;
+    public enum AnimalType { Prey, Predator }
+    public AnimalType m_Type;
+
+    public Agent m_Agent;
+    protected MMArray m_ActionsVector;
+
     public float maxMoveSpeed = 5f;
     public float maxTurnSpeed = 100f;
 
     public float energy = 100f;
-    public float energyDrainPerStep = 0.1f;
-    public float speedEnergyDrain = 0.1f;
+    float energyDrainPerStep = 0.1f;
+    float energyDrainPerSpeed = 0.1f;
+    float currentEnergyDrain;
 
+    bool communicationEnabled = false;
+    public float currentSound = 0f;
+
+    protected Transform nearFood;
+    protected Transform nearMate;
     public int collectedFood = 0;
 
-    float energyDrain;
-
-    public UPC.Agent m_Agent;
-
-    Transform nearFood;
-    Transform nearMate;
-
     Rigidbody2D rigidBody2D;
-    public enum AnimalType { Prey, Predator }
 
     void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
-        m_Agent = GetComponent<UPC.Agent>();
+        m_Agent = GetComponent<Agent>();
 
+        maxMoveSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_move_speed"] ?? maxMoveSpeed);
+        maxTurnSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_turn_speed"] ?? maxTurnSpeed);
+
+
+        energy = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy"]?? energy);
+        energyDrainPerStep = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_step"]?? energyDrainPerStep);
+        energyDrainPerSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_speed"]?? energyDrainPerSpeed);
+    }
+
+    public void SetActionsVector(MMArray actionsVector)
+    {
+        m_ActionsVector = actionsVector;
+    }
+
+    public float GetSpeed()
+    {
+        return Mathf.Abs(m_ActionsVector[0]);
     }
 
     public void AnimalStep()
     {
         TryEat();
+        if(communicationEnabled)
+            TryMakeSound();
 
-        energy -= (energyDrain + energyDrainPerStep);
+        energy -= Mathf.Pow(Mathf.Abs(m_ActionsVector[0]), 2f) * energyDrainPerSpeed;
+        energy -= energyDrainPerStep;
 
-        if (energy <= 0) Die();
+        if (energy <= 0) OnDie();
     }
 
-    public void SetMovement(float vel, float angVel)
+    public void UpdateMovement()
     {
-        Vector2 pos = transform.position;
-        if (pos.x > 50f) pos.x -= 100f;
-        if (pos.x < -50f) pos.x += 100f;
-        if (pos.y > 50f) pos.y -= 100f;
-        if (pos.y < -50f) pos.y += 100f;
-        transform.position = pos;
+        rigidBody2D.angularVelocity = m_ActionsVector[1] * maxTurnSpeed;
+        rigidBody2D.velocity = transform.up * (m_ActionsVector[0] * maxMoveSpeed);
 
-        if (Mathf.Abs(angVel) > 1f)
-            angVel = angVel / Mathf.Abs(angVel);
-        if (Mathf.Abs(vel) > 1f)
-            vel = vel / Mathf.Abs(vel);
-
-        energyDrain = Mathf.Pow(Mathf.Abs(vel), 2f) * speedEnergyDrain;
-
-        rigidBody2D.angularVelocity = angVel * maxTurnSpeed;
-        rigidBody2D.velocity = transform.up * (vel * maxMoveSpeed);
-    }
-
-    private void FixedUpdate()
-    {
-        if (steer)
-        {
-            float s = Input.GetAxis("Vertical");
-            float r = -Input.GetAxis("Horizontal");
-
-            SetMovement(s, r);
-            AnimalStep();
-        }
-    }
-
-
-    public void SetNearObject(Transform nearObject)
-    {
-        if (Type == AnimalType.Predator)
-        {
-            if (nearObject.tag == "Predator") nearMate = nearObject;
-            else if (nearObject.tag == "Prey") nearFood = nearObject;
-        }
-
-        if(Type == AnimalType.Prey)
-        {
-            if (nearObject.tag == "Prey") nearMate = nearObject;
-            else if (nearObject.tag == "Plant") nearFood = nearObject;
-        }
-    }
-
-    public void ResetNearObject()
-    {
-        nearMate = null;
-        nearFood = null;
-    }
-
-    void Die()
-    {
-        m_Agent.UpdateFitness();
-        m_Agent.OnDie();
+        StopInBorders();
     }
 
     void TryEat()
@@ -112,4 +80,46 @@ public class Animal : MonoBehaviour
             nearFood = null;
         }
     }
+
+    protected virtual void TryMakeSound()
+    {    }
+
+    public void StopInBorders()
+    {
+        Vector2 pos = transform.position;
+        if (pos.x > 50f) pos.x -= 100f;
+        if (pos.x < -50f) pos.x += 100f;
+        if (pos.y > 50f) pos.y -= 100f;
+        if (pos.y < -50f) pos.y += 100f;
+        transform.position = pos;
+    }
+
+    public virtual void SetNearObject(Transform nearObject)
+    {    }
+
+    public void ResetNearObject()
+    {
+        nearMate = null;
+        nearFood = null;
+    }
+
+    void OnDie()
+    {
+        m_Agent.OnDie();
+
+        Destroy(this.gameObject);
+    }
+
+    //public bool steer = false;
+    //private void FixedUpdate()
+    //{
+    //    if (steer)
+    //    {
+    //        float s = Input.GetAxis("Vertical");
+    //        float r = -Input.GetAxis("Horizontal");
+
+    //        UpdateMovement(s, r);
+    //        AnimalStep();
+    //    }
+    //}
 }

@@ -3,40 +3,33 @@ from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityIn
 from mlagents.communicator_objects.engine_configuration_pb2 import EngineConfigurationProto
 import tensorflow as tf
 import re
+from configs.engine_configuration import engine_config
 
 def get_initialization_input(reset_parameters = None):
-    engine_config = EngineConfigurationProto()
-    engine_config.width = 800
-    engine_config.height = 600
-    engine_config.quality_level = 1
-    engine_config.time_scale = 1
-    engine_config.target_frame_rate = -1
-    engine_config.show_monitor = False
+    engine_proto = EngineConfigurationProto()
+    engine_proto.width = engine_config['width']
+    engine_proto.height = engine_config['height']
+    engine_proto.quality_level = engine_config['quality_level']
+    engine_proto.time_scale = engine_config['time_scale']
+    engine_proto.target_frame_rate = engine_config['target_frame_rate']
+    engine_proto.show_monitor = engine_config['show_monitor']
 
     if reset_parameters is not None:
-        reset_parameters = get_reset_parameters(reset_parameters)
+        reset_parameters = stick_reset_parameters(reset_parameters)
 
     return UnityInitializationInputProto(seed=1, engine_configuration=engine_config, custom_reset_parameters=reset_parameters)
 
-def load_custom_reset_parameters(fileName='custom_reset_params_1'):
-    with open('configs\\' + fileName, 'r') as file:
-        custom_reset_parameters = json.loads(file.read())
-
-    # Remove commented (by '#') parameters
-    list_keys = list(custom_reset_parameters.keys())
-    for k in list_keys:
-        if k.startswith('#'):
-            custom_reset_parameters.pop(k)
-    return custom_reset_parameters
-
-def get_reset_parameters(json_dict):
+def stick_reset_parameters(json_dict):
     def stack_dict(old_dict):
         new_dict = {}
         for key, item in old_dict.items():
             if isinstance(item, dict):
                 temp = stack_dict(item)
                 for k, i in temp.items():
-                    new_dict[f'{key}_{k}'] = i
+                    if k == "":
+                        new_dict[f'{key}'] = i
+                    else:
+                        new_dict[f'{key}_{k}'] = i
             else:
                 new_dict[key] = item
 
@@ -52,6 +45,17 @@ def get_reset_parameters(json_dict):
         parameters[f'{brain}_observations_vector_size'] = observations_vector_size
 
     return parameters
+
+def load_custom_reset_parameters(fileName='custom_reset_params_1'):
+    with open('configs\\' + fileName, 'r') as file:
+        custom_reset_parameters = json.loads(file.read())
+
+    # Remove commented (by '#') parameters
+    list_keys = list(custom_reset_parameters.keys())
+    for k in list_keys:
+        if k.startswith('#'):
+            custom_reset_parameters.pop(k)
+    return custom_reset_parameters
 
 def unityLogo():
     try:

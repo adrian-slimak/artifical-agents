@@ -2,62 +2,62 @@
 using System.Collections;
 using UnityEngine;
 
-namespace UPC
+public class MMArray : IEnumerator, IEnumerable
 {
-    public class MMArray : IEnumerator, IEnumerable
+    unsafe float* arrayPointer;
+    public readonly int Length;
+
+    int position = -1;
+
+    public unsafe MMArray(float* arrayPointer, int length)
     {
-        unsafe float* arrayPointer;
-        public readonly int Length;
+        this.arrayPointer = arrayPointer;
+        this.Length = length;
+    }
 
-        int position = -1;
+    //public unsafe MMArray(int length)
+    //{
+    //    this.arrayPointer = new float*[length];
+    //    this.Length = length;
+    //}
 
-        public unsafe MMArray(float* arrayPointer, int length)
+    public unsafe float this[int index]
+    {
+        get
         {
-            this.arrayPointer = arrayPointer;
-            this.Length = length;
+            if (index >= this.Length)
+                throw new IndexOutOfRangeException();
+            return *(arrayPointer + index);
         }
 
-        public unsafe float this[int index]
+        set
         {
-            get
-            {
-                if (index >= this.Length)
-                    throw new IndexOutOfRangeException();
-                return *(arrayPointer + index);
-            }
-
-            set
-            {
-                if (index >= this.Length)
-                    throw new IndexOutOfRangeException();
-                *(arrayPointer + index) = value;
-            }
-        }
-
-        public IEnumerator GetEnumerator()
-        {
-            this.position=-1;
-            return (IEnumerator)this;
-        }
-
-        //IEnumerator
-        public bool MoveNext()
-        {
-            this.position++;
-            return (this.position < this.Length);
-        }
-
-        //IEnumerable
-        public void Reset()
-        { this.position = -1; }
-
-        //IEnumerable
-        public object Current
-        {
-            get { return this[this.position]; }
+            if (index >= this.Length)
+                throw new IndexOutOfRangeException();
+            *(arrayPointer + index) = value;
         }
     }
 
+    public IEnumerator GetEnumerator()
+    {
+        this.position=-1;
+        return (IEnumerator)this;
+    }
 
+    //IEnumerator
+    public bool MoveNext()
+    {
+        this.position++;
+        return (this.position < this.Length);
+    }
 
+    //IEnumerable
+    public void Reset()
+    { this.position = -1; }
+
+    //IEnumerable
+    public object Current
+    {
+        get { return this[this.position]; }
+    }
 }

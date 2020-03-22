@@ -1,88 +1,87 @@
-using System;
 using UnityEngine;
 
-namespace UPC
+public class Agent : MonoBehaviour
 {
+    public string m_BrainName;
 
-    public class Agent : MonoBehaviour
+    Brain m_Brain;
+    public int m_ID;
+
+    MMArray m_FitnessArray;
+
+    Animal m_Animal;
+    Vision m_Vision;
+    Hearing m_Hearing;
+
+    void Awake()
     {
-        public string m_BrainName;
+        AttachBrain();
 
-        Brain m_Brain;
-        public int m_Id;
+        m_Animal = GetComponent<Animal>();
+        m_Vision = GetComponent<Vision>();
 
-        MMArray m_ActionsVector;
-        MMArray m_VisionObservationsVectorArray;
-        MMArray m_FitnessArray;
+        if (m_Brain.hearingObservationsVectorSize > 0)
+            m_Hearing = GetComponent<Hearing>();
+        else
+            Destroy(GetComponent<Hearing>());
+    }
 
-        int m_StepCount;
+    public void AttachBrain()
+    {
+        m_Brain = Academy.Instance.m_Brains[m_BrainName];
+        m_ID = m_Brain.SubscribeAgent();
 
-        Animal m_Animal;
-        Vision m_Vision;
+        Academy.Instance.AgentUpdateObservations += UpdateObservations;
+        Academy.Instance.AgentUpdateMovement += AgentStep;
+        Academy.Instance.AgentUpdateFitness += UpdateFitness;
+    }
 
-        void Awake()
+    public void Init()
+    {
+        m_FitnessArray = m_Brain.GetFitnessArray(m_ID);
+
+        m_Animal.SetActionsVector(m_Brain.GetActionsArray(m_ID));
+        m_Vision.SetObservationsVector(m_Brain.GetVisionObservationsArray(m_ID));
+        if (m_Hearing)
+            m_Hearing.SetObservationsVector(m_Brain.GetHearingObservationsArray(m_ID));
+    }
+
+    void UpdateObservations()
+    {
+        m_Vision.UpdateObservations();
+        if (m_Hearing)
+            m_Hearing.UpdateObservations();
+    }
+
+    public void UpdateFitness()
+    {
+        float fitness = m_Animal.collectedFood;
+        m_FitnessArray[0] = fitness;
+        if(fitness>m_Brain.bestAgentFitness)
         {
-            m_Animal = GetComponent<Animal>();
-            m_Vision = GetComponent<Vision>();
+            m_Brain.bestAgentFitness = fitness;
+            m_Brain.bestAgent = this;
         }
+    }
 
-        public void Subscribe()
-        {
-            m_Brain = Academy.Instance.m_Brains[m_BrainName];
-            m_Id = m_Brain.SubscribeAgent();
+    void AgentStep()
+    {
+        m_Animal.UpdateMovement();
+        m_Animal.AnimalStep();
 
-            Academy.Instance.AgentUpdateObservations += UpdateObservations;
-            Academy.Instance.AgentUpdateMovement += AgentStep;
-            Academy.Instance.AgentUpdateFitness += UpdateFitness;
-        }
+        UpdateFitness();
+    }
 
-        public void Init()
-        {
-            m_VisionObservationsVectorArray = m_Brain.GetVisionObservationsArray(m_Id);
-            m_ActionsVector = m_Brain.GetActionsArray(m_Id);
-            m_FitnessArray = m_Brain.GetFitnessArray(m_Id);
+    internal void OnDie()
+    {
+        UpdateFitness();
+        m_Brain.OnAgentDie();
+    }
 
-            m_Vision.SetVisionVectorArray(m_VisionObservationsVectorArray);
-        }
-
-        void UpdateObservations()
-        {
-            m_Vision.UpdateVisionObservations();
-        }
-
-        public void UpdateFitness()
-        {
-            float fitness = m_Animal.collectedFood;
-            m_FitnessArray[0] = fitness;
-            if(fitness>m_Brain.bestAgentFitness)
-            {
-                m_Brain.bestAgentFitness = fitness;
-                m_Brain.bestAgent = this;
-            }
-        }
-
-        void AgentStep()
-        {
-            m_StepCount += 1;
-
-            if (m_ActionsVector == null) return;
-            m_Animal.SetMovement(m_ActionsVector[0], m_ActionsVector[1]);
-            m_Animal.AnimalStep();
-
-            UpdateFitness();
-        }
-
-        internal void OnDie()
-        {
-            m_Brain.agentsAlive--;
-            Destroy(this.gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            Academy.Instance.AgentUpdateObservations -= UpdateObservations;
-            Academy.Instance.AgentUpdateMovement -= AgentStep;
-            Academy.Instance.AgentUpdateFitness -= UpdateFitness;
-        }
+    private void OnDestroy()
+    {
+        Academy.Instance.AgentUpdateObservations -= UpdateObservations;
+        Academy.Instance.AgentUpdateMovement -= AgentStep;
+        Academy.Instance.AgentUpdateFitness -= UpdateFitness;
     }
 }

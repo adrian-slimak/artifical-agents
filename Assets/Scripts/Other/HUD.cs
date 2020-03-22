@@ -10,7 +10,6 @@ public class HUD : MonoBehaviour
     public Text m_FPSText;
     public Text EnvInfo;
     public Text PopInfo;
-    float deltaTime = 0.0f;
     Academy m_Academy;
 
     private void Start()

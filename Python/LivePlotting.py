@@ -10,7 +10,7 @@ from collections.abc import Iterable
 
 
 class LivePlot:
-    def __init__(self, plots={'fig1': (['xLabel', 'yLabel'], ['line1', 'line2'])}, figsize=(10, 8)):
+    def __init__(self, plots={'fig1': (['xLabel', 'yLabel'], ['line1', 'line2', 'line3'])}, figsize=(10, 8)):
         self.fig, self.ax = plt.subplots(len(plots.keys()), 1, figsize=figsize)
         self.ID = None
         self.plots = {}
@@ -18,7 +18,7 @@ class LivePlot:
         if not isinstance(self.ax, Iterable):
             self.ax = [self.ax]
 
-        colors = ['r', 'b']
+        colors = ['g', 'r', 'b']
         for (plot_name, plot_params), ax in zip(plots.items(), self.ax):
             self.plots[plot_name] = {'ax': ax}
             ax.set_title(plot_name)

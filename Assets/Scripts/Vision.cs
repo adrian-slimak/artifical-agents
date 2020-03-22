@@ -1,48 +1,37 @@
 ﻿using UnityEngine;
 using System;
 
-public class Vision : MonoBehaviour
+public class Vision : Sensor
 {
     public float visionAngle = 220f;
     public float visionRange = 10f;
-    public int visionCellsNum = 15;
+    public int visionCellNum = 15;
     public bool drawGizmo = false;
 
     Animal m_Animal;
 
-    //float[] observationsVector;
-    UPC.MMArray observationsVector;
     Vector3 arcStart;
     float cellAngle;
     float nearTargetDistance;
 
-    Collider2D[] hits = new Collider2D[20];
+    Collider2D[] hits = new Collider2D[30];
     int hitsNum = 0;
-
+    public LayerMask sensorLayerMask;
 
     private void Awake()
     {
         m_Animal = GetComponent<Animal>();
-        string brainName = GetComponent<UPC.Agent>().m_BrainName;
+        string brainName = GetComponent<Agent>().m_BrainName;
 
         visionAngle = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_angle"] ?? visionAngle;
         visionRange = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_range"] ?? visionRange;
-        visionCellsNum = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_vector_size"] ?? visionCellsNum);
+        visionCellNum = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_cell_number"] ?? visionCellNum);
 
-        cellAngle = visionAngle / visionCellsNum;
+        cellAngle = visionAngle / visionCellNum;
         nearTargetDistance = 1f - (0.3f / visionRange);
-
-        //observationsVector = new float[visionCellsNum];
-        //cellAngle = visionAngle / visionCellsNum;
-        //nearTargetDistance = 1f - (0.3f / visionDistance);
     }
 
-    public void SetVisionVectorArray(UPC.MMArray visionVectorArray)
-    {
-        observationsVector = visionVectorArray;
-    }
-
-    public void UpdateVisionObservations()
+    public override void UpdateObservations()
     {
         arcStart = rotateByAngle(transform.right, (180f - visionAngle) / 2f);
         DetectVision();
@@ -50,7 +39,7 @@ public class Vision : MonoBehaviour
 
     void DetectVision()
     {
-        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, hits, layerMask: 1 << 8);
+        hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, hits, layerMask: sensorLayerMask);
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
@@ -72,31 +61,19 @@ public class Vision : MonoBehaviour
                     distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
 
-                    //distance = 1f - Mathf.Clamp(distance/visionDistance, 0f, 0.999f);
                     distance = 1f - distance / visionRange;
 
-                    //if (observationsVector[cellNum] % 1 < distance)
+                    if (hits[i].tag == "Prey")
+                        cellNum += visionCellNum;
+                    else if (hits[i].tag == "Predator")
+                        cellNum += visionCellNum * 2;
+
+
                     if (observationsVector[cellNum] < distance)
                     {
                         if (distance > nearTargetDistance) m_Animal.SetNearObject(hits[i].transform);
 
-                        if (m_Animal.Type == Animal.AnimalType.Prey)
-                            if (hits[i].tag == "Plant")
-                                observationsVector[cellNum] = distance;
-
-                        if (m_Animal.Type == Animal.AnimalType.Predator)
-                            if (hits[i].tag == "Prey")
-                                observationsVector[cellNum] = distance;
-                        ////if (hits[i].tag == "Prey")
-                        ////    distance += 0f;
-                        ////else
-                        //if (hits[i].tag == "Plant")
-                        //    distance += 1f;
-                        //else
-                        //if (hits[i].tag == "Predator")
-                        //    distance += 2f;
-
-                        //observationsVector[cellNum] = distance;
+                        observationsVector[cellNum] = distance;
                     }
                 }
             }
@@ -109,38 +86,36 @@ public class Vision : MonoBehaviour
         if (!drawGizmo) return;
         if (Application.isEditor)
         {
-            Awake();
-            UpdateVisionObservations();
+            //Awake();
+            UpdateObservations();
         }
-        UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
-        UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, arcStart,
-                                                            visionAngle, visionRange);
+
+        //UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
+        //UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, arcStart,
+        //                                                    visionAngle, visionRange);
         UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
         UnityEditor.Handles.DrawWireArc(transform.position, transform.forward, arcStart,
                                                             visionAngle, visionRange);
         UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(visionAngle, Vector3.forward) * arcStart * visionRange);
 
-        for (int i = 0; i < observationsVector.Length; i++)
+        for (int i = 0; i < visionCellNum; i++)
         {
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
             UnityEditor.Handles.DrawLine(transform.position,
                 transform.position + Quaternion.AngleAxis(cellAngle * i, Vector3.forward) * arcStart * visionRange);
 
+            UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
             if (observationsVector[i] > 0)
-            {
-                UnityEditor.Handles.color = new Color(0f, 0f, 1f, 0.15f);
-                if (observationsVector[i] > 2)
-                    UnityEditor.Handles.color = new Color(1f, 0f, 0f, 0.15f);
-                else if (observationsVector[i] > 1)
-                    UnityEditor.Handles.color = new Color(0f, 1f, 0f, 0.15f);
+                UnityEditor.Handles.color += new Color(0f, 1f, 0f, 0.15f);
+            if (observationsVector[i+visionCellNum] > 0)
+                UnityEditor.Handles.color += new Color(0f, 0f, 1f, 0.15f);
+            if (observationsVector[i+visionCellNum*2] > 0)
+                UnityEditor.Handles.color += new Color(1f, 0f, 0f, 0.15f);
 
-                UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward,
-                    rotateByAngle(arcStart, i * cellAngle),
-                    cellAngle, visionRange);
-            }
+            UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, rotateByAngle(arcStart, i * cellAngle),
+                cellAngle, visionRange);
         }
-
     }
 #endif
 

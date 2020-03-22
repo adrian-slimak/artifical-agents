@@ -26,8 +26,6 @@ public class VirtualAcademy : Academy
             brain.Reset();
 
         List<Agent> agents = SpawnAgents();
-        foreach (Agent agent in agents)
-            agent.Subscribe();// Can this be onStart in Agent???
 
         foreach (Brain brain in brains)
             brain.Init();

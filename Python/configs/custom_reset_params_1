@@ -1,9 +1,0 @@
-{
-"preys_count": 60,
-"#prey_vision_observations_vector_size": 10,
-"#prey_actions_vector_size": 10,
-
-"#predators_count": 0,
-"#predator_vision_observations_vector_size": 10,
-"#predator_actions_vector_size": 10
-}

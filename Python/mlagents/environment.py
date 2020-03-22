@@ -10,7 +10,7 @@ from .exception import (UnityEnvironmentException, UnityCommunicationException, 
 from mlagents.communicator_objects.unity_input_pb2 import UnityInputProto
 from mlagents.communicator_objects.unity_output_pb2 import UnityOutputProto
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
-from utils import get_reset_parameters
+from utils import stick_reset_parameters
 
 from .np_communicator import NPCommunicator
 import signal
@@ -74,7 +74,9 @@ class UnityEnvironment:
         self.reset(reset_parameters)
 
         for step in range(num_steps):
+            print('1')
             agent_observations = self.step_receive_observations()
+            print('2')
 
             agent_actions = {}
             for brain_name in models.keys():
@@ -96,7 +98,7 @@ class UnityEnvironment:
 
         if reset_parameters is not None:
             self.external_brains = {}
-            reset_parameters = get_reset_parameters(reset_parameters)
+            reset_parameters = stick_reset_parameters(reset_parameters)
 
             for brain_name in ['prey', 'predator']:
                 self.external_brains[brain_name] = Brain(brain_name, self.worker_id)
@@ -106,8 +108,7 @@ class UnityEnvironment:
 
         logger.info("\n\tAcademy \"{0}_{1}\" reset.".format(self.academy_name, self.worker_id))
         # if reset_parameters is not None:
-        #     logger.info("\n\tAcademy \"{0}_{1}\" reset with custom parameters:\n{2}".format(self.academy_name, self.worker_id,
-        #         "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
+        #     logger.info("\n\tAcademy \"{0}_{1}\" reset with custom parameters:\n{2}".format(self.academy_name, self.worker_id, "\n\t\t ".join([str(x) + " -> " + str(custom_reset_parameters[x]) for x in custom_reset_parameters])))
 
         self.communicator.receive()  # Unity Environment is ready to receive new command
         self.communicator.send(unity_input)
@@ -117,17 +118,12 @@ class UnityEnvironment:
         if unity_output is None:
             raise UnityCommunicationException("Communicator has stopped.")
 
-        # if self.external_brains is None:
-        #     self.external_brains = {}
-        #     for brain in unity_output.initialization_output.brain_parameters:
-        #         self.external_brains[brain.brain_name] = Brain(brain.brain_name, self.worker_id)
-        #         self.external_brains[brain.brain_name].init_from_brain(brain)
-
     def _step_receive_observations(self):
         self.communicator.receive()
 
     def step_receive_observations(self):
         self.communicator.receive()
+        print('1.1')
 
         # Read observations from memory
         state = {}

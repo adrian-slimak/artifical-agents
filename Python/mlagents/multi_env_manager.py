@@ -4,7 +4,7 @@ from mlagents.environment import UnityEnvironment
 from mlagents.exception import UnityCommunicationException, UnityTimeOutException
 from multiprocessing import Process, Pipe
 from multiprocessing.connection import Connection
-from utils import get_initialization_input, get_reset_parameters
+from utils import get_initialization_input, stick_reset_parameters
 import configs.custom_reset_parameters as custom_params
 from .brain import Brain
 # multiprocessing.set_start_method('forkserver')
@@ -26,7 +26,7 @@ class MultiEnvManager:
 
     def init_brains(self):
         params = custom_params.custom_reset_parameters_1
-        params = get_reset_parameters(params)
+        params = stick_reset_parameters(params)
 
         for brain_name in ['prey', 'predator']:
             self.external_brains[brain_name] = Brain(brain_name, 0)
@@ -58,7 +58,7 @@ class MultiEnvManager:
         for env in self.environments:
             env._episode_completed()
 
-        fitness = {'prey': self.external_brains['prey'].get_stacked_fitness() for brain_name in ['prey']}
+        fitness = {brain_name: self.external_brains[brain_name].get_stacked_fitness() for brain_name in ['prey']}
 
         return fitness
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UPC;
+﻿using UnityEngine;
 
 
 [System.Serializable]
@@ -12,7 +9,9 @@ public class Brain
     [HideInInspector]
     public int observationsVectorSize;
     public int visionObservationsVectorSize;
+    public int hearingObservationsVectorSize;
     public int actionsVectorSize;
+    public int fitnessVectorSize = 1;
 
     [HideInInspector]
     public int agentsCount;
@@ -35,9 +34,12 @@ public class Brain
     public void Reset()
     {
         visionObservationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_observations_vision_vector_size"] ?? visionObservationsVectorSize);
+        hearingObservationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_observations_hearing_vector_size"] ?? hearingObservationsVectorSize);
         observationsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_observations_vector_size"]);
 
         actionsVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_actions_vector_size"] ?? actionsVectorSize);
+
+        //fitnessVectorSize = (int)(Academy.Instance.m_ResetParameters[brainName + "_fitness_vector_size"] ?? fitnessVectorSize);
 
         agentsCount = 0;
 
@@ -50,7 +52,7 @@ public class Brain
         bestAgentFitness = -1;
         bestAgent = null;
 
-        m_Memory.Init(agentsCount, observationsVectorSize, actionsVectorSize);
+        m_Memory.Init(agentsCount, observationsVectorSize, actionsVectorSize, fitnessVectorSize);
     }
 
     public int SubscribeAgent()
@@ -58,9 +60,19 @@ public class Brain
         return agentsCount++;
     }
 
+    public void OnAgentDie()
+    {
+        agentsCount--;
+    }
+
     public MMArray GetVisionObservationsArray(int agent_id)
     {
         return m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize, visionObservationsVectorSize);
+    }
+
+    public MMArray GetHearingObservationsArray(int agent_id)
+    {
+        return m_Memory.GetObservationsMemoryArray(agent_id * observationsVectorSize + visionObservationsVectorSize, hearingObservationsVectorSize);
     }
 
     public MMArray GetActionsArray(int agent_id)
@@ -70,6 +82,6 @@ public class Brain
 
     internal MMArray GetFitnessArray(int agent_id)
     {
-        return m_Memory.GetFitnessMemoryArray(agent_id, 1);
+        return m_Memory.GetFitnessMemoryArray(agent_id * fitnessVectorSize, fitnessVectorSize);
     }
 }

@@ -31,10 +31,10 @@ class Genotype:
         return numpies
 
 # Random Init
-_minGenes = 0.2
-_maxGenes = 0.4
+_minGenes = 0.5
+_maxGenes = 0.75
 _loc = 0.
-_scale = 5.
+_scale = 1.
 
 # Selection
 # _selectionMethod = 'Roulette Wheel'
@@ -43,13 +43,13 @@ _selectionMethod = 'Fittest Half'
 # Mating
 _matingMethod = 'Two Points Per Part'
 # _matingMethod = 'Two Points'
-_maxPercentLength = 0.8
+_maxPercentLength = 0.7
 
 # Mutation
 _genMutationChance = 0.04
-_genRemoveChance = 0.02
-_genAppearChance = 0.02
-_sigma = 0.1
+_genRemoveChance = 0.015
+_genAppearChance = 0.03
+_sigma = 0.4
 
 class GeneticAlgorithm:
     def __init__(self, input_dim, lstm_units, output_dim, population_size, use_bias=False):
@@ -75,10 +75,6 @@ class GeneticAlgorithm:
 
         sorted_by_fitness = sorted(self.population, key=lambda individual: individual.fitness, reverse=True)
         self.population = sorted_by_fitness
-        print([indiv.fitness for indiv in self.population])
-        print(f"avg fitness: {np.average(fitness)}")
-        print(f"best fitness: {np.max(fitness)}")
-        return np.max(fitness), np.average(fitness)
 
     def next_generation(self):
         selected_individuals = GeneticAlgorithm.selection(self.population, method=_selectionMethod)

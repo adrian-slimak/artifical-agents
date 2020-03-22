@@ -26,30 +26,30 @@ public class Memory
             viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref m_Pointer);
     }
 
-    public unsafe void Init(int agentsCount, int observationsVectorSize, int actionsVectorSize)
+    public unsafe void Init(int agentsCount, int observationsVectorSize, int actionsVectorSize, int fitnessVectorSize)
     {
         mmf_size_observations = agentsCount * observationsVectorSize * 4;
         mmf_size_actions = agentsCount * actionsVectorSize * 4;
-        mmf_size_fitness = agentsCount * 4;
+        mmf_size_fitness = agentsCount * fitnessVectorSize * 4;
 
         mmf_observations_pointer = m_Pointer + mmf_size_observations * m_workerID;
         mmf_actions_pointer = 100000 + m_Pointer + mmf_size_actions * m_workerID;
         mmf_fitness_pointer = 150000 + m_Pointer + mmf_size_fitness * m_workerID;
     }
 
-    public unsafe UPC.MMArray GetObservationsMemoryArray(int offset, int length)
+    public unsafe MMArray GetObservationsMemoryArray(int offset, int length)
     {
-        return new UPC.MMArray((float*) (mmf_observations_pointer + offset*4), length);
+        return new MMArray((float*) (mmf_observations_pointer + offset*4), length);
     }
 
-    public unsafe UPC.MMArray GetActionsMemoryArray(int offset, int length)
+    public unsafe MMArray GetActionsMemoryArray(int offset, int length)
     {
-        return new UPC.MMArray((float*) (mmf_actions_pointer + offset*4), length);
+        return new MMArray((float*) (mmf_actions_pointer + offset*4), length);
     }
 
-    public unsafe UPC.MMArray GetFitnessMemoryArray(int offset, int length)
+    public unsafe MMArray GetFitnessMemoryArray(int offset, int length)
     {
-        return new UPC.MMArray((float*)(mmf_fitness_pointer + offset*4), length);
+        return new MMArray((float*)(mmf_fitness_pointer + offset*4), length);
     }
 
     public unsafe void Reset()

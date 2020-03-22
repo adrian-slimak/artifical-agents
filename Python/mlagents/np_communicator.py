@@ -66,6 +66,5 @@ class NPCommunicator:
             message = UnityMessageProto()
             message.status = 400
             win32file.WriteFile(self._pipe, message.SerializeToString())
-            # self.unity_to_external.parent_conn.close()
-            # self.server.stop(False)
+            win32file.CloseHandle(self._pipe)
             self.is_open = False
