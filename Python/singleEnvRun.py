@@ -14,6 +14,7 @@ BRAINS = ['prey']
 
 def main():
     # livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 9))
+    livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']),}, figsize=(7, 4))
 
     unity_environment = UnityEnvironment(file_name=None, worker_id=0, initialization_input=get_initialization_input(custom_params.custom_reset_parameters_1))
 
@@ -43,7 +44,7 @@ def main():
             print(f"avg fitness: {avg}")
             print(f"best fitness: {max}")
             print(f"worst fitness: {min}")
-            # livePlot.update({brain_name: [avg, max, min]})
+            livePlot.update({brain_name: [avg, max, min]})
 
     unity_environment.close()
     # livePlot.close()

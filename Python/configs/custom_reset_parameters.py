@@ -49,6 +49,7 @@ custom_reset_parameters_1 = \
                         "vision":
                             {
                                 "vector_size": 12,
+                                "cell_number": 12,
                                 "angle": 180,
                                 "range": 25
                             },

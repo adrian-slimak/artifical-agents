@@ -42,8 +42,6 @@ public class Hearing : Sensor
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
 
-        m_Animal.ResetNearObject();
-
         float angle;
         int cellNum;
         float distance;

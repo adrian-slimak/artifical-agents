@@ -14,7 +14,6 @@ public class Animal : MonoBehaviour
     public float energy = 100f;
     float energyDrainPerStep = 0.1f;
     float energyDrainPerSpeed = 0.1f;
-    float currentEnergyDrain;
 
     bool communicationEnabled = false;
     public float currentSound = 0f;
@@ -25,18 +24,17 @@ public class Animal : MonoBehaviour
 
     Rigidbody2D rigidBody2D;
 
-    void Awake()
+    protected virtual void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
         m_Agent = GetComponent<Agent>();
 
-        maxMoveSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_move_speed"] ?? maxMoveSpeed);
-        maxTurnSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_turn_speed"] ?? maxTurnSpeed);
+        maxMoveSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_move_speed"] ?? maxMoveSpeed);
+        maxTurnSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_turn_speed"] ?? maxTurnSpeed);
 
-
-        energy = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy"]?? energy);
-        energyDrainPerStep = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_step"]?? energyDrainPerStep);
-        energyDrainPerSpeed = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_speed"]?? energyDrainPerSpeed);
+        energy = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy"]?? energy);
+        energyDrainPerStep = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_step"]?? energyDrainPerStep);
+        energyDrainPerSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_speed"]?? energyDrainPerSpeed);
     }
 
     public void SetActionsVector(MMArray actionsVector)
@@ -69,7 +67,7 @@ public class Animal : MonoBehaviour
         StopInBorders();
     }
 
-    void TryEat()
+    protected virtual void TryEat()
     {
         if (nearFood)
         {

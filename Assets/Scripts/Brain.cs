@@ -62,7 +62,7 @@ public class Brain
 
     public void OnAgentDie()
     {
-        agentsCount--;
+        agentsAlive--;
     }
 
     public MMArray GetVisionObservationsArray(int agent_id)

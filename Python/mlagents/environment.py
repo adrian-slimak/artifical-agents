@@ -74,9 +74,7 @@ class UnityEnvironment:
         self.reset(reset_parameters)
 
         for step in range(num_steps):
-            print('1')
             agent_observations = self.step_receive_observations()
-            print('2')
 
             agent_actions = {}
             for brain_name in models.keys():
@@ -123,7 +121,6 @@ class UnityEnvironment:
 
     def step_receive_observations(self):
         self.communicator.receive()
-        print('1.1')
 
         # Read observations from memory
         state = {}

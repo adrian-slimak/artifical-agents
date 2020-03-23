@@ -18,9 +18,10 @@ public class VirtualAcademy : Academy
 
     public void ResetAgents()
     {
-        Agent[] oldAgents = FindObjectsOfType<Agent>();
-        foreach (Agent agent in oldAgents)
-            Destroy(agent.gameObject);
+        foreach (Transform oldAgent in PreysHolder.transform)
+            Destroy(oldAgent.gameObject);
+        foreach (Transform oldAgent in PredatorsHolder.transform)
+            Destroy(oldAgent.gameObject);
 
         foreach (Brain brain in brains)
             brain.Reset();

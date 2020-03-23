@@ -10,8 +10,8 @@ unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
 n_envs = 4
 
-prey_parameters = (45, 8, 2, 60, n_envs, False)
-prey_parameters1 = (45, 8, 2, 60, False)
+prey_parameters = (57, 8, 2, 60, n_envs, False)
+prey_parameters1 = (57, 8, 2, 60, False)
 
 def main():
     livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(6, 4))

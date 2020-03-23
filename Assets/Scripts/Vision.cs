@@ -14,7 +14,7 @@ public class Vision : Sensor
     float cellAngle;
     float nearTargetDistance;
 
-    Collider2D[] hits = new Collider2D[30];
+    Collider2D[] hits = new Collider2D[100];
     int hitsNum = 0;
     public LayerMask sensorLayerMask;
 
@@ -78,6 +78,21 @@ public class Vision : Sensor
                 }
             }
         }
+    }
+
+    public int GetNearTargetObjects(Transform targetObject, float minDistance, string objectTag)
+    {
+        int numOfObjects = 0;
+        for (int i = 0; i < hitsNum; i++)
+        {
+            if (hits[i].transform != targetObject && hits[i].tag == objectTag)
+            {
+                if (Vector2.Distance(targetObject.position, hits[i].transform.position) < minDistance)
+                    numOfObjects++;
+            }
+        }
+
+        return numOfObjects;
     }
 
 #if UNITY_EDITOR

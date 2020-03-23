@@ -10,7 +10,7 @@ public class Agent : MonoBehaviour
     MMArray m_FitnessArray;
 
     Animal m_Animal;
-    Vision m_Vision;
+    public Vision m_Vision;
     Hearing m_Hearing;
 
     void Awake()
@@ -19,7 +19,6 @@ public class Agent : MonoBehaviour
 
         m_Animal = GetComponent<Animal>();
         m_Vision = GetComponent<Vision>();
-
         if (m_Brain.hearingObservationsVectorSize > 0)
             m_Hearing = GetComponent<Hearing>();
         else
@@ -42,15 +41,13 @@ public class Agent : MonoBehaviour
 
         m_Animal.SetActionsVector(m_Brain.GetActionsArray(m_ID));
         m_Vision.SetObservationsVector(m_Brain.GetVisionObservationsArray(m_ID));
-        if (m_Hearing)
-            m_Hearing.SetObservationsVector(m_Brain.GetHearingObservationsArray(m_ID));
+        m_Hearing?.SetObservationsVector(m_Brain.GetHearingObservationsArray(m_ID));
     }
 
     void UpdateObservations()
     {
         m_Vision.UpdateObservations();
-        if (m_Hearing)
-            m_Hearing.UpdateObservations();
+        m_Hearing?.UpdateObservations();
     }
 
     public void UpdateFitness()
