@@ -1,45 +1,46 @@
+from mlagents.multi_env_manager import MultiEnvManager
+import configs.learning_parameters as _lp
+from LivePlotting import LivePlot
 from GA import GeneticAlgorithm
+from networks.lstm import LSTMModel
+from networks.rnn import RNNModel
 import numpy as np
 
-from mlagents.multi_env_manager import MultiEnvManager
-from LSTM import LSTMModel
-
-from LivePlotting import LivePlot
-
-unity_env_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
-
-n_envs = 4
-
-prey_parameters = (57, 8, 2, 60, n_envs, False)
-prey_parameters1 = (57, 8, 2, 60, False)
 
 def main():
-    livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(6, 4))
+    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(6, 4)) if _lp.show_plots else None
 
-    env_manager = MultiEnvManager(n_envs)
+    env_manager = MultiEnvManager(_lp.number_of_environments)
 
-    prey_GA = GeneticAlgorithm(*prey_parameters1)
-    prey_GA.initial_population()
+    GAs = {}
+    for brain_name in _lp.brains:
+        brain = env_manager.environments[0].external_brains[brain_name]
+        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, model=_lp.network_model, use_bias=_lp.use_bias)
+        GAs[brain_name].initial_population()
 
-    for generation in range(1000):
-        prey_model_weights = prey_GA.to_lstm_model()
+    for generation in range(_lp.number_of_generations):
+        models = {}
+        for brain_name in _lp.brains:
+            brain = env_manager.environments[0].external_brains[brain_name]
+            model_weights = GAs[brain_name].to_lstm_model()
+            models[brain_name] = _lp.NetworkModel(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, n_envs=_lp.number_of_environments, use_bias=_lp.use_bias)
+            models[brain_name].build(model_weights=model_weights)
 
-        prey_model = LSTMModel(*prey_parameters)
-        prey_model.build(model_weights=prey_model_weights)
+        all_fitness = env_manager.run_episode(models, _lp.number_of_steps)
 
-        models = {'prey': prey_model}
+        for brain_name in _lp.brains:
+            fitness = np.mean(all_fitness[brain_name], axis=0)
+            GAs[brain_name].calc_fitness(fitness)
+            GAs[brain_name].next_generation()
 
-        all_fitness = env_manager.run_episode(models=models)
-
-        prey_fitness = np.mean(all_fitness['prey'], axis=0)
-
-        prey_GA.calc_fitness(prey_fitness)
-        avg, max, min = np.average(prey_fitness), np.max(prey_fitness), np.min(prey_fitness)
-        livePlot.update({'prey': [avg, max, min]})
-
-        prey_GA.next_generation()
+            avg, max, min = np.average(fitness), np.max(fitness), np.min(fitness)
+            print(f"AVG: {avg:.2f}   BEST: {max:.2f}   WORST: {min:.2f}")
+            if live_plot:
+                live_plot.update({brain_name: [avg, max, min]})
 
     env_manager.close()
+    if live_plot:
+        live_plot.close()
 
 
 if __name__ == "__main__":

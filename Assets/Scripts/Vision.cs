@@ -6,7 +6,6 @@ public class Vision : Sensor
     public float visionAngle = 220f;
     public float visionRange = 10f;
     public int visionCellNum = 15;
-    public bool drawGizmo = false;
 
     Animal m_Animal;
 
@@ -96,6 +95,7 @@ public class Vision : Sensor
     }
 
 #if UNITY_EDITOR
+    public bool drawGizmo = false;
     private void OnDrawGizmos()
     {
         if (!drawGizmo) return;

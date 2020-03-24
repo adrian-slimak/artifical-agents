@@ -1,50 +1,35 @@
 import json
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
-from mlagents.communicator_objects.engine_configuration_pb2 import EngineConfigurationProto
 import tensorflow as tf
 import re
 from configs.engine_configuration import engine_config
 
 def get_initialization_input(reset_parameters = None):
-    engine_proto = EngineConfigurationProto()
-    engine_proto.width = engine_config['width']
-    engine_proto.height = engine_config['height']
-    engine_proto.quality_level = engine_config['quality_level']
-    engine_proto.time_scale = engine_config['time_scale']
-    engine_proto.target_frame_rate = engine_config['target_frame_rate']
-    engine_proto.show_monitor = engine_config['show_monitor']
-
     if reset_parameters is not None:
         reset_parameters = stick_reset_parameters(reset_parameters)
 
     return UnityInitializationInputProto(seed=1, engine_configuration=engine_config, custom_reset_parameters=reset_parameters)
 
 def stick_reset_parameters(json_dict):
-    def stack_dict(old_dict):
-        new_dict = {}
+    new_dict = {}
+
+    def merge_dict(old_dict, new_dict, key_name):
         for key, item in old_dict.items():
             if isinstance(item, dict):
-                temp = stack_dict(item)
-                for k, i in temp.items():
-                    if k == "":
-                        new_dict[f'{key}'] = i
-                    else:
-                        new_dict[f'{key}_{k}'] = i
+                merge_dict(item, new_dict, key if key_name is None else f'{key_name}_{key}')
             else:
-                new_dict[key] = item
+                new_dict[key_name if key == '' else f'{key_name}_{key}'] = item
 
-        return new_dict
-
-    parameters = stack_dict(json_dict)
+    merge_dict(json_dict, new_dict, None)
 
     for brain in json_dict.keys():
         observations_vector_size = 0
-        for k, v in parameters.items():
+        for k, v in new_dict.items():
             if re.match(f'{brain}_observations_\w+_vector_size', k):
                 observations_vector_size += v
-        parameters[f'{brain}_observations_vector_size'] = observations_vector_size
+        new_dict[f'{brain}_observations_vector_size'] = observations_vector_size
 
-    return parameters
+    return new_dict
 
 def load_custom_reset_parameters(fileName='custom_reset_params_1'):
     with open('configs\\' + fileName, 'r') as file:

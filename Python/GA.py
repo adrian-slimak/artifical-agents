@@ -1,6 +1,22 @@
-# from LSTM import LSTMModel
+import configs.learning_parameters as _lp
 import numpy as np
 import random
+
+
+def get_shapes_lengths(input_dim, units, output_dim, model='lstm', use_bias=True):
+    shapes, lengths = None, None
+
+    k = 4 if model == 'lstm' else 1
+
+    if model == 'lstm' or model == 'rnn':
+        if use_bias:
+            shapes = [(input_dim, units * k), (units, units * k), (1, units * k), (units, output_dim), (1, output_dim)]
+            lengths = [input_dim * units * k, units * units * k, units * k, units * output_dim, output_dim]
+        else:
+            shapes = [(input_dim, units * k), (units, units * k), (units, output_dim)]
+            lengths = [input_dim * units * k, units * units * k, units * output_dim]
+
+    return shapes, lengths
 
 class Genotype:
     def __init__(self, shapes, lengths):
@@ -10,11 +26,11 @@ class Genotype:
         self.fitness = None
 
     def copy(self):
-        newone = type(self)(self.shapes, self.lengths)
-        newone.genotype = self.genotype.copy()
-        return newone
+        new_one = type(self)(self.shapes, self.lengths)
+        new_one.genotype = self.genotype.copy()
+        return new_one
 
-    def random_init(self, min, max, loc, scale):
+    def random_init(self, min=_lp.init_min_genes, max=_lp.init_max_genes, loc=_lp.init_loc, scale=_lp.init_scale):
         percentOfGenes = random.uniform(min, max)
         numOfGenes = int(sum(self.lengths) * percentOfGenes)
         genesIdx = random.sample(range(0, sum(self.lengths) - 1), numOfGenes)
@@ -30,36 +46,11 @@ class Genotype:
             s += length
         return numpies
 
-# Random Init
-_minGenes = 0.5
-_maxGenes = 0.75
-_loc = 0.
-_scale = 1.
-
-# Selection
-# _selectionMethod = 'Roulette Wheel'
-_selectionMethod = 'Fittest Half'
-
-# Mating
-_matingMethod = 'Two Points Per Part'
-# _matingMethod = 'Two Points'
-_maxPercentLength = 0.7
-
-# Mutation
-_genMutationChance = 0.04
-_genRemoveChance = 0.015
-_genAppearChance = 0.03
-_sigma = 0.4
-
 class GeneticAlgorithm:
-    def __init__(self, input_dim, lstm_units, output_dim, population_size, use_bias=False):
+    def __init__(self, input_dim, units, output_dim, population_size, model='lstm', use_bias=True):
         self.population = []
-        if use_bias:
-            self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (1, lstm_units * 4), (lstm_units, output_dim), (1, output_dim)]
-            self.lengths = [input_dim * lstm_units * 4, lstm_units * lstm_units * 4, lstm_units * 4, lstm_units * output_dim, output_dim]
-        else:
-            self.shapes = [(input_dim, lstm_units * 4), (lstm_units, lstm_units * 4), (lstm_units, output_dim)]
-            self.lengths = [input_dim * lstm_units * 4, lstm_units * lstm_units * 4, lstm_units * output_dim]
+
+        self.shapes, self.lengths = get_shapes_lengths(input_dim, units, output_dim, model, use_bias)
 
         self.population_size = population_size
         self.use_bias = use_bias
@@ -67,21 +58,22 @@ class GeneticAlgorithm:
     def initial_population(self):
         self.population = [Genotype(self.shapes, self.lengths) for i in range(self.population_size)]
         for individual in self.population:
-            individual.random_init(min=_minGenes, max=_maxGenes, loc=_loc, scale=_scale)
+            individual.random_init()
+
 
     def calc_fitness(self, fitness):
         for idx, value in enumerate(fitness):
             self.population[idx].fitness = value
 
-        sorted_by_fitness = sorted(self.population, key=lambda individual: individual.fitness, reverse=True)
-        self.population = sorted_by_fitness
+        # Sort population by fitness, best to worst order
+        self.population = sorted(self.population, key=lambda individual: individual.fitness, reverse=True)
 
     def next_generation(self):
-        selected_individuals = GeneticAlgorithm.selection(self.population, method=_selectionMethod)
+        selected_individuals = GeneticAlgorithm.selection(self.population, method=_lp.selection_method)
 
         parents = GeneticAlgorithm.pairing(selected_individuals)
 
-        offsprings = [GeneticAlgorithm.mating(parents[x], maxPercentLength=_maxPercentLength, method=_matingMethod) for x in range(len(parents))]
+        offsprings = [GeneticAlgorithm.mating(parents[x]) for x in range(len(parents))]
         offsprings = [individual for sublist in offsprings for individual in sublist]
 
         elite_individuals = self.population[:2]
@@ -89,7 +81,7 @@ class GeneticAlgorithm:
 
         next_gen = selected_individuals + offsprings
         for individual in next_gen:
-            GeneticAlgorithm.mutation(individual, gen_mutation_chance=_genMutationChance, gen_remove_chance=_genRemoveChance, gen_appear_chance=_genAppearChance, sigma=_sigma)
+            GeneticAlgorithm.mutation(individual)
         next_gen.extend(elite_individuals)
 
         if len(next_gen) != self.population_size:
@@ -112,7 +104,7 @@ class GeneticAlgorithm:
             raise Exception('Not such selection method found')
 
     @staticmethod
-    def pairing(selected, method='Fittest'):
+    def pairing(selected, method=_lp.pairing_method):
         individuals = selected
         parents = []
 
@@ -122,13 +114,13 @@ class GeneticAlgorithm:
         return parents
 
     @staticmethod
-    def mating(parents, maxPercentLength, method='Two Points Per Part'):
+    def mating(parents, max_percent_length=_lp.max_percent_length, method=_lp.mating_method):
         offsprings = [parents[0].copy(), parents[1].copy()]
 
         if method == 'Two Points Per Part':
             partStart = 0
             for partLength in parents[0].lengths:
-                l = int(random.uniform(0, maxPercentLength) * (partLength-1))
+                l = int(random.uniform(0, max_percent_length) * (partLength-1))
                 s = random.randrange(partStart, partStart + partLength)
                 if s+l>=len(parents[0].genotype):
                     l-=(s+l)-len(parents[0].genotype)
@@ -137,11 +129,11 @@ class GeneticAlgorithm:
                 partStart += partLength
 
         elif method == 'Two Points':
-            genotypeLength = len(parents[0].genotype)
-            l = int(random.uniform(0, maxPercentLength) * genotypeLength)
-            s = random.randrange(0, genotypeLength)
-            if s+l>=len(parents[0].genotype):
-                l-=(s+l)-len(parents[0].genotype)
+            genotype_length = len(parents[0].genotype)
+            l = int(random.uniform(0, max_percent_length) * genotype_length)
+            s = random.randrange(0, genotype_length)
+            if s + l >= len(parents[0].genotype):
+                l -= (s+l)-len(parents[0].genotype)
             offsprings[0].genotype[s:s+l] = parents[1].genotype[s:s+l]
             offsprings[1].genotype[s:s+l] = parents[0].genotype[s:s+l]
 
@@ -151,7 +143,7 @@ class GeneticAlgorithm:
         return offsprings
 
     @staticmethod
-    def mutation(individual, gen_mutation_chance, gen_remove_chance, gen_appear_chance, sigma=1.):
+    def mutation(individual, gen_mutation_chance=_lp.gen_mutation_chance, gen_remove_chance=_lp.gen_remove_chance, gen_appear_chance=_lp.gen_appear_chance, sigma=_lp.gen_mutation_scale):
         for id in range(len(individual.genotype)):
             if individual.genotype[id] == 0.:
                 if random.random() <= gen_appear_chance:
@@ -166,8 +158,8 @@ class GeneticAlgorithm:
         weights = [[], [], []]
         biases = None if self.use_bias is False else [[], []]
 
-        for indyvidual in self.population:
-            numpies = indyvidual.to_numpy()
+        for individual in self.population:
+            numpies = individual.to_numpy()
             weights[0].append(numpies[0])
             weights[1].append(numpies[1])
             if self.use_bias:
@@ -181,4 +173,4 @@ class GeneticAlgorithm:
         if self.use_bias:
             biases = [np.array(bias, dtype='f') for bias in biases]
 
-        return (weights, biases)
+        return weights, biases

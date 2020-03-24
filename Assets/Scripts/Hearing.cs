@@ -1,19 +1,18 @@
 ﻿using UnityEngine;
-using System;
 
 public class Hearing : Sensor
 {
     public float hearingAngle = 360f;
     public float hearingRange = 30f;
     public int hearingCellNum = 15;
-    public bool drawGizmo = false;
 
     Animal m_Animal;
 
     Vector3 arcStart;
     float cellAngle;
 
-    Collider2D[] hits = new Collider2D[30];
+    Collider2D[] hits = new Collider2D[50];
+    float[] hitDistances = new float[50];
     int hitsNum = 0;
     public LayerMask sensorLayerMask;
 
@@ -44,7 +43,7 @@ public class Hearing : Sensor
 
         float angle;
         int cellNum;
-        float distance;
+        float normalizedDistance;
         for (int i = 0; i < hitsNum; i++)
         {
             if (hits[i].gameObject != this.gameObject)
@@ -55,18 +54,41 @@ public class Hearing : Sensor
                 if (angle < hearingAngle)
                 {
                     cellNum = (int)(angle / cellAngle);
-                    distance = Vector2.Distance(transform.position, hits[i].transform.position);
+                    hitDistances[i] = Vector2.Distance(transform.position, hits[i].transform.position);
 
-                    distance = 1f - distance / hearingRange;
+                    normalizedDistance = 1f - hitDistances[i] / hearingRange;
 
-                    if (observationsVector[cellNum] < distance)
-                        observationsVector[cellNum] = distance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
+                    if (observationsVector[cellNum] < normalizedDistance)
+                        observationsVector[cellNum] = normalizedDistance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
                 }
             }
         }
     }
 
+    public int GetNearObjects(float minDistance, string objectTag)
+    {
+        int numOfObjects = -1;
+        for (int i = 0; i < hitsNum; i++)
+            if (hitDistances[i] < minDistance)
+                numOfObjects++;
+
+        return numOfObjects;
+    }
+
+    public float GetDistanceToClosest()
+    {
+        float minDistance = float.MaxValue;
+
+        for (int i = 0; i < hitsNum; i++)
+            if (hits[i].gameObject != this.gameObject && hitDistances[i] < minDistance)
+                minDistance = hitDistances[i];
+
+        return minDistance;
+    }
+
 #if UNITY_EDITOR
+    public bool drawGizmo = false;
+
     private void OnDrawGizmos()
     {
         if (!drawGizmo) return;

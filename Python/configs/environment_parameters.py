@@ -1,4 +1,4 @@
-custom_reset_parameters_1 = \
+environment_parameters = \
     {
         "prey":
             {
@@ -81,8 +81,8 @@ custom_reset_parameters_1 = \
                 "food":
                     {
                         "spawn_method": 1,   # 0 - Grid  1 - Random
-                        "spawn_per_step": 0.1,
-                        "spawn_amount_reset": 500,  # for Random Spawn
+                        "spawn_per_step": 0.3,
+                        "spawn_amount_reset": 400,  # for Random Spawn
                         "spawn_grid_step": 4,  # for Grid Spawn
                     }
             }

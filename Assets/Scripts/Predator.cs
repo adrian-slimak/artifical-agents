@@ -1,12 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Predator : Animal
 {
     bool confusionEffectEnabled = false;
     float confusionEffectValue = 1f;
     float confusionEffectDistance = 3f;
+
+    int numberOfAttacks = 0;
 
     protected override void Awake()
     {
@@ -36,6 +36,7 @@ public class Predator : Animal
         if (nearFood)
         {
             bool canEat = true;
+            numberOfAttacks++;
 
             // Confusion Effect
             if (confusionEffectEnabled)

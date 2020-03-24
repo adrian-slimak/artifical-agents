@@ -1,0 +1,23 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+StructuredBuffer<objInfo> _objInfo;
+StructuredBuffer<float> _targetObjInfo;
+RWStructuredBuffer<float> _result;
+
+struct objInfo
+{
+	float2 position;
+	float2 arcStart;
+};
+
+[numthreads(1,16,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	x = id.x;
+	y = id.y;
+	
+	if (x>=1 || y>=100) return;
+	
+	_result[y] = 1;
+}

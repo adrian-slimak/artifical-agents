@@ -1,5 +1,5 @@
 import tensorflow as tf
-from LSTM import LSTMModel
+from networks.LSTM import LSTMModel
 import numpy as np
 
 tf.random.set_seed(1000)
@@ -64,13 +64,13 @@ def test2():
     b2 = np.random.rand(3, 1, 2).astype(np.float32)
     # b2 = np.vstack([b2, b2, b2])
 
-    m1 = LSTMModel(5, 4, 2, 3, envs=1)
+    m1 = LSTMModel(5, 4, 2, 3, n_envs=1)
     m1.build(([w1, w2, w3], [b1, b2]))
-    m2 = LSTMModel(5, 4, 2, 3, envs=1)
+    m2 = LSTMModel(5, 4, 2, 3, n_envs=1)
     m2.build(([w1, w2, w3], [b1, b2]))
-    m3 = LSTMModel(5, 4, 2, 3, envs=1)
+    m3 = LSTMModel(5, 4, 2, 3, n_envs=1)
     m3.build(([w1, w2, w3], [b1, b2]))
-    m0 = LSTMModel(5, 4, 2, 3, envs=3)
+    m0 = LSTMModel(5, 4, 2, 3, n_envs=3)
     m0.build(([w1, w2, w3], [b1, b2]))
 
     for i in range(15):
