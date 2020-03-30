@@ -1,10 +1,10 @@
-import json
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 import tensorflow as tf
+import json
 import re
-from configs.engine_configuration import engine_config
 
-def get_initialization_input(reset_parameters = None):
+
+def get_initialization_input(engine_config=None, reset_parameters=None):
     if reset_parameters is not None:
         reset_parameters = stick_reset_parameters(reset_parameters)
 

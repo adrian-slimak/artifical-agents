@@ -1,21 +1,20 @@
 from mlagents.environment import UnityEnvironment
 import configs.learning_parameters as _lp
-from networks.lstm import LSTMModel
-import numpy as np
-from GA import GeneticAlgorithm
 from LivePlotting import LivePlot
+from GA import GeneticAlgorithm
+import numpy as np
 
 
 def main():
     # livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 9))
-    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 4)) if _lp.show_plots else None
+    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 6)) if _lp.show_plots else None
 
     unity_environment = UnityEnvironment(file_name=_lp.unity_environment_path, worker_id=0, initialization_input=_lp.initialization_input)
 
     GAs = {}
     for brain_name in _lp.brains:
         brain = unity_environment.external_brains[brain_name]
-        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, model=_lp.network_model, use_bias=_lp.use_bias)
+        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, model_name=_lp.NetworkModel.name, use_bias=_lp.use_bias)
         GAs[brain_name].initial_population()
 
     # Main Loop

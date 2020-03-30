@@ -2,20 +2,18 @@ from mlagents.multi_env_manager import MultiEnvManager
 import configs.learning_parameters as _lp
 from LivePlotting import LivePlot
 from GA import GeneticAlgorithm
-from networks.lstm import LSTMModel
-from networks.rnn import RNNModel
 import numpy as np
 
 
 def main():
-    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(6, 4)) if _lp.show_plots else None
+    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(6, 9)) if _lp.show_plots else None
 
     env_manager = MultiEnvManager(_lp.number_of_environments)
 
     GAs = {}
     for brain_name in _lp.brains:
         brain = env_manager.environments[0].external_brains[brain_name]
-        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, model=_lp.network_model, use_bias=_lp.use_bias)
+        GAs[brain_name] = GeneticAlgorithm(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, model_name=_lp.NetworkModel.name, use_bias=_lp.use_bias)
         GAs[brain_name].initial_population()
 
     for generation in range(_lp.number_of_generations):

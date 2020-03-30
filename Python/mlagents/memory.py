@@ -3,7 +3,11 @@ from numpy import fromstring
 import numpy as np
 from tensorflow import io, reshape, float32, transpose
 
-MMF_SIZE = 200000  # number of bytes
+MMF_SIZE = 250000  # number of bytes
+OBSERVATIONS_SIZE = 100 * 1024
+ACTIONS_SIZE = 50 * 1024
+FITNES_SIZE = 50 * 1024
+STATS_SIZE = 50 * 1024
 
 class Memory:
     def __init__(self, brain_name, worker_id, brain):
@@ -21,14 +25,19 @@ class Memory:
         self.mmf_offset_fitness = -1
         self.mmf_size_fitness = -1
 
-    def Init(self, agents_count, observations_vector_size, actions_vector_size):
+        self.mmf_offset_stats = -1
+        self.mmf_size_stats = -1
+
+    def Init(self, agents_count, observations_vector_size, actions_vector_size, stats_vector_size):
         self.mmf_size_observations = agents_count * observations_vector_size * 4
         self.mmf_size_actions = agents_count * actions_vector_size * 4
         self.mmf_size_fitness = agents_count * 4
+        self.mmf_size_stats = stats_vector_size * 4
 
         self.mmf_offset_observations = self.mmf_size_observations * self.worker_id
         self.mmf_offset_actions = 100000 + self.mmf_size_actions * self.worker_id
         self.mmf_offset_fitness = 150000 + self.mmf_size_fitness * self.worker_id
+        self.mmf_offset_stats = 175000 + self.mmf_size_stats * self.worker_id
 
         # size_needed = self.mmf_size_observations+self.mmf_offset_actions+self.mmf_size_fitness
         # if MMF_SIZE < size_needed:

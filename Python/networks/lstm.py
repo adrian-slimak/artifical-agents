@@ -3,8 +3,8 @@ from networks.dense import DenseLayer
 
 
 class LSTMCell(tf.keras.layers.Layer):
-    def __init__(self, input_dim, units, models, use_bias=False, **kwargs):
-        super(LSTMCell, self).__init__(**kwargs)
+    def __init__(self, input_dim, units, models, use_bias=False):
+        super(LSTMCell, self).__init__()
 
         self.input_dim = input_dim
         self.models = models
@@ -68,7 +68,10 @@ class LSTMCell(tf.keras.layers.Layer):
 
         return h, [h, c]
 
+
 class LSTMModel:
+    name = 'lstm'
+
     def __init__(self, input_dim, lstm_units, dense_units, models, n_envs=1, use_bias=True):
         self.lstm_units = lstm_units
         self.models = models
@@ -76,7 +79,7 @@ class LSTMModel:
 
         self.lstm_cell = LSTMCell(input_dim, lstm_units, models, use_bias)
         self.cell_states = None
-        self.dense_layer = DenseLayer(lstm_units, dense_units, models, use_bias)
+        self.output_layer = DenseLayer(lstm_units, dense_units, models, use_bias)
 
     def build(self, model_weights=(None, None)):
         weights, biases = model_weights
@@ -84,19 +87,17 @@ class LSTMModel:
         self.cell_states = [tf.zeros((self.models, self.n_envs, self.lstm_units)),
                             tf.zeros((self.models, self.n_envs, self.lstm_units))]
 
-
         if weights is not None and biases is not None:
             self.lstm_cell.build(kernel=weights[0], recurrent_kernel=weights[1], bias=biases[0])
-            self.dense_layer.build(kernel=weights[2], bias=biases[1])
+            self.output_layer.build(kernel=weights[2], bias=biases[1])
         elif weights is not None:
             self.lstm_cell.build(kernel=weights[0], recurrent_kernel=weights[1])
-            self.dense_layer.build(kernel=weights[2])
+            self.output_layer.build(kernel=weights[2])
         else:
             self.lstm_cell.build()
-            self.dense_layer.build()
+            self.output_layer.build()
 
         self.built = True
-
 
     def __call__(self, inputs):
         return self.call(inputs).numpy()
@@ -105,11 +106,9 @@ class LSTMModel:
     def call(self, inputs):
         (output, states) = self.lstm_cell.call(inputs, self.cell_states)
         self.cell_states = states
-        output = self.dense_layer.call(output)
+        output = self.output_layer.call(output)
         if self.n_envs == 1:
             output = tf.squeeze(output, 1)
         else:
             output = tf.transpose(output, (1, 0, 2))
         return output
-
-

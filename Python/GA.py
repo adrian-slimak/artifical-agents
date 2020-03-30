@@ -3,30 +3,37 @@ import numpy as np
 import random
 
 
-def get_shapes_lengths(input_dim, units, output_dim, model='lstm', use_bias=True):
+def get_shapes_lengths(input_dim, units, output_dim, model_name='lstm', use_bias=True):
     shapes, lengths = None, None
 
-    k = 4 if model == 'lstm' else 1
+    k = 4 if model_name == 'lstm' else 1
 
-    if model == 'lstm' or model == 'rnn':
+    if model_name == 'lstm' or model_name == 'rnn':
         if use_bias:
-            shapes = [(input_dim, units * k), (units, units * k), (1, units * k), (units, output_dim), (1, output_dim)]
-            lengths = [input_dim * units * k, units * units * k, units * k, units * output_dim, output_dim]
+            shapes = [[(input_dim, units * k), (units, units * k), (units, output_dim)], [(1, units * k), (1, output_dim)]]
+            lengths = [input_dim * units * k, units * units * k, units * output_dim, units * k, output_dim]
         else:
-            shapes = [(input_dim, units * k), (units, units * k), (units, output_dim)]
+            shapes = [[(input_dim, units * k), (units, units * k), (units, output_dim)]]
             lengths = [input_dim * units * k, units * units * k, units * output_dim]
+
+    if model_name == 'mlp':
+        if use_bias:
+            shapes = [[(input_dim, units), (units, output_dim)], [(1, units), (1, output_dim)]]
+            lengths = [input_dim * units, units * output_dim, units, output_dim]
+        else:
+            shapes = [[(input_dim, units), (units, output_dim)]]
+            lengths = [input_dim * units, units * output_dim]
 
     return shapes, lengths
 
 class Genotype:
-    def __init__(self, shapes, lengths):
-        self.shapes = shapes
+    def __init__(self, lengths):
         self.lengths = lengths
         self.genotype = np.zeros((sum(self.lengths)), dtype='f')
         self.fitness = None
 
     def copy(self):
-        new_one = type(self)(self.shapes, self.lengths)
+        new_one = type(self)(self.lengths)
         new_one.genotype = self.genotype.copy()
         return new_one
 
@@ -38,25 +45,32 @@ class Genotype:
         for id in genesIdx:
             self.genotype[id] = genesVals[id]
 
-    def to_numpy(self):
-        numpies = []
-        s = 0
-        for shape, length in zip(self.shapes, self.lengths):
-            numpies.append(np.reshape(self.genotype[s:s+length], shape))
-            s += length
-        return numpies
+    def to_numpy(self, shapes):
+        w_b = ([], [])
+        p = 0
+        l_id = 0
+        for s_w_b, e_w_b in zip(shapes, w_b):
+            for shape in s_w_b:
+                l = self.lengths[l_id]
+                e_w_b.append(np.reshape(self.genotype[p:p+l], shape))
+                p += l
+                l_id += 1
+        return w_b
+
 
 class GeneticAlgorithm:
-    def __init__(self, input_dim, units, output_dim, population_size, model='lstm', use_bias=True):
+    def __init__(self, input_dim, units, output_dim, population_size, model_name='lstm', use_bias=True):
         self.population = []
 
-        self.shapes, self.lengths = get_shapes_lengths(input_dim, units, output_dim, model, use_bias)
+        self.shapes, self.lengths = get_shapes_lengths(input_dim, units, output_dim, model_name, use_bias)
 
         self.population_size = population_size
         self.use_bias = use_bias
 
+        self.model_name = model_name
+
     def initial_population(self):
-        self.population = [Genotype(self.shapes, self.lengths) for i in range(self.population_size)]
+        self.population = [Genotype(self.lengths) for i in range(self.population_size)]
         for individual in self.population:
             individual.random_init()
 
@@ -155,19 +169,17 @@ class GeneticAlgorithm:
                     individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
 
     def to_lstm_model(self):
-        weights = [[], [], []]
-        biases = None if self.use_bias is False else [[], []]
+        weights = [[] for i in self.shapes[0]]
+        biases = [[] for i in self.shapes[1]] if self.use_bias else None
 
         for individual in self.population:
-            numpies = individual.to_numpy()
-            weights[0].append(numpies[0])
-            weights[1].append(numpies[1])
+            (i_weights, i_biases) = individual.to_numpy(self.shapes)
+            for i_w, w in zip(i_weights, weights):
+                w.append(i_w)
+
             if self.use_bias:
-                biases[0].append(numpies[2])
-                weights[2].append(numpies[3])
-                biases[1].append(numpies[4])
-            else:
-                weights[2].append(numpies[2])
+                for i_b, b in zip(i_biases, biases):
+                    b.append(i_b)
 
         weights = [np.array(weight, dtype='f') for weight in weights]
         if self.use_bias:

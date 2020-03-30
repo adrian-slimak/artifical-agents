@@ -10,19 +10,19 @@ environment_parameters = \
                     {
                         "vision":
                             {
-                                "vector_size": 3 * 15,  # 3 x "vision_cell_number", one per plant, prey, predator
+                                "vector_size": 15 * 3,  # 3 x "vision_cell_number", one per plant, prey, predator
                                 "cell_number": 15,
                                 "angle": 220,
                                 "range": 20
                             },
 
-                        "hearing":
-                            {
-                                "vector_size": 12,
-                                "cell_number": 12,
-                                "angle": 360,
-                                "range": 30
-                            },
+                        # "hearing":
+                        #     {
+                        #         "vector_size": 12,
+                        #         "cell_number": 12,
+                        #         "angle": 360,
+                        #         "range": 30
+                        #     },
                     },
 
                 "actions_vector_size": 2,
@@ -40,27 +40,33 @@ environment_parameters = \
 
         "predator":
             {
-                "count": 0,
+                "count": 12,
 
                 "communication_enabled": 0,  # 0 - False, 1 - True
+
+                "confusion_effect":
+                    {
+                        "value": 1,
+                        "distance": 3,
+                    },
 
                 "observations":
                     {
                         "vision":
                             {
-                                "vector_size": 12,
+                                "vector_size": 12 * 3,
                                 "cell_number": 12,
                                 "angle": 180,
                                 "range": 25
                             },
 
-                        "hearing":
-                            {
-                                "vector_size": 12,
-                                "cell_number": 12,
-                                "angle": 360,
-                                "range": 30
-                            },
+                        # "hearing":
+                        #     {
+                        #         "vector_size": 12,
+                        #         "cell_number": 12,
+                        #         "angle": 360,
+                        #         "range": 30
+                        #     },
                     },
 
                 "actions_vector_size": 2,

@@ -3,8 +3,8 @@ from networks.dense import DenseLayer
 
 
 class RNNCell(tf.keras.layers.Layer):
-    def __init__(self, input_dim, units, models, use_bias=False, **kwargs):
-        super(RNNCell, self).__init__(**kwargs)
+    def __init__(self, input_dim, units, models, use_bias=False):
+        super(RNNCell, self).__init__()
 
         self.input_dim = input_dim
         self.models = models
@@ -56,7 +56,10 @@ class RNNCell(tf.keras.layers.Layer):
 
         return o, [o]
 
+
 class RNNModel:
+    name = 'rnn'
+
     def __init__(self, input_dim, rnn_units, dense_units, models, n_envs=1, use_bias=True):
         self.rnn_units = rnn_units
         self.models = models
@@ -64,26 +67,22 @@ class RNNModel:
 
         self.rnn_cell = RNNCell(input_dim, rnn_units, models, use_bias)
         self.cell_states = None
-        self.dense_layer = DenseLayer(rnn_units, dense_units, models, use_bias)
+        self.output_layer = DenseLayer(rnn_units, dense_units, models, use_bias)
 
     def build(self, model_weights=(None, None)):
         weights, biases = model_weights
 
         self.cell_states = [tf.zeros((self.models, self.n_envs, self.rnn_units))]
 
-
         if weights is not None and biases is not None:
             self.rnn_cell.build(kernel=weights[0], recurrent_kernel=weights[1], bias=biases[0])
-            self.dense_layer.build(kernel=weights[2], bias=biases[1])
+            self.output_layer.build(kernel=weights[2], bias=biases[1])
         elif weights is not None:
             self.rnn_cell.build(kernel=weights[0], recurrent_kernel=weights[1])
-            self.dense_layer.build(kernel=weights[2])
+            self.output_layer.build(kernel=weights[2])
         else:
             self.rnn_cell.build()
-            self.dense_layer.build()
-
-        self.built = True
-
+            self.output_layer.build()
 
     def __call__(self, inputs):
         return self.call(inputs).numpy()
@@ -92,11 +91,9 @@ class RNNModel:
     def call(self, inputs):
         (output, states) = self.rnn_cell.call(inputs, self.cell_states)
         self.cell_states = states
-        output = self.dense_layer.call(output)
+        output = self.output_layer.call(output)
         if self.n_envs == 1:
             output = tf.squeeze(output, 1)
         else:
             output = tf.transpose(output, (1, 0, 2))
         return output
-
-
