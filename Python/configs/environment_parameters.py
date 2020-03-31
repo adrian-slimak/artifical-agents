@@ -6,6 +6,9 @@ environment_parameters = \
 
                 "communication_enabled": 0,  # 0 - False, 1 - True
 
+                "max_move_speed": 5,
+                "max_turn_speed": 100,
+
                 "observations":
                     {
                         "vision":
@@ -26,13 +29,13 @@ environment_parameters = \
                     },
 
                 "actions_vector_size": 2,
-
-                "max_move_speed": 5,
-                "max_turn_speed": 100,
+                "fitness_vector_size": 1,
+                "stats_vector_size": 2,
 
                 "energy":
                 {
                     "": 100,
+                    "gain_per_eat": 50,
                     "drain_per_step": 0.15,
                     "drain_per_speed": 0.1,
                 },
@@ -43,6 +46,9 @@ environment_parameters = \
                 "count": 12,
 
                 "communication_enabled": 0,  # 0 - False, 1 - True
+
+                "max_move_speed": 15,
+                "max_turn_speed": 150,
 
                 "confusion_effect":
                     {
@@ -70,14 +76,14 @@ environment_parameters = \
                     },
 
                 "actions_vector_size": 2,
-
-                "max_move_speed": 10,
-                "max_turn_speed": 70,
+                "fitness_vector_size": 1,
+                "stats_vector_size": 2,
 
                 "energy":
                 {
                     "": 100,
-                    "drain_per_step": 0.15,
+                    "gain_per_eat": 50,
+                    "drain_per_step": 0.1,
                     "drain_per_speed": 0.1,
                 },
             },

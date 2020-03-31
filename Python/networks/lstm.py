@@ -107,8 +107,5 @@ class LSTMModel:
         (output, states) = self.lstm_cell.call(inputs, self.cell_states)
         self.cell_states = states
         output = self.output_layer.call(output)
-        if self.n_envs == 1:
-            output = tf.squeeze(output, 1)
-        else:
-            output = tf.transpose(output, (1, 0, 2))
+        output = tf.transpose(output, (1, 0, 2))
         return output

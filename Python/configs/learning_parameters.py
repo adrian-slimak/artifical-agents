@@ -1,20 +1,19 @@
 from configs.environment_parameters import environment_parameters as _envparams
-from utils import stick_reset_parameters, get_initialization_input
 from configs.engine_configuration import engine_config as _engconf
+from configs.plots_parameters import plot_structure, plot_subplots, plot_size
 from hotkeysLogger import HotKeyListener
 
 from networks.lstm import LSTMModel
 from networks.rnn import RNNModel
+from networks.dense import MLPModel
 
 # ENVIRONMENT PARAMETERS
 unity_environment_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
 
 environment_parameters = _envparams
-merged_environment_parameters = stick_reset_parameters(environment_parameters)
+engine_configuration = _engconf
 
-initialization_input = get_initialization_input(_engconf, _envparams)
-
-brains = [brain_name for brain_name in _envparams if ('count' in _envparams[brain_name] and _envparams[brain_name]['count'] > 0)]
+brains = [brain_name for brain_name in environment_parameters if ('count' in _envparams[brain_name] and _envparams[brain_name]['count'] > 0)]
 
 # GENERAL
 NetworkModel = LSTMModel
@@ -28,7 +27,7 @@ number_of_steps = 2000
 show_plots = True
 
 # MULTI
-number_of_environments = 1
+number_of_environments = 4
 
 # GENETIC ALGORITHM PARAMETERS
 # Random Init

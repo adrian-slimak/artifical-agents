@@ -1,16 +1,8 @@
-from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 import tensorflow as tf
 import json
 import re
 
-
-def get_initialization_input(engine_config=None, reset_parameters=None):
-    if reset_parameters is not None:
-        reset_parameters = stick_reset_parameters(reset_parameters)
-
-    return UnityInitializationInputProto(seed=1, engine_configuration=engine_config, custom_reset_parameters=reset_parameters)
-
-def stick_reset_parameters(json_dict):
+def merge_environment_parameters(nested_dictionary):
     new_dict = {}
 
     def merge_dict(old_dict, new_dict, key_name):
@@ -20,9 +12,9 @@ def stick_reset_parameters(json_dict):
             else:
                 new_dict[key_name if key == '' else f'{key_name}_{key}'] = item
 
-    merge_dict(json_dict, new_dict, None)
+    merge_dict(nested_dictionary, new_dict, None)
 
-    for brain in json_dict.keys():
+    for brain in nested_dictionary.keys():
         observations_vector_size = 0
         for k, v in new_dict.items():
             if re.match(f'{brain}_observations_\w+_vector_size', k):

@@ -1,4 +1,4 @@
-from mlagents.environment import UnityEnvironment
+from mlagents.unity_environment import UnityEnvironment
 import configs.learning_parameters as _lp
 from LivePlotting import LivePlot
 from GA import GeneticAlgorithm
@@ -6,10 +6,11 @@ import numpy as np
 
 
 def main():
-    # livePlot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 9))
-    live_plot = LivePlot(plots={'prey': (['episode', 'fitness'], ['avg', 'best', 'worst']), 'predator': (['episode', 'fitness'], ['avg', 'best', 'worst'])}, figsize=(7, 6)) if _lp.show_plots else None
+    live_plot = LivePlot(plots=_lp.plot_structure, figsize=_lp.plot_size) if _lp.show_plots else None
 
-    unity_environment = UnityEnvironment(file_name=_lp.unity_environment_path, worker_id=0, initialization_input=_lp.initialization_input)
+    unity_environment = UnityEnvironment(file_path=_lp.unity_environment_path, worker_id=0,
+                                         engine_configuration=_lp.engine_configuration,
+                                         environment_parameters=_lp.environment_parameters)
 
     GAs = {}
     for brain_name in _lp.brains:
@@ -38,7 +39,7 @@ def main():
             if live_plot:
                 live_plot.update({brain_name: [avg, max, min]})
 
-    unity_environment.close()
+    # unity_environment.close()
     if live_plot:
         live_plot.close()
 

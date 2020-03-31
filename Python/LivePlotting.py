@@ -1,40 +1,56 @@
 from multiprocessing import Process, Queue
+from collections.abc import Iterable
+import matplotlib.pyplot as plt
+from pickle import dump
 from os import listdir
 from re import findall
-import matplotlib.pyplot as plt
 import matplotlib
-from pickle import dump
 plt.style.use('ggplot')
 matplotlib.use('tkagg')
-from collections.abc import Iterable
+
+
+class PlotPart:
+    def __init__(self, name, params, ax):
+        self.name = name
+        self._ax = ax
+
+        self._ax.set_title(params['title'])
+        self._ax.set_xlabel(params['labels'][0])
+        self._ax.set_ylabel(params['labels'][1])
+        self._ax.set_xlim(0, params['lims'][0])
+        self._ax.set_ylim(0, params['lims'][1])
+
+        self.X = []
+        self.Y = {}
+
+        colors = ['g', 'r', 'b']
+        for line_name, color in zip(params['lines'], colors):
+            self._ax.plot([], [], color, label=line_name)
+            self.Y[line_name] = []
+
+        self._ax.legend()
+
+    def update(self, data):
+        self.X = list(range(len(self.X) + 1))
+        for line, Ys, v in zip(self._ax.lines, self.Y.values(), data):
+            Ys.append(v)
+            line.set_xdata(self.X)
+            line.set_ydata(Ys)
 
 
 class LivePlot:
-    def __init__(self, plots={'fig1': (['xLabel', 'yLabel'], ['line1', 'line2', 'line3'])}, figsize=(10, 8)):
-        self.fig, self.ax = plt.subplots(len(plots.keys()), 1, figsize=figsize)
+    def __init__(self, plots=None, subplots=(1,1), figsize=(10, 8)):
+        self.fig, self.ax = plt.subplots(subplots[0], subplots[1], figsize=figsize)
         self.ID = None
         self.plots = {}
 
-        if not isinstance(self.ax, Iterable):
+        print(self.ax)
+        if not isinstance(self.ax, Iterable) or not isinstance(self.ax[0], Iterable):
             self.ax = [self.ax]
 
-        colors = ['g', 'r', 'b']
-        for (plot_name, plot_params), ax in zip(plots.items(), self.ax):
-            self.plots[plot_name] = {'ax': ax}
-            ax.set_title(plot_name)
-            ax.set_xlabel(plot_params[0][0])
-            ax.set_ylabel(plot_params[0][1])
-            ax.set_xlim(0, 200)
-            ax.set_ylim(0, 30)
-
-            self.plots[plot_name]['Y'] = {}
-            for line_name, color in zip(plot_params[1], colors):
-                ax.plot([], [], color, label=line_name)
-                self.plots[plot_name]['Y'][line_name] = []
-
-            ax.legend()
-
-        self.X = {plot_name: [] for plot_name in plots.keys()}
+        for plot_name, params in plots.items():
+            pos = params['position']
+            self.plots[plot_name] = PlotPart(plot_name, params, self.ax[pos[0]][pos[1]])
 
         plt.tight_layout()
         self._start_process()
@@ -75,15 +91,8 @@ class LivePlot:
         return True
 
     def _update(self, data):
-        for key in data.keys():
-            self.X[key] = list(range(len(self.X[key])+1))
-
-        for key, value in data.items():
-            plot = self.plots[key]
-            for line, Ys, v in zip(plot['ax'].lines, plot['Y'].values(), value):
-                Ys.append(v)
-                line.set_xdata(self.X[key])
-                line.set_ydata(Ys)
+        for data_key in data.keys():
+            self.plots[data_key].update(data[data_key])
 
         self.fig.canvas.draw()
         # self.fig.canvas.flush_events()
