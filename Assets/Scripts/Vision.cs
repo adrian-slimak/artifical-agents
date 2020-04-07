@@ -3,8 +3,11 @@ using System;
 
 public class Vision : Sensor
 {
+    [Parameter("observations_vision_angle")]
     public float visionAngle = 220f;
+    [Parameter("observations_vision_range")]
     public float visionRange = 10f;
+    [Parameter("observations_vision_cell_number")]
     public int visionCellNum = 15;
 
     Animal m_Animal;
@@ -15,29 +18,21 @@ public class Vision : Sensor
 
     Collider2D[] hits = new Collider2D[100];
     int hitsNum = 0;
-    public LayerMask sensorLayerMask;
 
-    private void Awake()
+    protected override void Awake()
     {
-        m_Animal = GetComponent<Animal>();
-        string brainName = GetComponent<Agent>().m_BrainName;
+        base.Awake();
 
-        visionAngle = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_angle"] ?? visionAngle;
-        visionRange = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_range"] ?? visionRange;
-        visionCellNum = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_vision_cell_number"] ?? visionCellNum);
+        m_Animal = GetComponent<Animal>();
 
         cellAngle = visionAngle / visionCellNum;
-        nearTargetDistance = 1f - (0.3f / visionRange);
+        nearTargetDistance = 1f - (0.5f / visionRange);
     }
 
     public override void UpdateObservations()
     {
         arcStart = rotateByAngle(transform.right, (180f - visionAngle) / 2f);
-        DetectVision();
-    }
 
-    void DetectVision()
-    {
         hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, hits, layerMask: sensorLayerMask);
         for (int j = 0; j < observationsVector.Length; j++)
             observationsVector[j] = 0;
@@ -75,16 +70,18 @@ public class Vision : Sensor
                         observationsVector[cellNum] = distance;
                     }
                 }
+                else
+                    hits[i] = null;
             }
         }
     }
 
-    public int GetNearTargetObjects(Transform targetObject, float minDistance, string objectTag)
+    public int GetNearTargetObjects(Transform targetObject, float minDistance, string objectTag) // Tutaj są wszystkie hity, nie tylko w obszarze wzroku!!!
     {
         int numOfObjects = 0;
         for (int i = 0; i < hitsNum; i++)
         {
-            if (hits[i].transform != targetObject && hits[i].tag == objectTag)
+            if (hits[i] != null && hits[i].tag == objectTag)
             {
                 if (Vector2.Distance(targetObject.position, hits[i].transform.position) < minDistance)
                     numOfObjects++;
@@ -92,6 +89,25 @@ public class Vision : Sensor
         }
 
         return numOfObjects;
+    }
+
+    public int GetObjectsInSight(string objectType)
+    {
+        int amount = 0;
+
+        int k = 0;
+        if (objectType == "Prey")
+            k = 1;
+        else if (objectType == "Predator")
+            k = 2;
+
+        for(int i = visionCellNum * k; i < visionCellNum * (k+1); i++)
+        {
+            if (observationsVector[i] > 0)
+                amount++;
+        }
+
+        return amount;
     }
 
 #if UNITY_EDITOR

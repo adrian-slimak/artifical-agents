@@ -1,14 +1,15 @@
 from mlagents.unity_environment import UnityEnvironment
 import configs.learning_parameters as _lp
-from LivePlotting import LivePlot
-from GA import GeneticAlgorithm
+import configs.plots_parameters as _pp
+from other.LivePlotting import LivePlot
+from networks.GA import GeneticAlgorithm
 import numpy as np
 
 
 def main():
-    live_plot = LivePlot(plots=_lp.plot_structure, figsize=_lp.plot_size) if _lp.show_plots else None
+    live_plot = LivePlot(plots=_pp.plot_structure, subplots=_pp.plot_subplots, figsize=_pp.plot_size) if _lp.show_plots else None
 
-    unity_environment = UnityEnvironment(file_path=_lp.unity_environment_path, worker_id=0,
+    unity_environment = UnityEnvironment(file_path=None, worker_id=0,
                                          engine_configuration=_lp.engine_configuration,
                                          environment_parameters=_lp.environment_parameters)
 
@@ -23,11 +24,11 @@ def main():
         models = {}
         for brain_name in _lp.brains:
             brain = unity_environment.external_brains[brain_name]
-            model_weights = GAs[brain_name].to_lstm_model()
+            model_weights = GAs[brain_name].to_model()
             models[brain_name] = _lp.NetworkModel(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, use_bias=_lp.use_bias)
             models[brain_name].build(model_weights=model_weights)
 
-        all_fitness = unity_environment.run_single_episode(models, _lp.number_of_steps)
+        all_fitness = unity_environment.run_single_episode(models, _lp.number_of_steps, live_plot=live_plot)
 
         for brain_name in _lp.brains:
             fitness = all_fitness[brain_name]
@@ -37,7 +38,7 @@ def main():
             avg, max, min = np.average(fitness), np.max(fitness), np.min(fitness)
             print(f"AVG: {avg:.2f}   BEST: {max:.2f}   WORST: {min:.2f}")
             if live_plot:
-                live_plot.update({brain_name: [avg, max, min]})
+                live_plot.update({f'{brain_name}1': [avg, max, min], f'{brain_name}2': None})
 
     # unity_environment.close()
     if live_plot:

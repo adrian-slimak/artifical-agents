@@ -38,8 +38,11 @@ public class VirtualAcademy : Academy
     List<Agent> SpawnAgents()
     {
         int numberOfPreys = (int)(m_ResetParameters["prey_count"] ?? 0);
+        int numberOfPredators = (int)(m_ResetParameters["predator_count"] ?? 0);
 
-        List<Agent> agents = new List<Agent>(numberOfPreys);
+
+        List<Agent> agents = new List<Agent>(numberOfPreys + numberOfPredators);
+
         for (int i = 0; i < numberOfPreys; i++)
         {
             Vector2 randomPosition = new Vector2((Random.value - 0.5f) * 100f, (Random.value - 0.5f) * 100f);
@@ -47,8 +50,6 @@ public class VirtualAcademy : Academy
             GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
             agents.Add(agent.GetComponent<Agent>());
         }
-
-        int numberOfPredators = (int)(m_ResetParameters["predator_count"] ?? 0);
 
         for (int i = 0; i < numberOfPredators; i++)
         {

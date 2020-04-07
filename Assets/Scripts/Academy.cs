@@ -51,20 +51,21 @@ public class Academy : MonoBehaviour
 
 
     [SerializeField]
-    public ResetParameters m_ResetParameters = new ResetParameters();
+    public EnvironmentParameters m_ResetParameters = new EnvironmentParameters();
 
     [SerializeField]
     [Tooltip("The engine-level settings which correspond to rendering quality and engine speed during Training.")]
     EngineConfiguration m_EngineConfiguration = new EngineConfiguration(80, 80, 1, 100.0f, -1);
 
-    public NPCommunicator m_Communicator;
-    public int m_WorkerID = 0;
+    NPCommunicator m_Communicator;
+    int m_WorkerID = 0;
 
     bool m_FirstAcademyReset;
 
     public event System.Action AgentUpdateObservations;
     public event System.Action AgentUpdateMovement;
     public event System.Action AgentUpdateFitness;
+    //public event System.Action AgentUpdateStats;
 
     public List<Brain> brains;
     public Dictionary<string, Brain> m_Brains;
@@ -87,7 +88,7 @@ public class Academy : MonoBehaviour
         m_Brains = new Dictionary<string, Brain>();
         foreach (Brain brain in brains)
         {
-            m_Brains.Add(brain.brainName, brain);
+            m_Brains.Add(brain.m_BrainName, brain);
             brain.CreateMemory(m_WorkerID);
         }
 
@@ -172,7 +173,6 @@ public class Academy : MonoBehaviour
     }
 
 
-
     void EnvironmentStep()
     {
         if (m_FirstAcademyReset)
@@ -180,6 +180,9 @@ public class Academy : MonoBehaviour
             using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
             {
                 AgentUpdateObservations?.Invoke();
+
+                foreach (Brain brain in brains)
+                    brain.UpdateStats();
             }
         }
 

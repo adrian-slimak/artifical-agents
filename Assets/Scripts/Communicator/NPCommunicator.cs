@@ -42,7 +42,7 @@ public class NPCommunicator
         }
     }
 
-    public UnityInitializationParameters Initialize(string academyName, ResetParameters resetParameters)
+    public UnityInitializationParameters Initialize(string academyName, EnvironmentParameters resetParameters)
     {
         UnityOutputProto unity_output = new UnityOutputProto
         {
@@ -209,10 +209,10 @@ public class NPCommunicator
         {
             var brainParametersProto = new BrainParametersProto
             {
-                BrainName = brain.brainName,
+                BrainName = brain.m_BrainName,
                 AgentsCount = brain.agentsCount,
-                ObservationsVectorSize = brain.observationsVectorSize,
-                ActionsVectorSize = brain.actionsVectorSize,
+                ObservationsVectorSize = brain.m_ObservationsVectorSize,
+                ActionsVectorSize = brain.m_ActionsVectorSize,
             };
 
             output.BrainParameters.Add(brainParametersProto);
@@ -221,7 +221,7 @@ public class NPCommunicator
         return output;
     }
 
-    UnityInitializationOutputProto GetUnityInitializationOutput(string name, ResetParameters resetParameters)
+    UnityInitializationOutputProto GetUnityInitializationOutput(string name, EnvironmentParameters resetParameters)
     {
         var output = new UnityInitializationOutputProto();
         output.Name = name;

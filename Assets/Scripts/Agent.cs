@@ -9,9 +9,9 @@ public class Agent : MonoBehaviour
 
     MMArray m_FitnessArray;
 
-    Animal m_Animal;
-    public Vision m_Vision;
-    Hearing m_Hearing;
+    internal Animal m_Animal;
+    internal Vision m_Vision;
+    internal Hearing m_Hearing;
 
     void Awake()
     {
@@ -28,7 +28,7 @@ public class Agent : MonoBehaviour
     public void AttachBrain()
     {
         m_Brain = Academy.Instance.m_Brains[m_BrainName];
-        m_ID = m_Brain.SubscribeAgent();
+        m_ID = m_Brain.SubscribeAgent(this);
 
         Academy.Instance.AgentUpdateObservations += UpdateObservations;
         Academy.Instance.AgentUpdateMovement += AgentStep;
@@ -50,7 +50,7 @@ public class Agent : MonoBehaviour
         m_Hearing?.UpdateObservations();
     }
 
-    public void UpdateFitness()
+    void UpdateFitness()
     {
         float fitness = m_Animal.collectedFood;
         m_FitnessArray[0] = fitness;
@@ -59,6 +59,17 @@ public class Agent : MonoBehaviour
             m_Brain.bestAgentFitness = fitness;
             m_Brain.bestAgent = this;
         }
+    }
+
+    public void UpdateStats()
+    {
+        int swarmDensity = m_Hearing.GetNearObjects(30f, this.gameObject.tag);
+        m_Brain.m_StatsVectorArray[0] += swarmDensity;
+        float swarmDispersion = m_Hearing.GetDistanceToClosest(this.gameObject.tag);
+        m_Brain.m_StatsVectorArray[1] += swarmDispersion;
+
+        if (m_Animal.m_Type == Animal.AnimalType.Predator)
+            m_Brain.m_StatsVectorArray[3] += ((Predator)m_Animal).numberOfAttacks;
     }
 
     void AgentStep()
@@ -72,7 +83,9 @@ public class Agent : MonoBehaviour
     internal void OnDie()
     {
         UpdateFitness();
-        m_Brain.OnAgentDie();
+        m_Brain.UnsubscribeAgent(this);
+
+        Destroy(this.gameObject);
     }
 
     private void OnDestroy()

@@ -1,11 +1,11 @@
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 from mlagents.communicator_objects.unity_output_pb2 import UnityOutputProto
 
-from mlagents.exception import (UnityEnvironmentException, UnityCommunicationException, UnityTimeOutException)
+from mlagents.exception import (UnityCommunicationException)
 from mlagents.base_environment import Environment
 from mlagents.brain import Brain
 
-from utils import merge_environment_parameters
+from other.utils import merge_environment_parameters
 from typing import Dict, Optional
 import numpy as np
 import logging
@@ -35,11 +35,17 @@ class UnityEnvironment:
             UnityInitializationInputProto(seed=1, engine_configuration=engine_configuration, custom_reset_parameters=environment_parameters)
         )
 
-    def run_single_episode(self, brain_models, number_of_steps, environment_parameters=None):
+    def run_single_episode(self, brain_models, number_of_steps, environment_parameters=None, live_plot=None):
         self.reset(environment_parameters)
 
         for current_step in range(number_of_steps):
             agent_observations = self.step_receive_observations()
+
+            stats = self.step_receive_stats()
+
+            if live_plot is not None:
+                for brain_name, brain_stats in stats.items():
+                    live_plot.update({f'{brain_name}2': [brain_stats[0][0], brain_stats[0][1], brain_stats[0][2], brain_stats[0][3]]})
 
             agent_actions = {}
             for brain_name, brain_model in brain_models.items():
@@ -72,6 +78,14 @@ class UnityEnvironment:
             state[brain_name] = brain.get_observations()
 
         return state
+
+    def step_receive_stats(self):
+        # Read statistics from memory
+        stats = {}
+        for brain_name, brain in self.external_brains.items():
+            stats[brain_name] = brain.get_stats()
+
+        return stats
 
     def step_send_actions(self, agents_actions: Dict[str, np.ndarray] = None):
 

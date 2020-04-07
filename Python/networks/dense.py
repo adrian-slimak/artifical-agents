@@ -49,6 +49,7 @@ class MLPModel:
 
     def __init__(self, input_dim, mlp_units, output_units, models, n_envs=1, use_bias=True):
         self.mlp_units = mlp_units
+        self.input_dim = input_dim
         self.models = models
         self.n_envs = n_envs
 
@@ -73,6 +74,8 @@ class MLPModel:
 
     @tf.function
     def call(self, inputs):
+        inputs = tf.reshape(inputs, (self.n_envs, self.models, self.input_dim))
+        inputs = tf.transpose(inputs, [1, 0, 2])
         output = self.input_layer.call(inputs)
         output = self.output_layer.call(output)
         output = tf.transpose(output, (1, 0, 2))

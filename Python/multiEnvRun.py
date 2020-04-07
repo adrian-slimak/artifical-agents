@@ -1,7 +1,7 @@
 from mlagents.multi_unity_environment import MultiUnityEnvironment
 import configs.learning_parameters as _lp
-from LivePlotting import LivePlot
-from GA import GeneticAlgorithm
+from other.LivePlotting import LivePlot
+from networks.GA import GeneticAlgorithm
 import numpy as np
 
 
@@ -22,7 +22,7 @@ def main():
         models = {}
         for brain_name in _lp.brains:
             brain = unity_environment.external_brains[brain_name]
-            model_weights = GAs[brain_name].to_lstm_model()
+            model_weights = GAs[brain_name].to_model()
             models[brain_name] = _lp.NetworkModel(brain.observations_vector_size, _lp.units, brain.actions_vector_size, brain.agents_count, n_envs=_lp.number_of_environments, use_bias=_lp.use_bias)
             models[brain_name].build(model_weights=model_weights)
 

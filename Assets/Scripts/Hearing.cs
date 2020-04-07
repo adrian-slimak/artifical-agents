@@ -2,8 +2,11 @@
 
 public class Hearing : Sensor
 {
+    [Parameter("observations_hearing_angle")]
     public float hearingAngle = 360f;
+    [Parameter("observations_hearing_range")]
     public float hearingRange = 30f;
+    [Parameter("observations_hearing_cell_number")]
     public int hearingCellNum = 15;
 
     Animal m_Animal;
@@ -14,17 +17,12 @@ public class Hearing : Sensor
     Collider2D[] hits = new Collider2D[50];
     float[] hitDistances = new float[50];
     int hitsNum = 0;
-    public LayerMask sensorLayerMask;
 
-
-    private void Awake()
+    protected override void Awake()
     {
-        m_Animal = GetComponent<Animal>();
-        string brainName = GetComponent<Agent>().m_BrainName;
+        base.Awake();
 
-        hearingAngle = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_hearing_angle"] ?? hearingAngle;
-        hearingRange = VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_hearing_range"] ?? hearingRange;
-        hearingCellNum = (int)(VirtualAcademy.Instance.m_ResetParameters[$"{brainName}_observations_hearing_cell_number"] ?? hearingCellNum);
+        m_Animal = GetComponent<Animal>();
 
         cellAngle = hearingAngle / hearingCellNum;
     }
@@ -44,6 +42,7 @@ public class Hearing : Sensor
         float angle;
         int cellNum;
         float normalizedDistance;
+        float sound;
         for (int i = 0; i < hitsNum; i++)
         {
             if (hits[i].gameObject != this.gameObject)
@@ -58,9 +57,17 @@ public class Hearing : Sensor
 
                     normalizedDistance = 1f - hitDistances[i] / hearingRange;
 
-                    if (observationsVector[cellNum] < normalizedDistance)
-                        observationsVector[cellNum] = normalizedDistance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
+                    sound = hits[i].gameObject.GetComponent<Animal>().currentSound;
+                    if (sound == 0)
+                        sound = normalizedDistance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
+
+                    if (observationsVector[cellNum] < sound)
+                        observationsVector[cellNum] = sound;
                 }
+            }
+            else
+            {
+                hitDistances[i] = float.MaxValue;
             }
         }
     }
@@ -69,18 +76,18 @@ public class Hearing : Sensor
     {
         int numOfObjects = -1;
         for (int i = 0; i < hitsNum; i++)
-            if (hitDistances[i] < minDistance)
+            if (hits[i].tag == objectTag && hitDistances[i] < minDistance)
                 numOfObjects++;
 
         return numOfObjects;
     }
 
-    public float GetDistanceToClosest()
+    public float GetDistanceToClosest(string objectTag)
     {
         float minDistance = float.MaxValue;
 
         for (int i = 0; i < hitsNum; i++)
-            if (hits[i].gameObject != this.gameObject && hitDistances[i] < minDistance)
+            if (hits[i].tag == objectTag && hitDistances[i] < minDistance)
                 minDistance = hitDistances[i];
 
         return minDistance;

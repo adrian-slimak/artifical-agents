@@ -30,28 +30,27 @@ class Brain:
         self.fitness_vector_size = int(brain_parameters[f'{self.brain_name}_fitness_vector_size'])
         self.stats_vector_size = int(brain_parameters[f'{self.brain_name}_stats_vector_size'])
 
+        if self.brain_name == 'predator' and brain_parameters[f'predator_communication_enabled'] > 0:
+            self.actions_vector_size += 1
+
         self._memory.init(self.agents_count, self.observations_vector_size, self.fitness_vector_size, self.actions_vector_size, self.stats_vector_size)
 
     def get_observations(self):
         observations = self._memory.read_observations()
-        observations = reshape(observations, (self.agents_count, 1, self.observations_vector_size))
         return observations
-
 
     def get_fitness(self):
         return self._memory.read_fitness()
 
+    def get_stats(self):
+        stats = self._memory.read_stats()
+        stats = reshape(stats, (self.n_envs, self.stats_vector_size)).numpy()
+        return stats
+
     def set_actions(self, agents_actions):
         self._memory.write_actions(agents_actions)
 
-    def get_stacked_observations(self):
-        observations = self._memory.read_observations()
-        observations = reshape(observations, (self.n_envs, self.agents_count, self.observations_vector_size))
-        observations = transpose(observations, [1, 0, 2])
-        return observations
-
     def get_stacked_fitness(self):
         fitness = self._memory.read_fitness()
-        fitness = reshape(fitness, (self.n_envs, self.agents_count))
-        # fitness = transpose(fitness, [1, 0, 2])
+        fitness = reshape(fitness, (self.n_envs, self.agents_count)).numpy()
         return fitness

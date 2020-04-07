@@ -62,6 +62,7 @@ class RNNModel:
 
     def __init__(self, input_dim, rnn_units, dense_units, models, n_envs=1, use_bias=True):
         self.rnn_units = rnn_units
+        self.input_dim = input_dim
         self.models = models
         self.n_envs = n_envs
 
@@ -89,6 +90,11 @@ class RNNModel:
 
     @tf.function
     def call(self, inputs):
+        if self.n_envs == 1:
+            inputs = tf.reshape(inputs, (self.models, 1, self.input_dim))
+        else:
+            inputs = tf.reshape(inputs, (self.n_envs, self.models, self.input_dim))
+            inputs = tf.transpose(inputs, [1, 0, 2])
         (output, states) = self.rnn_cell.call(inputs, self.cell_states)
         self.cell_states = states
         output = self.output_layer.call(output)

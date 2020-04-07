@@ -1,7 +1,5 @@
 from configs.environment_parameters import environment_parameters as _envparams
 from configs.engine_configuration import engine_config as _engconf
-from configs.plots_parameters import plot_structure, plot_subplots, plot_size
-from hotkeysLogger import HotKeyListener
 
 from networks.lstm import LSTMModel
 from networks.rnn import RNNModel
@@ -9,6 +7,7 @@ from networks.dense import MLPModel
 
 # ENVIRONMENT PARAMETERS
 unity_environment_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
+# unity_environment_path = None
 
 environment_parameters = _envparams
 engine_configuration = _engconf
@@ -16,15 +15,16 @@ engine_configuration = _engconf
 brains = [brain_name for brain_name in environment_parameters if ('count' in _envparams[brain_name] and _envparams[brain_name]['count'] > 0)]
 
 # GENERAL
-NetworkModel = LSTMModel
+show_plots = False
+
+NetworkModel = MLPModel
 
 units = 16
 use_bias = True
 
-number_of_generations = 1000
-number_of_steps = 2000
+number_of_generations = 250
+number_of_steps = 1500
 
-show_plots = True
 
 # MULTI
 number_of_environments = 4

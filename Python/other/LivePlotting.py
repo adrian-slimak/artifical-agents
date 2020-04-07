@@ -23,7 +23,7 @@ class PlotPart:
         self.X = []
         self.Y = {}
 
-        colors = ['g', 'r', 'b']
+        colors = ['g', 'r', 'b', 'm', 'y']
         for line_name, color in zip(params['lines'], colors):
             self._ax.plot([], [], color, label=line_name)
             self.Y[line_name] = []
@@ -31,6 +31,12 @@ class PlotPart:
         self._ax.legend()
 
     def update(self, data):
+        if data is None:
+            self.X = []
+            for y_key in self.Y.keys():
+                self.Y[y_key] = []
+            return
+
         self.X = list(range(len(self.X) + 1))
         for line, Ys, v in zip(self._ax.lines, self.Y.values(), data):
             Ys.append(v)
@@ -39,12 +45,11 @@ class PlotPart:
 
 
 class LivePlot:
-    def __init__(self, plots=None, subplots=(1,1), figsize=(10, 8)):
+    def __init__(self, plots=None, subplots=(1, 1), figsize=(10, 8)):
         self.fig, self.ax = plt.subplots(subplots[0], subplots[1], figsize=figsize)
         self.ID = None
         self.plots = {}
 
-        print(self.ax)
         if not isinstance(self.ax, Iterable) or not isinstance(self.ax[0], Iterable):
             self.ax = [self.ax]
 
@@ -75,7 +80,7 @@ class LivePlot:
 
     def __call__(self):
         self.fig.canvas.mpl_connect('key_press_event', self._onkey)
-        timer = self.fig.canvas.new_timer(interval=1000)
+        timer = self.fig.canvas.new_timer(interval=10)
         timer.add_callback(self._call_back)
         timer.start()
         plt.show()
@@ -88,13 +93,12 @@ class LivePlot:
                 return False
             else:
                 self._update(data)
+        self.fig.canvas.draw()
         return True
 
     def _update(self, data):
         for data_key in data.keys():
             self.plots[data_key].update(data[data_key])
-
-        self.fig.canvas.draw()
         # self.fig.canvas.flush_events()
 
     def update(self, data):

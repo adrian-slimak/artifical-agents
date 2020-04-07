@@ -2,19 +2,21 @@
 
 public class Predator : Animal
 {
-    bool confusionEffectEnabled = false;
-    float confusionEffectValue = 1f;
-    float confusionEffectDistance = 3f;
+    [Parameter("confusion_effect_value")]
+    public bool confusionEffectEnabled = false;
+    [Parameter("confusion_effect_value")]
+    public float confusionEffectValue = 1f;
+    [Parameter("confusion_effect_distance")]
+    public float confusionEffectDistance = 3f;
 
-    int numberOfAttacks = 0;
+    public int numberOfAttacks = 0;
+
+    [Parameter("communication_sound_value")]
+    public float soundValue;
 
     protected override void Awake()
     {
         base.Awake();
-
-        confusionEffectEnabled = (VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_confusion_effect_value"] ?? 0)>0;
-        confusionEffectValue = (VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_confusion_effect_value"] ?? confusionEffectValue);
-        confusionEffectDistance = (VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_confusion_effect_distance"] ?? confusionEffectDistance);
     }
 
     override public void SetNearObject(Transform nearObject)
@@ -25,23 +27,26 @@ public class Predator : Animal
 
     override protected void TryMakeSound()
     {
-        if (m_ActionsVector[3] > 0.5)
-            currentSound = 5;
-        else if (m_ActionsVector[4] > 0.5)
-            currentSound = 10;
+        if (m_ActionsVector[2] > 0.7f)
+            currentSound = soundValue;
+        else
+            currentSound = 0;
     }
 
     override protected void TryEat()
     {
-        if (nearFood)
+        stepsToEat--;
+        if (nearFood && stepsToEat<0)
         {
             bool canEat = true;
             numberOfAttacks++;
+            stepsToEat = restAfterEat;
 
             // Confusion Effect
             if (confusionEffectEnabled)
             {
-                float eatChance = confusionEffectValue / m_Agent.m_Vision.GetNearTargetObjects(nearFood, confusionEffectDistance, "Prey");
+                int nearAgents = m_Agent.m_Vision.GetNearTargetObjects(nearFood, confusionEffectDistance, "Prey");
+                float eatChance = confusionEffectValue / nearAgents;
                 canEat = Random.value < eatChance;
             }
 
@@ -50,7 +55,7 @@ public class Predator : Animal
                 // Eat Effect
                 energy += 50f;
                 collectedFood++;
-                Destroy(nearFood.gameObject);
+                nearFood.GetComponent<Agent>().OnDie();
                 nearFood = null;
             }
         }

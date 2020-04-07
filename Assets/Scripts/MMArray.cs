@@ -38,6 +38,12 @@ public class MMArray : IEnumerator, IEnumerable
         }
     }
 
+    public void Zero()
+    {
+        for (int i = 0; i < Length; i++)
+            this[i] = 0;
+    }
+
     public IEnumerator GetEnumerator()
     {
         this.position=-1;

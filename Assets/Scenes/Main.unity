@@ -626,7 +626,7 @@ MonoBehaviour:
   m_ResetParameters:
     m_ResetParametersList:
     - key: prey_count
-      value: 100
+      value: 100.1
     - key: predator_count
       value: 0
   m_EngineConfiguration:
@@ -635,24 +635,25 @@ MonoBehaviour:
     qualityLevel: 1
     timeScale: 1
     targetFrameRate: 60
-  m_WorkerID: 0
   brains:
-  - brainName: prey
-    observationsVectorSize: 15
+  - m_BrainName: prey
+    m_ObservationsVectorSize: 0
     visionObservationsVectorSize: 15
     hearingObservationsVectorSize: 0
-    actionsVectorSize: 2
-    fitnessVectorSize: 1
+    m_ActionsVectorSize: 0
+    m_FitnessVectorSize: 0
+    m_StatisticsVectorSize: 0
     agentsCount: 0
     agentsAlive: 0
     bestAgentFitness: 0
     bestAgent: {fileID: 0}
-  - brainName: predator
-    observationsVectorSize: 15
+  - m_BrainName: predator
+    m_ObservationsVectorSize: 0
     visionObservationsVectorSize: 12
     hearingObservationsVectorSize: 0
-    actionsVectorSize: 2
-    fitnessVectorSize: 1
+    m_ActionsVectorSize: 0
+    m_FitnessVectorSize: 0
+    m_StatisticsVectorSize: 0
     agentsCount: 0
     agentsAlive: 0
     bestAgentFitness: 0
@@ -1103,7 +1104,7 @@ GameObject:
   - component: {fileID: 531324865189825924}
   - component: {fileID: 531324865189825926}
   - component: {fileID: 531324865189825928}
-  m_Layer: 8
+  m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}

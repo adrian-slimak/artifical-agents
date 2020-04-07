@@ -1,11 +1,11 @@
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
 from mlagents.communicator_objects.unity_output_pb2 import UnityOutputProto
 
-from mlagents.exception import (UnityEnvironmentException, UnityCommunicationException, UnityTimeOutException)
+from mlagents.exception import (UnityCommunicationException)
 from mlagents.base_environment import Environment
 from mlagents.brain import Brain
 
-from utils import merge_environment_parameters
+from other.utils import merge_environment_parameters
 from typing import Dict, Optional
 import numpy as np
 import logging
@@ -39,11 +39,18 @@ class MultiUnityEnvironment:
             unity_output = environment.initialize(initialization_input)
             self.environments.append(environment)
 
-    def run_single_episode(self, brain_models, number_of_steps, environment_parameters=None):
+    def run_single_episode(self, brain_models, number_of_steps, environment_parameters=None, live_plot=None):
         self.reset(environment_parameters)
 
         for current_step in range(number_of_steps):
             agent_observations = self.step_receive_observations()
+
+            stats = self.step_receive_stats()
+
+            if live_plot is not None:
+                for brain_name, brain_stats in stats.items():
+                    brain_stats = np.mean(brain_stats, axis=0)
+                    live_plot.update({f'{brain_name}2': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3]]})
 
             agent_actions = {}
             for brain_name, brain_model in brain_models.items():
@@ -53,6 +60,11 @@ class MultiUnityEnvironment:
             self.step_send_actions(agent_actions)
 
         fitness = self.episode_completed()
+        stats = self.step_receive_stats()
+        if live_plot is not None:
+            for brain_name, brain_stats in stats.items():
+                brain_stats = np.mean(brain_stats, axis=0)
+                live_plot.update({f'{brain_name}3': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3]]})
         return fitness
 
     def reset(self, environment_parameters: Dict = None):
@@ -77,9 +89,19 @@ class MultiUnityEnvironment:
         # Read observations from memory
         observations = {}
         for brain_name, brain in self.external_brains.items():
-            observations[brain_name] = brain.get_stacked_observations()
+            observations[brain_name] = brain.get_observations()
+        # observations['prey'] = self.external_brains['prey'].get_stacked_observations()
+        # observations['predator'] = self.external_brains['predator'].get_observations_multi()
 
         return observations
+
+    def step_receive_stats(self):
+        # Read statistics from memory
+        stats = {}
+        for brain_name, brain in self.external_brains.items():
+            stats[brain_name] = brain.get_stats()
+
+        return stats
 
     def step_send_actions(self, agents_actions: Dict[str, np.ndarray] = None):
 
@@ -96,8 +118,10 @@ class MultiUnityEnvironment:
 
         # Read fitness from memory
         fitness = {}
-        for brain_name, brain in self.external_brains.items():
-            fitness[brain_name] = brain.get_stacked_fitness()
+        # for brain_name, brain in self.external_brains.items():
+        #     fitness[brain_name] = brain.get_stacked_fitness()
+        fitness['prey'] = self.external_brains['prey'].get_stacked_fitness()
+        fitness['predator'] = self.external_brains['predator'].get_fitness()
 
         return fitness
 

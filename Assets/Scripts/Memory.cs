@@ -1,21 +1,30 @@
 ﻿using System.IO.MemoryMappedFiles;
-using UnityEngine;
 
 public class Memory
 {
+    static int OBSERVATIONS_SIZE = 100 * 1024;
+    static int ACTIONS_SIZE = 50 * 1024;
+    static int FITNESS_SIZE = 50 * 1024;
+    static int STATS_SIZE = 10 * 1024;
+    static int MMF_SIZE = OBSERVATIONS_SIZE + ACTIONS_SIZE + FITNESS_SIZE + STATS_SIZE;
+
+
     MemoryMappedFile m_MMF;
     unsafe byte* m_Pointer;
 
     int m_workerID;
 
     unsafe byte* mmf_observations_pointer;
-    internal int mmf_size_observations;
+    internal int mmf_observations_size;
 
     unsafe byte* mmf_actions_pointer;
-    internal int mmf_size_actions;
+    internal int mmf_actions_size;
 
     unsafe byte* mmf_fitness_pointer;
-    internal int mmf_size_fitness;
+    internal int mmf_fitness_size;
+
+    unsafe byte* mmf_stats_pointer;
+    internal int mmf_stats_size;
 
     public unsafe Memory(string brainName, int workerID)
     {
@@ -26,15 +35,17 @@ public class Memory
             viewAccessor.SafeMemoryMappedViewHandle.AcquirePointer(ref m_Pointer);
     }
 
-    public unsafe void Init(int agentsCount, int observationsVectorSize, int actionsVectorSize, int fitnessVectorSize)
+    public unsafe void Init(int agentsCount, int observationsVectorSize, int actionsVectorSize, int fitnessVectorSize, int statsVectorSize)
     {
-        mmf_size_observations = agentsCount * observationsVectorSize * 4;
-        mmf_size_actions = agentsCount * actionsVectorSize * 4;
-        mmf_size_fitness = agentsCount * fitnessVectorSize * 4;
+        mmf_observations_size = agentsCount * observationsVectorSize * 4;
+        mmf_actions_size = agentsCount * actionsVectorSize * 4;
+        mmf_fitness_size = agentsCount * fitnessVectorSize * 4;
+        mmf_stats_size = statsVectorSize * 4;
 
-        mmf_observations_pointer = m_Pointer + mmf_size_observations * m_workerID;
-        mmf_actions_pointer = 100000 + m_Pointer + mmf_size_actions * m_workerID;
-        mmf_fitness_pointer = 150000 + m_Pointer + mmf_size_fitness * m_workerID;
+        mmf_observations_pointer = m_Pointer + mmf_observations_size * m_workerID;
+        mmf_actions_pointer = OBSERVATIONS_SIZE + m_Pointer + mmf_actions_size * m_workerID;
+        mmf_fitness_pointer = OBSERVATIONS_SIZE + ACTIONS_SIZE + m_Pointer + mmf_fitness_size * m_workerID;
+        mmf_stats_pointer = OBSERVATIONS_SIZE + ACTIONS_SIZE + FITNESS_SIZE + m_Pointer + mmf_stats_size * m_workerID;
     }
 
     public unsafe MMArray GetObservationsMemoryArray(int offset, int length)
@@ -52,13 +63,19 @@ public class Memory
         return new MMArray((float*)(mmf_fitness_pointer + offset*4), length);
     }
 
+    public unsafe MMArray GetStatsMemoryArray()
+    {
+        return new MMArray((float*)(mmf_stats_pointer), mmf_stats_size/4);
+    }
+
     public unsafe void Reset()
     {
         mmf_observations_pointer = null;
         mmf_actions_pointer = null;
         mmf_fitness_pointer = null;
-        mmf_size_actions = -1;
-        mmf_size_observations = -1;
-        mmf_size_fitness = -1;
+        mmf_actions_size = -1;
+        mmf_observations_size = -1;
+        mmf_fitness_size = -1;
+        mmf_stats_size = -1;
     }
 }

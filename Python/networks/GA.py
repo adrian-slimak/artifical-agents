@@ -168,7 +168,7 @@ class GeneticAlgorithm:
                 if random.random() <= gen_mutation_chance:
                     individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
 
-    def to_lstm_model(self):
+    def to_model(self):
         weights = [[] for i in self.shapes[0]]
         biases = [[] for i in self.shapes[1]] if self.use_bias else None
 

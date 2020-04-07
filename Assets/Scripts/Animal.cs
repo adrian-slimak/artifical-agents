@@ -8,18 +8,29 @@ public class Animal : MonoBehaviour
     public Agent m_Agent;
     protected MMArray m_ActionsVector;
 
+    [Parameter("max_move_speed")]
     public float maxMoveSpeed = 5f;
+    [Parameter("max_turn_speed")]
     public float maxTurnSpeed = 100f;
 
+    [Parameter("energy")]
     public float energy = 100f;
+    [Parameter("energy_gain_per_eat")]
+    float energyGainPerEat = 50f;
+    [Parameter("energy_drain_per_step")]
     float energyDrainPerStep = 0.1f;
+    [Parameter("energy_drain_per_speed")]
     float energyDrainPerSpeed = 0.1f;
 
+    [Parameter("communication_enabled")]
     bool communicationEnabled = false;
     public float currentSound = 0f;
 
     protected Transform nearFood;
     protected Transform nearMate;
+    [Parameter("rest_after_eat")]
+    protected int restAfterEat = 0;
+    protected int stepsToEat = 0;
     public int collectedFood = 0;
 
     Rigidbody2D rigidBody2D;
@@ -29,12 +40,7 @@ public class Animal : MonoBehaviour
         rigidBody2D = GetComponent<Rigidbody2D>();
         m_Agent = GetComponent<Agent>();
 
-        maxMoveSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_move_speed"] ?? maxMoveSpeed);
-        maxTurnSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_max_turn_speed"] ?? maxTurnSpeed);
-
-        energy = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy"]?? energy);
-        energyDrainPerStep = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_step"]?? energyDrainPerStep);
-        energyDrainPerSpeed = (float)(VirtualAcademy.Instance.m_ResetParameters[$"{m_Agent.m_BrainName}_energy_drain_per_speed"]?? energyDrainPerSpeed);
+        VirtualAcademy.Instance.m_ResetParameters.LoadEnvParams(this, m_Agent.m_BrainName);
     }
 
     public void SetActionsVector(MMArray actionsVector)
@@ -56,7 +62,7 @@ public class Animal : MonoBehaviour
         energy -= Mathf.Pow(Mathf.Abs(m_ActionsVector[0]), 2f) * energyDrainPerSpeed;
         energy -= energyDrainPerStep;
 
-        if (energy <= 0) OnDie();
+        if (energy <= 0) m_Agent.OnDie();
     }
 
     public void UpdateMovement()
@@ -69,10 +75,12 @@ public class Animal : MonoBehaviour
 
     protected virtual void TryEat()
     {
-        if (nearFood)
+        stepsToEat--;
+        if (nearFood && stepsToEat<0)
         {
             // Eat effect
-            energy += 50f;
+            energy += energyGainPerEat;
+            stepsToEat = restAfterEat;
             collectedFood++;
             Destroy(nearFood.gameObject);
             nearFood = null;
@@ -99,13 +107,6 @@ public class Animal : MonoBehaviour
     {
         nearMate = null;
         nearFood = null;
-    }
-
-    void OnDie()
-    {
-        m_Agent.OnDie();
-
-        Destroy(this.gameObject);
     }
 
     //public bool steer = false;
