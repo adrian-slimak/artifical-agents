@@ -1,4 +1,5 @@
 ﻿using System.IO.MemoryMappedFiles;
+using UnityEngine;
 
 public class Memory
 {

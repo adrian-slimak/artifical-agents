@@ -40,6 +40,7 @@ public class Predator : Animal
         {
             bool canEat = true;
             numberOfAttacks++;
+            m_Agent.m_Brain.totalNumberOfAttacks++;
             stepsToEat = restAfterEat;
 
             // Confusion Effect
@@ -55,6 +56,7 @@ public class Predator : Animal
                 // Eat Effect
                 energy += 50f;
                 collectedFood++;
+                m_Agent.m_Brain.totalFoodCollected++;
                 nearFood.GetComponent<Agent>().OnDie();
                 nearFood = null;
             }

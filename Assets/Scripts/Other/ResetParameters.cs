@@ -37,7 +37,8 @@ public class EnvironmentParameters : ISerializationCallbackReceiver
 
             if (attribute != null)
             {
-                float? paramValue = this[$"{_prefix}_{attribute.Name}"];
+                string paramName = _prefix==""?attribute.Name:$"{_prefix}_{attribute.Name}";
+                float? paramValue = this[paramName];
 
                 if (paramValue != null)
                 {
@@ -62,8 +63,8 @@ public class EnvironmentParameters : ISerializationCallbackReceiver
             else
             if (m_DefaultEnvParams.ContainsKey(name))
                 return m_DefaultEnvParams[name];
-            else
-                Debug.LogWarning($"Reset parameter '{name}' not found.");
+            //else
+            //    Debug.LogWarning($"Reset parameter '{name}' not found.");
             return null;
         }
     }

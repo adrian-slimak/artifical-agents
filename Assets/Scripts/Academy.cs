@@ -92,7 +92,7 @@ public class Academy : MonoBehaviour
             brain.CreateMemory(m_WorkerID);
         }
 
-        AcademyInitialization();
+        OnAwakeAcademyInitialization();
     }
 
     // Used to read Python-provided environment parameters
@@ -141,10 +141,10 @@ public class Academy : MonoBehaviour
 
             if (m_Communicator != null)
             {
-                m_Communicator.QuitCommandReceived += OnQuitCommandReceived;
-                m_Communicator.ResetCommandReceived += OnResetCommandReceived;
-                m_Communicator.StepCommandReceived += OnStepCommandReceived;
-                m_Communicator.EpisodeCompletedCommandReceived += OnEpisodeCompletedCommandReceived;
+                m_Communicator.QuitCommandReceived += QuitCommandReceived;
+                m_Communicator.ResetCommandReceived += ResetCommandReceived;
+                m_Communicator.StepCommandReceived += StepCommandReceived;
+                m_Communicator.EpisodeCompletedCommandReceived += EpisodeCompletedCommandReceived;
             }
         }
     }
@@ -159,19 +159,11 @@ public class Academy : MonoBehaviour
         Application.targetFrameRate = m_EngineConfiguration.targetFrameRate;
     }
 
-    public virtual void AcademyInitialization()
+    public virtual void OnAwakeAcademyInitialization()
     { }
 
     public virtual void AcademyStep()
     { }
-
-    public virtual void AcademyReset()
-    {
-        AgentUpdateObservations = null;
-        AgentUpdateMovement = null;
-        AgentUpdateFitness = null;
-    }
-
 
     void EnvironmentStep()
     {
@@ -192,14 +184,14 @@ public class Academy : MonoBehaviour
         }
     }
 
-    void OnStepCommandReceived()
+    void StepCommandReceived()
     {
         AgentUpdateMovement?.Invoke();
 
         m_StepCount += 1;
     }
         
-    void OnResetCommandReceived(Dictionary<string, float> customResetParameters)
+    void ResetCommandReceived(Dictionary<string, float> customResetParameters)
     {
         if (customResetParameters != null)
             m_ResetParameters.SetCustomParameters(customResetParameters);
@@ -207,26 +199,38 @@ public class Academy : MonoBehaviour
         m_EpisodeCount++;
         m_StepCount = 0;
 
-        AcademyReset();
-        PlantsSpawner.Instance.OnReset();
+        AgentUpdateObservations = null;
+        AgentUpdateMovement = null;
+        AgentUpdateFitness = null;
+
+        OnAcademyReset();
 
         m_FirstAcademyReset = true;
     }
 
-    public void OnEpisodeCompletedCommandReceived()
+    protected virtual void OnAcademyReset() { }
+
+    void EpisodeCompletedCommandReceived()
     {
         m_FirstAcademyReset = false;
 
         AgentUpdateFitness?.Invoke();
+        foreach (Brain brain in brains)
+            brain.UpdateStatsLate();
     }
 
-    static void OnQuitCommandReceived()
+    void QuitCommandReceived()
     {
 #if UNITY_EDITOR
 
         EditorApplication.isPlaying = false;
 #endif
         Application.Quit();
+    }
+
+    public static void LoadEnvironmentParameters(object _object, string _prefix = "")
+    {
+        Instance.m_ResetParameters.LoadEnvParams(_object, _prefix);
     }
 
     void FixedUpdate()

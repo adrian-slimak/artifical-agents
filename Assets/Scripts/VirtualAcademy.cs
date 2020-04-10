@@ -4,15 +4,34 @@ using UPC;
 
 public class VirtualAcademy : Academy
 {
+
+    public new static VirtualAcademy Instance;
+
     public GameObject PreyAgentInstance;
     public GameObject PreysHolder;
 
     public GameObject PredatorAgentInstance;
     public GameObject PredatorsHolder;
 
-    public override void AcademyReset()
+    public GameObject WorldGround;
+
+    [Parameter("environment_world_size")]
+    public int m_WorldSize = 100;
+    public int m_HalfWorldSize;
+
+    public override void OnAwakeAcademyInitialization()
     {
-        base.AcademyReset();
+        Instance = Academy.Instance as VirtualAcademy;
+    }
+
+    protected override void OnAcademyReset()
+    {
+        m_ResetParameters.LoadEnvParams(this);
+
+        m_HalfWorldSize = m_WorldSize / 2;
+        WorldGround.transform.localScale = new Vector3(m_WorldSize, m_WorldSize, 1);
+
+        PlantsSpawner.Instance.OnReset();
         ResetAgents();
     }
 
@@ -45,7 +64,7 @@ public class VirtualAcademy : Academy
 
         for (int i = 0; i < numberOfPreys; i++)
         {
-            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * 100f, (Random.value - 0.5f) * 100f);
+            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * m_WorldSize, (Random.value - 0.5f) * m_WorldSize);
             Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
             GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
             agents.Add(agent.GetComponent<Agent>());

@@ -6,9 +6,14 @@ public class PlantsSpawner : MonoBehaviour
     public Transform plantsHolder;
     public GameObject plantPrefab;
 
+    [Parameter("environment_food_spawn_amount_reset")]
     public int plantsOnReset = 100;
+    [Parameter("environment_food_spawn_per_step")]
     public float plantsPerStep = 0.05f;
-    private float gridStep = 3.5f;
+    [Parameter("environment_food_spawn_grid_step")]
+    public float gridStep = 3.5f;
+    [Parameter("environment_food_spawn_method")]
+    public int spawnMethod = 0;
 
     float plantsToSpawn;
 
@@ -20,24 +25,16 @@ public class PlantsSpawner : MonoBehaviour
             Destroy(this.gameObject);
     }
 
-    //private void Start()
-    //{
-    //    OnReset();
-    //}
-
     public void OnReset()
     {
+        Academy.LoadEnvironmentParameters(this);
+
         foreach (Transform child in plantsHolder.transform)
             Destroy(child.gameObject);
 
-        int method = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_method"] ?? 0);
-        plantsPerStep = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_per_step"] ?? plantsPerStep);
-        plantsOnReset = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_amount_reset"] ?? plantsOnReset);
-        gridStep = (int)(VirtualAcademy.Instance.m_ResetParameters["environment_food_spawn_grid_step"] ?? plantsPerStep);
-
-        if (method == 0)
+        if (spawnMethod == 0)
             SpawnGrid();
-        if (method == 1)
+        if (spawnMethod == 1)
             Spawn(plantsOnReset);
     }
 
@@ -53,19 +50,20 @@ public class PlantsSpawner : MonoBehaviour
 
     void Spawn(int amount)
     {
+        Debug.Log(VirtualAcademy.Instance.m_WorldSize);
         for (int i = 0; i < amount; i++)
         {
-            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * 100f, (Random.value - 0.5f) * 100f);
+            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * VirtualAcademy.Instance.m_WorldSize, (Random.value - 0.5f) * VirtualAcademy.Instance.m_WorldSize);
             GameObject agent = Instantiate(plantPrefab, randomPosition, Quaternion.identity, plantsHolder.transform);
         }
     }
 
     void SpawnGrid()
     {
-        for (float y=-50f; y<50f; y+=gridStep)
+        for (float y=-VirtualAcademy.Instance.m_HalfWorldSize; y<VirtualAcademy.Instance.m_HalfWorldSize; y+=gridStep)
         {
 
-            for (float x=-50f; x<50f; x+=gridStep)
+            for (float x=-VirtualAcademy.Instance.m_HalfWorldSize; x< VirtualAcademy.Instance.m_HalfWorldSize; x+=gridStep)
             {
                 float noiseX = (Random.value - 0.5f)*0.6f;
                 float noiseY = (Random.value - 0.5f)*0.6f;

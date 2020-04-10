@@ -1,7 +1,7 @@
 from mlagents.unity_environment import UnityEnvironment
 import configs.learning_parameters as _lp
 import configs.plots_parameters as _pp
-from other.LivePlotting import LivePlot
+from other.live_plot import LivePlot
 from networks.GA import GeneticAlgorithm
 import numpy as np
 

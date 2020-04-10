@@ -50,7 +50,7 @@ class MultiUnityEnvironment:
             if live_plot is not None:
                 for brain_name, brain_stats in stats.items():
                     brain_stats = np.mean(brain_stats, axis=0)
-                    live_plot.update({f'{brain_name}2': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3]]})
+                    live_plot.update({f'{brain_name}2': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3], brain_stats[4]]})
 
             agent_actions = {}
             for brain_name, brain_model in brain_models.items():
@@ -64,7 +64,7 @@ class MultiUnityEnvironment:
         if live_plot is not None:
             for brain_name, brain_stats in stats.items():
                 brain_stats = np.mean(brain_stats, axis=0)
-                live_plot.update({f'{brain_name}3': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3]]})
+                live_plot.update({f'{brain_name}3': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3], brain_stats[4]]})
         return fitness
 
     def reset(self, environment_parameters: Dict = None):

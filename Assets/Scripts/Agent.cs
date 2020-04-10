@@ -4,7 +4,7 @@ public class Agent : MonoBehaviour
 {
     public string m_BrainName;
 
-    Brain m_Brain;
+    internal Brain m_Brain;
     public int m_ID;
 
     MMArray m_FitnessArray;
@@ -52,9 +52,16 @@ public class Agent : MonoBehaviour
 
     void UpdateFitness()
     {
-        float fitness = m_Animal.collectedFood;
+        //float fitness = m_Animal.collectedFood;
+        float fitness = 0f;
+        if(m_Animal.m_Type == Animal.AnimalType.Prey)
+            fitness = m_Animal.collectedFood + VirtualAcademy.Instance.m_StepCount/15f;
+        else
+            fitness = m_Animal.collectedFood + ((Predator)m_Animal).numberOfAttacks;
+
         m_FitnessArray[0] = fitness;
-        if(fitness>m_Brain.bestAgentFitness)
+
+        if(fitness > m_Brain.bestAgentFitness)
         {
             m_Brain.bestAgentFitness = fitness;
             m_Brain.bestAgent = this;

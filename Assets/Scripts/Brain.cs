@@ -36,6 +36,11 @@ public class Brain
 
     Memory m_Memory;
 
+    float meanDensity;
+    float meanDispersity;
+    public int totalNumberOfAttacks;
+    public int totalFoodCollected;
+
 
     public void CreateMemory(int workerID)
     {
@@ -47,11 +52,15 @@ public class Brain
         VirtualAcademy.Instance.m_ResetParameters.LoadEnvParams(this, m_BrainName);
 
         if (m_BrainName == "predator")
-            if ((VirtualAcademy.Instance.m_ResetParameters[$"predator_confusion_effect_value"] ?? 0) > 0)
+            if ((VirtualAcademy.Instance.m_ResetParameters[$"predator_communication_enabled"] ?? 0) > 0)
                 m_ActionsVectorSize += 1;
 
         m_Agents = new List<Agent>(agentsCount);
         agentsCount = 0;
+        meanDensity = 0;
+        meanDispersity = 0;
+        totalNumberOfAttacks = 0;
+        totalFoodCollected = 0;
 
         m_Memory.Reset();
     }
@@ -86,7 +95,18 @@ public class Brain
 
         foreach (Agent agent in m_Agents)
         {
-            int swarmDensity = agent.m_Hearing.GetNearObjects(30f, agent.gameObject.tag);
+            int swarmDensity = 0;
+            if (agent.m_Hearing != null)
+                swarmDensity = agent.m_Hearing.GetNearObjects(30f, agent.gameObject.tag);
+            else
+            {
+                foreach (Agent agent2 in m_Agents)
+                {
+                    float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
+                    if (distance < 30f && agent != agent2)
+                        swarmDensity++;
+                }
+            }
             m_StatsVectorArray[1] += swarmDensity;
 
             float swarmDispersion = float.MaxValue;
@@ -96,21 +116,39 @@ public class Brain
                 foreach(Agent agent2 in m_Agents)
                 {
                     float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
-                    if (distance < swarmDispersion)
+                    if (distance < swarmDispersion && agent != agent2)
                         swarmDispersion = distance;
                 }
             m_StatsVectorArray[2] += swarmDispersion;
+
+            m_StatsVectorArray[3] += agent.m_Animal.collectedFood;
         }
 
         m_StatsVectorArray[1] /= agentsAlive;
-        m_StatsVectorArray[2] /= agentsAlive;
+        meanDensity += m_StatsVectorArray[1];
+        m_StatsVectorArray[2] /= agentsAlive; // DODAĆ LICZBĘ UDANYCH ATAKÓW
+        meanDispersity += m_StatsVectorArray[2];
+        m_StatsVectorArray[3] /= agentsAlive; // CZY ŚREDNIA SUMY DA NAM TO SAMO CO SUMA ŚREDNICH, jak tak no to
+
 
         if (m_BrainName == "predator")
         {
             foreach (Agent agent in m_Agents)
-                m_StatsVectorArray[3] += ((Predator)agent.m_Animal).numberOfAttacks;
-            m_StatsVectorArray[3] /= agentsAlive;
+                m_StatsVectorArray[4] += ((Predator)agent.m_Animal).numberOfAttacks;
+            m_StatsVectorArray[4] /= agentsAlive;
         }
+    }
+
+    public void UpdateStatsLate()
+    {
+        m_StatsVectorArray.Zero();
+
+        m_StatsVectorArray[0] = agentsAlive;
+        m_StatsVectorArray[1] = meanDensity / VirtualAcademy.Instance.m_StepCount;
+        m_StatsVectorArray[2] = meanDispersity / VirtualAcademy.Instance.m_StepCount;
+        m_StatsVectorArray[3] = totalFoodCollected / agentsCount;
+        m_StatsVectorArray[4] = totalNumberOfAttacks / agentsCount;
+
     }
 
     public MMArray GetVisionObservationsArray(int agent_id)

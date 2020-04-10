@@ -1,20 +1,66 @@
-environment_parameters = \
-    {
-        "prey":
-            {
-                "count": 60,
+__LEARNING_PARAMETERS__
+from configs.environment_parameters import environment_parameters as environment_parameters
+from configs.engine_configuration import engine_config as engine_configuration
+from other.hotkey_listener import HotKeyListener
+from networks.lstm import LSTMModel
+from networks.rnn import RNNModel
+from networks.dense import MLPModel
+from other.utils import save_parameters, current_save_ID
 
-                "communication":
-                    {
-                        "enabled": 0,  # 0 - False, 1 - True
-                        "food_sound_trigger": 8,  # Minimal number of food in 'vision' field to activate this sound
-                        "food_sound_value": 2.5,
-                        "predator_sound_trigger": 1,  # Minimal number of predators in 'vision' field to activate this sound
-                        "predator_sound_value": 5,
-                    },
 
-                "max_move_speed": 10,
-                "max_turn_speed": 150,
+save_ID = current_save_ID()
+hotkey_listener = HotKeyListener()
+hotkey_listener.add('<ctrl>+<alt>+a', lambda: save_parameters(save_ID))
+
+
+# ENVIRONMENT PARAMETERS
+unity_environment_path = "C:/Users/adek1/Desktop/Env/ArtificalAnimals.exe"
+# unity_environment_path = None
+
+brains = [brain_name for brain_name in environment_parameters if ('count' in environment_parameters[brain_name] and environment_parameters[brain_name]['count'] > 0)]
+
+show_plots = True
+
+# GENERAL
+NetworkModel = LSTMModel
+
+units = 8
+use_bias = True
+
+number_of_generations = 250
+number_of_steps = 1500
+
+
+# MULTI
+number_of_environments = 4
+
+# GENETIC ALGORITHM PARAMETERS
+# Random Init
+init_min_genes = 0.5
+init_max_genes = 0.75
+init_loc = 0.
+init_scale = 1.
+
+# Selection
+# selection_method = 'Roulette Wheel'
+selection_method = 'Fittest Half'
+
+# Mating
+mating_method = 'Two Points Per Part'
+# mating_method = 'Two Points'
+max_percent_length = 0.7
+
+# Pairing
+pairing_method = 'Fittest'
+
+# Mutation
+gen_mutation_chance = 0.04
+gen_remove_chance = 0.015
+gen_appear_chance = 0.03
+gen_mutation_scale = 0.4
+
+__ENVIRONMENT_PARAMETERS__
+                "max_turn_speed": 100,
 
                 "rest_after_eat": 0,
 
@@ -29,7 +75,7 @@ environment_parameters = \
                                 "vector_size": 15 * 3,  # 3 x "vision_cell_number", one per plant, prey, predator
                                 "cell_number": 15,
                                 "angle": 240,
-                                "range": 40
+                                "range": 20
                             },
 
                         # "hearing":
@@ -60,10 +106,10 @@ environment_parameters = \
                         "sound_value": 3.5,
                     },
 
-                "max_move_speed": 20,
-                "max_turn_speed": 125,
+                "max_move_speed": 8,
+                "max_turn_speed": 150,
 
-                "rest_after_eat": 10,
+                "rest_after_eat": 4,
 
                 "actions_vector_size": 2,
                 "fitness_vector_size": 1,
@@ -82,7 +128,7 @@ environment_parameters = \
                                 "vector_size": 12 * 3,
                                 "cell_number": 12,
                                 "angle": 180,
-                                "range": 50
+                                "range": 25
                             },
 
                         # "hearing":
@@ -105,12 +151,11 @@ environment_parameters = \
 
         "environment":
             {
-                "world_size": 256,
                 "food":
                     {
                         "spawn_method": 1,   # 0 - Grid  1 - Random
                         "spawn_per_step": 0.3,
-                        "spawn_amount_reset": 350,  # for Random Spawn
+                        "spawn_amount_reset": 400,  # for Random Spawn
                         "spawn_grid_step": 4,  # for Grid Spawn
                     }
             }

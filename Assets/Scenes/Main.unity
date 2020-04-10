@@ -647,6 +647,8 @@ MonoBehaviour:
     agentsAlive: 0
     bestAgentFitness: 0
     bestAgent: {fileID: 0}
+    totalNumberOfAttacks: 0
+    totalFoodCollected: 0
   - m_BrainName: predator
     m_ObservationsVectorSize: 0
     visionObservationsVectorSize: 12
@@ -658,6 +660,8 @@ MonoBehaviour:
     agentsAlive: 0
     bestAgentFitness: 0
     bestAgent: {fileID: 0}
+    totalNumberOfAttacks: 0
+    totalFoodCollected: 0
   m_EpisodeCount: 0
   m_StepCount: 0
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
@@ -666,6 +670,9 @@ MonoBehaviour:
   PredatorAgentInstance: {fileID: 6127257329547458512, guid: 3474258af231b274abc08128d32afedc,
     type: 3}
   PredatorsHolder: {fileID: 1043086549}
+  WorldGround: {fileID: 1884211417}
+  m_WorldSize: 100
+  m_HalfWorldSize: 0
 --- !u!4 &1361722398
 Transform:
   m_ObjectHideFlags: 0
@@ -787,7 +794,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1517283851}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -50, y: -50, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1998347053}
@@ -808,7 +815,7 @@ GameObject:
   - component: {fileID: 1884211420}
   - component: {fileID: 1884211419}
   m_Layer: 0
-  m_Name: Quad
+  m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -822,7 +829,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1884211417}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 50, y: 50, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 100, y: 100, z: 1}
   m_Children: []
   m_Father: {fileID: 1517283852}
@@ -1025,8 +1032,10 @@ MonoBehaviour:
   plantsHolder: {fileID: 2047284396}
   plantPrefab: {fileID: 5116160921917775520, guid: 759c92fc2b5c64560800ae5575b15aa1,
     type: 3}
-  plantsOnReset: 400
-  plantsPerStep: 0.1
+  plantsOnReset: 100
+  plantsPerStep: 0.05
+  gridStep: 3.5
+  spawnMethod: 0
 --- !u!4 &531324865189825915
 Transform:
   m_ObjectHideFlags: 0

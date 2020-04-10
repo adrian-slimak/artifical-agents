@@ -1,10 +1,10 @@
 from multiprocessing import Process, Queue
 from collections.abc import Iterable
 import matplotlib.pyplot as plt
+from other.hotkey_listener import HotKeyListener
 from pickle import dump
-from os import listdir
-from re import findall
 import matplotlib
+from configs.learning_parameters import save_ID
 plt.style.use('ggplot')
 matplotlib.use('tkagg')
 
@@ -13,10 +13,13 @@ class PlotPart:
     def __init__(self, name, params, ax):
         self.name = name
         self._ax = ax
+        self.title = params['title']
+        self.xlabel = params['labels'][0]
+        self.ylabel = params['labels'][1]
 
-        self._ax.set_title(params['title'])
-        self._ax.set_xlabel(params['labels'][0])
-        self._ax.set_ylabel(params['labels'][1])
+        self._ax.set_title(self.title)
+        self._ax.set_xlabel(self.xlabel)
+        self._ax.set_ylabel(self.ylabel)
         self._ax.set_xlim(0, params['lims'][0])
         self._ax.set_ylim(0, params['lims'][1])
 
@@ -47,7 +50,6 @@ class PlotPart:
 class LivePlot:
     def __init__(self, plots=None, subplots=(1, 1), figsize=(10, 8)):
         self.fig, self.ax = plt.subplots(subplots[0], subplots[1], figsize=figsize)
-        self.ID = None
         self.plots = {}
 
         if not isinstance(self.ax, Iterable) or not isinstance(self.ax[0], Iterable):
@@ -60,27 +62,14 @@ class LivePlot:
         plt.tight_layout()
         self._start_process()
 
-    def _onkey(self, event):
-        if event.key == 'alt+f':
-            if self.ID is None:
-                self.ID = 0
-                IDs = [int(findall('\d+', i)[0]) for i in listdir('results/plots')]
-                if len(IDs) > 0:
-                    self.ID = max(IDs)+1
-
-            plt.savefig(f'results/plots/plot_{self.ID}.png')
-            with open(f'results/plots/data_{self.ID}.pkl', 'wb') as file:
-                copy = {key: item['Y'] for key, item in self.plots.items()}
-                dump(copy, file)
-
     def _start_process(self):
         self.plot_queue = Queue()
         self.plot_process = Process(target=self, daemon=True)
         self.plot_process.start()
 
     def __call__(self):
-        self.fig.canvas.mpl_connect('key_press_event', self._onkey)
-        timer = self.fig.canvas.new_timer(interval=10)
+        HotKeyListener().add('<ctrl>+<alt>+a', self.save)
+        timer = self.fig.canvas.new_timer(interval=250)
         timer.add_callback(self._call_back)
         timer.start()
         plt.show()
@@ -92,14 +81,23 @@ class LivePlot:
                 plt.close('all')
                 return False
             else:
-                self._update(data)
+                self._update_data(data)
         self.fig.canvas.draw()
         return True
 
-    def _update(self, data):
+    def _update_data(self, data):
         for data_key in data.keys():
             self.plots[data_key].update(data[data_key])
         # self.fig.canvas.flush_events()
+
+    def save(self):
+        with open(f'results/data/data_{save_ID}.pkl', 'wb') as file:
+            to_save = {}
+            for plot_name, plot in self.plots.items():
+                to_save[plot_name] = {'Y': plot.Y, 'title': plot.title, 'xlabel': plot.xlabel, 'ylabel': plot.ylabel}
+            dump(to_save, file)
+
+        plt.savefig(f'results/plots/plot_{save_ID}.png')
 
     def update(self, data):
         self.plot_queue.put(data)

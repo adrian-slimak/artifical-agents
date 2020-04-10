@@ -87,7 +87,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainName: predator
-  m_Id: 0
+  m_ID: 0
 --- !u!114 &8758983384808968410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -100,14 +100,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41b21c3263010fb428f7be3434025486, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Type: 0
+  m_Type: 1
   m_Agent: {fileID: 0}
   maxMoveSpeed: 10
   maxTurnSpeed: 150
   energy: 100
-  energyDrainPerStep: 0.15
-  energyDrainPerSpeed: 0.1
+  currentSound: 0
   collectedFood: 0
+  confusionEffectEnabled: 0
+  confusionEffectValue: 1
+  confusionEffectDistance: 3
+  numberOfAttacks: 0
+  soundValue: 0
 --- !u!114 &6143707805166682195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,13 +124,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef0dd629f85df3e4a98868b90c6399ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sensorLayerMask:
+    serializedVersion: 2
+    m_Bits: 1792
   visionAngle: 160
   visionRange: 10
   visionCellNum: 15
   drawGizmo: 0
-  sensorLayerMask:
-    serializedVersion: 2
-    m_Bits: 1792
 --- !u!114 &7992768183338048989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,13 +143,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdcea4b2e7f69fb428d61259eba35a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sensorLayerMask:
+    serializedVersion: 2
+    m_Bits: 768
   hearingAngle: 360
   hearingRange: 30
   hearingCellNum: 12
   drawGizmo: 0
-  sensorLayerMask:
-    serializedVersion: 2
-    m_Bits: 768
 --- !u!1 &7447736276596515859
 GameObject:
   m_ObjectHideFlags: 0

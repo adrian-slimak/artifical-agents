@@ -1,6 +1,7 @@
-import tensorflow as tf
-import json
+from pickle import dump
+from os import listdir
 import re
+
 
 def merge_environment_parameters(nested_dictionary):
     new_dict = {}
@@ -23,63 +24,32 @@ def merge_environment_parameters(nested_dictionary):
 
     return new_dict
 
-def load_custom_reset_parameters(fileName='custom_reset_params_1'):
-    with open('configs\\' + fileName, 'r') as file:
-        custom_reset_parameters = json.loads(file.read())
 
-    # Remove commented (by '#') parameters
-    list_keys = list(custom_reset_parameters.keys())
-    for k in list_keys:
-        if k.startswith('#'):
-            custom_reset_parameters.pop(k)
-    return custom_reset_parameters
+def current_save_ID():
+    _id = 0
+    ids = [int(re.findall('\d+', i)[0]) for i in listdir('results/plots')]
+    if len(ids) > 0:
+        _id = max(ids) + 1
+    return _id
 
-def unityLogo():
-    try:
-        print(
-            """
 
-                        ▄▄▄▓▓▓▓
-                   ╓▓▓▓▓▓▓█▓▓▓▓▓
-              ,▄▄▄m▀▀▀'  ,▓▓▓▀▓▓▄                           ▓▓▓  ▓▓▌
-            ▄▓▓▓▀'      ▄▓▓▀  ▓▓▓      ▄▄     ▄▄ ,▄▄ ▄▄▄▄   ,▄▄ ▄▓▓▌▄ ▄▄▄    ,▄▄
-          ▄▓▓▓▀        ▄▓▓▀   ▐▓▓▌     ▓▓▌   ▐▓▓ ▐▓▓▓▀▀▀▓▓▌ ▓▓▓ ▀▓▓▌▀ ^▓▓▌  ╒▓▓▌
-        ▄▓▓▓▓▓▄▄▄▄▄▄▄▄▓▓▓      ▓▀      ▓▓▌   ▐▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▌   ▐▓▓▄ ▓▓▌
-        ▀▓▓▓▓▀▀▀▀▀▀▀▀▀▀▓▓▄     ▓▓      ▓▓▌   ▐▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▌    ▐▓▓▐▓▓
-          ^█▓▓▓        ▀▓▓▄   ▐▓▓▌     ▓▓▓▓▄▓▓▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▓▄    ▓▓▓▓`
-            '▀▓▓▓▄      ^▓▓▓  ▓▓▓       └▀▀▀▀ ▀▀ ^▀▀    `▀▀ `▀▀   '▀▀    ▐▓▓▌
-               ▀▀▀▀▓▄▄▄   ▓▓▓▓▓▓,                                      ▓▓▓▓▀
-                   `▀█▓▓▓▓▓▓▓▓▓▌
-                        ¬`▀▀▀█▓
+def save_parameters(id):
+    lines = [f'__LEARNING_PARAMETERS__\n']
+    with open('configs/learning_parameters.py', 'r') as f:
+        lines.extend([l for l in f.readlines()])
 
-        """
-        )
-    except Exception:
-        print("\n\n\tUnity Technologies\n")
+    lines.append(f'\n__ENVIRONMENT_PARAMETERS__\n')
+    with open('configs/environment_parameters.py', 'r') as f:
+        lines.extend([l for l in f.readlines()][16:])
 
-def setup_tensorflow():
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-      # Create N virtual GPUs with 256MB memory each
-      try:
-        tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=256)])
-        # logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-        # print(len(gpus), "Physical GPU,", len(logical_gpus), "Logical GPUs")
-      except RuntimeError as e:
-        # Virtual devices must be set before GPUs have been initialized
-        print(e)
+    with open(f'results/configs/parameters_{id}.txt', 'w') as f:
+        f.writelines(lines)
 
-# import tensorflow as tf
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#   # Create 2 virtual GPUs with 1GB memory each
-#   try:
-#     tf.config.experimental.set_virtual_device_configuration(
-#         gpus[0],
-#         [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024),
-#          tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)])
-#     logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-#     print(len(gpus), "Physical GPU,", len(logical_gpus), "Logical GPUs")
-#   except RuntimeError as e:
-#     # Virtual devices must be set before GPUs have been initialized
-#     print(e)
+
+def save_weights(models, _id):
+    weights = {}
+    for model_name, model in models.items():
+        weights[model_name] = model.to_model()
+
+    with open(f'results/models/weights_{_id}.pkl', 'wb') as file:
+        dump(weights, file)

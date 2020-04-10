@@ -16,11 +16,11 @@ public class Animal : MonoBehaviour
     [Parameter("energy")]
     public float energy = 100f;
     [Parameter("energy_gain_per_eat")]
-    float energyGainPerEat = 50f;
+    public float energyGainPerEat = 50f;
     [Parameter("energy_drain_per_step")]
-    float energyDrainPerStep = 0.1f;
+    public float energyDrainPerStep = 0.1f;
     [Parameter("energy_drain_per_speed")]
-    float energyDrainPerSpeed = 0.1f;
+    public float energyDrainPerSpeed = 0.1f;
 
     [Parameter("communication_enabled")]
     bool communicationEnabled = false;
@@ -70,7 +70,7 @@ public class Animal : MonoBehaviour
         rigidBody2D.angularVelocity = m_ActionsVector[1] * maxTurnSpeed;
         rigidBody2D.velocity = transform.up * (m_ActionsVector[0] * maxMoveSpeed);
 
-        StopInBorders();
+        KeepInBounds();
     }
 
     protected virtual void TryEat()
@@ -82,6 +82,7 @@ public class Animal : MonoBehaviour
             energy += energyGainPerEat;
             stepsToEat = restAfterEat;
             collectedFood++;
+            m_Agent.m_Brain.totalFoodCollected++;
             Destroy(nearFood.gameObject);
             nearFood = null;
         }
@@ -90,13 +91,13 @@ public class Animal : MonoBehaviour
     protected virtual void TryMakeSound()
     {    }
 
-    public void StopInBorders()
+    public void KeepInBounds()
     {
         Vector2 pos = transform.position;
-        if (pos.x > 50f) pos.x -= 100f;
-        if (pos.x < -50f) pos.x += 100f;
-        if (pos.y > 50f) pos.y -= 100f;
-        if (pos.y < -50f) pos.y += 100f;
+        if (pos.x > VirtualAcademy.Instance.m_HalfWorldSize) pos.x -= VirtualAcademy.Instance.m_WorldSize;
+        if (pos.x < -VirtualAcademy.Instance.m_HalfWorldSize) pos.x += VirtualAcademy.Instance.m_WorldSize;
+        if (pos.y > VirtualAcademy.Instance.m_HalfWorldSize) pos.y -= VirtualAcademy.Instance.m_WorldSize;
+        if (pos.y < -VirtualAcademy.Instance.m_HalfWorldSize) pos.y += VirtualAcademy.Instance.m_WorldSize;
         transform.position = pos;
     }
 
