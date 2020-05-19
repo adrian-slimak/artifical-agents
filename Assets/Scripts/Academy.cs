@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UPC.CommunicatorObjects;
+using System.Diagnostics;
 
 [System.Serializable]
 public class EngineConfiguration
@@ -178,10 +179,14 @@ public class Academy : MonoBehaviour
             }
         }
 
+        //var stopwatch = new Stopwatch();
+        //stopwatch.Start();
         using (TimerStack.Instance.Scoped("CommunicateWithPython"))
         {
             m_Communicator?.CommunicateWithPython();
         }
+        //stopwatch.Stop();
+        //UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds);
     }
 
     void StepCommandReceived()

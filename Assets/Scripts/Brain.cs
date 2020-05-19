@@ -102,9 +102,12 @@ public class Brain
             {
                 foreach (Agent agent2 in m_Agents)
                 {
-                    float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
-                    if (distance < 30f && agent != agent2)
-                        swarmDensity++;
+                    if (agent != agent2)
+                    {
+                        float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
+                        if (distance < 30f)
+                            swarmDensity++;
+                    }
                 }
             }
             m_StatsVectorArray[1] += swarmDensity;
@@ -115,27 +118,40 @@ public class Brain
             if (swarmDispersion == float.MaxValue)
                 foreach(Agent agent2 in m_Agents)
                 {
-                    float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
-                    if (distance < swarmDispersion && agent != agent2)
-                        swarmDispersion = distance;
+                    if (agent != agent2)
+                    {
+                        float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
+                        if (distance < swarmDispersion)
+                            swarmDispersion = distance;
+                    }
                 }
             m_StatsVectorArray[2] += swarmDispersion;
 
             m_StatsVectorArray[3] += agent.m_Animal.collectedFood;
         }
 
-        m_StatsVectorArray[1] /= agentsAlive;
-        meanDensity += m_StatsVectorArray[1];
-        m_StatsVectorArray[2] /= agentsAlive; // DODAĆ LICZBĘ UDANYCH ATAKÓW
-        meanDispersity += m_StatsVectorArray[2];
-        m_StatsVectorArray[3] /= agentsAlive; // CZY ŚREDNIA SUMY DA NAM TO SAMO CO SUMA ŚREDNICH, jak tak no to
+        if (agentsAlive > 0)
+        {
+            m_StatsVectorArray[1] /= agentsAlive;
+            meanDensity += m_StatsVectorArray[1];
+            m_StatsVectorArray[2] /= agentsAlive;
+            meanDispersity += m_StatsVectorArray[2];
+            m_StatsVectorArray[3] /= agentsAlive;
+        }
+        else
+        {
+            m_StatsVectorArray[1] = 0;
+            m_StatsVectorArray[2] = 0;
+            m_StatsVectorArray[3] = 0;
+        }
 
 
         if (m_BrainName == "predator")
         {
             foreach (Agent agent in m_Agents)
                 m_StatsVectorArray[4] += ((Predator)agent.m_Animal).numberOfAttacks;
-            m_StatsVectorArray[4] /= agentsAlive;
+            if (agentsCount > 0)
+                m_StatsVectorArray[4] /= agentsAlive;
         }
     }
 
@@ -144,10 +160,28 @@ public class Brain
         m_StatsVectorArray.Zero();
 
         m_StatsVectorArray[0] = agentsAlive;
-        m_StatsVectorArray[1] = meanDensity / VirtualAcademy.Instance.m_StepCount;
-        m_StatsVectorArray[2] = meanDispersity / VirtualAcademy.Instance.m_StepCount;
-        m_StatsVectorArray[3] = totalFoodCollected / agentsCount;
-        m_StatsVectorArray[4] = totalNumberOfAttacks / agentsCount;
+
+        if (VirtualAcademy.Instance.m_StepCount > 1)
+        {
+            m_StatsVectorArray[1] = meanDensity / VirtualAcademy.Instance.m_StepCount;
+            m_StatsVectorArray[2] = meanDispersity / VirtualAcademy.Instance.m_StepCount;
+        }
+        else
+        {
+            m_StatsVectorArray[1] = meanDensity;
+            m_StatsVectorArray[2] = meanDispersity;
+        }
+
+        if (agentsCount>0)
+        {
+            m_StatsVectorArray[3] = totalFoodCollected / agentsCount;
+            m_StatsVectorArray[4] = totalNumberOfAttacks / agentsCount;
+        }
+        else
+        {
+            m_StatsVectorArray[3] = totalFoodCollected;
+            m_StatsVectorArray[4] = totalNumberOfAttacks;
+        }
 
     }
 

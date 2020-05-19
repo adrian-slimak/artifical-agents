@@ -1,6 +1,6 @@
 from mlagents.multi_unity_environment import MultiUnityEnvironment
 import configs.learning_parameters as _lp
-from other.LivePlotting import LivePlot
+from other.live_plot import LivePlot
 from networks.GA import GeneticAlgorithm
 import numpy as np
 

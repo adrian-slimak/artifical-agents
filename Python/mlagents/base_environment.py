@@ -7,6 +7,7 @@ from .exception import (UnityEnvironmentException, UnityCommunicationException, 
 from mlagents.communicator_objects.unity_input_pb2 import UnityInputProto
 from mlagents.communicator_objects.unity_output_pb2 import UnityOutputProto
 from mlagents.communicator_objects.unity_initialization_input_pb2 import UnityInitializationInputProto
+from mlagents.communicator_objects.unity_message_pb2 import  UnityMessageProto
 
 from .np_communicator import NPCommunicator
 import signal
@@ -14,15 +15,22 @@ import signal
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("Environment")
 
+unity_input = UnityInputProto()
+unity_input.command = 0
+message = UnityMessageProto()
+message.status = 200
+message.unity_input.CopyFrom(unity_input)
+send_actions_message = message.SerializeToString()
 
 class Environment:
-    def __init__(self, file_path: Optional[str] = None, worker_id: int = 0, timeout_wait: int = 60):
+    def __init__(self, file_path: Optional[str] = None, worker_id: int = 0, timeout_wait: int = 60, batch_mode=False):
 
         self.worker_id = worker_id
         self.academy_name = None
         self.file_path = file_path
         self.timeout_wait = timeout_wait
         self.communicator = NPCommunicator(self.worker_id, self.timeout_wait)
+        self.batch_mode = batch_mode
         self._loaded = False
         self._process = None
 
@@ -73,10 +81,7 @@ class Environment:
         self.communicator.receive()
 
     def status_send_actions(self):
-        unity_input = UnityInputProto()
-        unity_input.command = 0
-
-        self.communicator.send(unity_input)
+        self.communicator.send_bytes(send_actions_message)
 
     def status_episode_completed(self):
         unity_input = UnityInputProto()
@@ -94,6 +99,8 @@ class Environment:
         # Launch Unity environment
         subprocess_args = [launch_string]
         subprocess_args += ["--port", str(self.worker_id)]
+        if self.batch_mode:
+            subprocess_args += ['-batchmode']
         try:
             self._process = subprocess.Popen(subprocess_args, start_new_session=True)
         except PermissionError as perm:

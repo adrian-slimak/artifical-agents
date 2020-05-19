@@ -57,6 +57,6 @@ plot_structure = \
                 'position': (1, 2),
                 'labels': ['step', 'value'],
                 'lines': ['survivorship', 'density', 'dispersion', 'food', 'attacks'],
-                'lims': [number_of_generations, 15],
+                'lims': [number_of_generations, 10],
             },
     }

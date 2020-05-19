@@ -87,7 +87,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainName: prey
-  m_Id: 0
+  m_ID: 0
 --- !u!114 &8928554276742030394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -105,9 +105,15 @@ MonoBehaviour:
   maxMoveSpeed: 5
   maxTurnSpeed: 100
   energy: 100
+  energyGainPerEat: 50
   energyDrainPerStep: 0.15
   energyDrainPerSpeed: 0.1
+  currentSound: 0
   collectedFood: 0
+  foodSoundValue: 0
+  predatorSoundValue: 0
+  foodSoundTrigger: 0
+  predatorSoundTrigger: 0
 --- !u!114 &6143707805166682195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120,13 +126,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef0dd629f85df3e4a98868b90c6399ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visionAngle: 220
-  visionRange: 10
-  visionCellNum: 15
-  drawGizmo: 0
   sensorLayerMask:
     serializedVersion: 2
     m_Bits: 1792
+  visionAngle: 220
+  visionRange: 10
+  visionCellNum: 15
+  nearbyDistance: 5
+  drawGizmo: 0
 --- !u!114 &5622041514198482325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,13 +146,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdcea4b2e7f69fb428d61259eba35a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  sensorLayerMask:
+    serializedVersion: 2
+    m_Bits: 768
   hearingAngle: 360
   hearingRange: 30
   hearingCellNum: 12
   drawGizmo: 0
-  sensorLayerMask:
-    serializedVersion: 2
-    m_Bits: 768
 --- !u!1 &7447736276596515859
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,10 +1,8 @@
 import tensorflow as tf
 
 
-class DenseLayer(tf.keras.layers.Layer):
+class DenseLayer:
     def __init__(self, input_dim, units, models, use_bias=True):
-        super(DenseLayer, self).__init__()
-
         self.input_dim = input_dim
         self.models = models
         self.units = units
@@ -16,18 +14,16 @@ class DenseLayer(tf.keras.layers.Layer):
     def build(self, kernel=None, bias=None):
 
         if kernel is not None:
-            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units),
-                                          name='kernel', initializer=tf.constant_initializer(kernel))
+            self.kernel = tf.Variable(kernel, shape=(self.models, self.input_dim, self.units), dtype=tf.float32)
         else:
-            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units),
+            self.kernel = tf.Variable(shape=(self.models, self.input_dim, self.units), dtype=tf.float32,
                                           name='kernel', initializer='random_normal')
 
         if bias is not None:
-            self.bias = self.add_weight(shape=(self.models, 1, self.units),
-                                          name='bias', initializer=tf.constant_initializer(bias))
+            self.bias = tf.Variable(bias, shape=(self.models, 1, self.units), dtype=tf.float32)
         else:
             if self.use_bias:
-                self.bias = self.add_weight(shape=(self.models, 1, self.units),
+                self.bias = tf.Variable(shape=(self.models, 1, self.units), dtype=tf.float32,
                                             name='bias', initializer='random_normal')
             else:
                 self.bias = None

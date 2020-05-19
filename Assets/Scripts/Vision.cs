@@ -9,6 +9,8 @@ public class Vision : Sensor
     public float visionRange = 10f;
     [Parameter("observations_vision_cell_number")]
     public int visionCellNum = 15;
+    [Parameter("distance_to_eat")]
+    public float nearbyDistance = 5;
 
     Animal m_Animal;
 
@@ -26,7 +28,7 @@ public class Vision : Sensor
         m_Animal = GetComponent<Animal>();
 
         cellAngle = visionAngle / visionCellNum;
-        nearTargetDistance = 1f - (0.5f / visionRange);
+        nearTargetDistance = 1f - (nearbyDistance / visionRange);
     }
 
     public override void UpdateObservations()

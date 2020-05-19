@@ -10,6 +10,7 @@ from typing import Dict, Optional
 import numpy as np
 import logging
 import atexit
+from time import clock
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("Environment")
@@ -18,13 +19,13 @@ _logger = logging.getLogger("Environment")
 class UnityEnvironment:
     def __init__(self, file_path: Optional[str] = None, worker_id: int = 0,
                  engine_configuration=None, environment_parameters=None,
-                 timeout_wait: int = 60):
+                 timeout_wait: int = 60, batch_mode=False):
 
         self.worker_id = worker_id
         self.external_brains: Dict[str, Brain] = None
         atexit.register(self._close)
 
-        self.environment = Environment(file_path, worker_id, timeout_wait)
+        self.environment = Environment(file_path, worker_id, timeout_wait, batch_mode)
 
         # Initialize environment
         if environment_parameters is not None:
@@ -37,22 +38,23 @@ class UnityEnvironment:
 
     def run_single_episode(self, brain_models, number_of_steps, environment_parameters=None, live_plot=None):
         self.reset(environment_parameters)
+        agent_actions = {}
 
         for current_step in range(number_of_steps):
             agent_observations = self.step_receive_observations()
-
+            # t = clock()
             stats = self.step_receive_stats()
 
             if live_plot is not None:
                 for brain_name, brain_stats in stats.items():
                     live_plot.update({f'{brain_name}2': [brain_stats[0][0], brain_stats[0][1], brain_stats[0][2], brain_stats[0][3]]})
 
-            agent_actions = {}
             for brain_name, brain_model in brain_models.items():
                 actions = brain_model(agent_observations[brain_name])
                 agent_actions[brain_name] = actions
 
             self.step_send_actions(agent_actions)
+            # print((clock() - t)*1000)
 
         fitness = self.episode_completed()
         return fitness

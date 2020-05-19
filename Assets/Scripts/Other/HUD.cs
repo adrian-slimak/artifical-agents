@@ -1,8 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UPC;
 using System;
 
 public class HUD : MonoBehaviour
@@ -46,7 +44,7 @@ public class HUD : MonoBehaviour
             int deltaSteps = m_Academy.m_StepCount - lastSteps;
 
             // Display it
-            float fps = deltaSteps / (deltaTime/1000f);
+            float fps = deltaSteps/(deltaTime/1000f);
             m_FPSText.text = string.Format("{0:0.0} steps/s", fps);
         }
     }

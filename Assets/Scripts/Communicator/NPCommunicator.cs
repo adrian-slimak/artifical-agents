@@ -19,6 +19,8 @@ public class NPCommunicator
     NamedPipeClientStream m_Pipe;
     bool m_IsOpen = false;
 
+    byte[] _nullSendMessage = WrapMessage(null, 200).ToByteArray();
+
     public NPCommunicator(int workerID)
     {
         m_WorkerID = workerID;
@@ -105,7 +107,7 @@ public class NPCommunicator
 
         using (TimerStack.Instance.Scoped("UnityPythonSend"))
         {
-            Send(null);
+            SendBytesMessage(_nullSendMessage);
         }
 
         using (TimerStack.Instance.Scoped("UnityPythonReceive"))
@@ -150,7 +152,15 @@ public class NPCommunicator
         m_Pipe.Write(encodedMessage, 0, encodedMessage.Length);
     }
 
-    byte[] buffer = new byte[10000];
+    void SendBytesMessage(byte[] bytesMessage)
+    {
+        if (!m_IsOpen)
+            return;
+
+        m_Pipe.Write(bytesMessage, 0, bytesMessage.Length);
+    }
+
+    byte[] buffer = new byte[2056];
     UnityInputProto Receive()
     {
         if (!m_IsOpen)

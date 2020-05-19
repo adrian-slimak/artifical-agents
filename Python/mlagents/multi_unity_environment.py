@@ -10,6 +10,7 @@ from typing import Dict, Optional
 import numpy as np
 import logging
 import atexit
+from time import clock
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger("Environment")
@@ -18,7 +19,7 @@ _logger = logging.getLogger("Environment")
 class MultiUnityEnvironment:
     def __init__(self, file_path: Optional[str] = None, number_of_environments: int = 0,
                  engine_configuration=None, environment_parameters=None,
-                 timeout_wait: int = 60):
+                 timeout_wait: int = 60, batch_mode=False):
 
         self.number_of_environments = number_of_environments
         self.external_brains: Dict[str, Brain] = None
@@ -35,7 +36,7 @@ class MultiUnityEnvironment:
         unity_output: UnityOutputProto = None
 
         for worker_id in range(number_of_environments):
-            environment = Environment(file_path, worker_id, timeout_wait)
+            environment = Environment(file_path, worker_id, timeout_wait, batch_mode)
             unity_output = environment.initialize(initialization_input)
             self.environments.append(environment)
 
@@ -43,6 +44,7 @@ class MultiUnityEnvironment:
         self.reset(environment_parameters)
 
         for current_step in range(number_of_steps):
+            # t = clock()
             agent_observations = self.step_receive_observations()
 
             stats = self.step_receive_stats()
@@ -58,9 +60,11 @@ class MultiUnityEnvironment:
                 agent_actions[brain_name] = actions
 
             self.step_send_actions(agent_actions)
+            # print((clock()-t)*1000)
 
         fitness = self.episode_completed()
         stats = self.step_receive_stats()
+
         if live_plot is not None:
             for brain_name, brain_stats in stats.items():
                 brain_stats = np.mean(brain_stats, axis=0)
@@ -90,8 +94,6 @@ class MultiUnityEnvironment:
         observations = {}
         for brain_name, brain in self.external_brains.items():
             observations[brain_name] = brain.get_observations()
-        # observations['prey'] = self.external_brains['prey'].get_stacked_observations()
-        # observations['predator'] = self.external_brains['predator'].get_observations_multi()
 
         return observations
 
@@ -117,11 +119,9 @@ class MultiUnityEnvironment:
             env.status_episode_completed()
 
         # Read fitness from memory
-        fitness = {}
-        # for brain_name, brain in self.external_brains.items():
-        #     fitness[brain_name] = brain.get_stacked_fitness()
-        fitness['prey'] = self.external_brains['prey'].get_stacked_fitness()
-        fitness['predator'] = self.external_brains['predator'].get_fitness()
+        fitness = {'prey': self.external_brains['prey'].get_stacked_fitness(),
+                   'predator': self.external_brains['predator'].get_fitness()}
+        # fitness['predator'] = self.external_brains['predator'].get_stacked_fitness()
 
         return fitness
 

@@ -1,4 +1,5 @@
 import configs.learning_parameters as _lp
+from pickle import load
 import numpy as np
 import random
 
@@ -74,6 +75,13 @@ class GeneticAlgorithm:
         for individual in self.population:
             individual.random_init()
 
+    def load_population_from_file(self, file_name, brain_name='predator'):
+        self.population = [Genotype(self.lengths) for i in range(self.population_size)]
+
+        with open(f'results/models/{file_name}', 'rb') as f:
+            models = load(f)[brain_name]
+            for indv, model in zip(self.population, models):
+                indv.genotype = model
 
     def calc_fitness(self, fitness):
         for idx, value in enumerate(fitness):

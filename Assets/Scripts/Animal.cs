@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class Animal : MonoBehaviour
 {
@@ -35,11 +36,15 @@ public class Animal : MonoBehaviour
 
     Rigidbody2D rigidBody2D;
 
+    Vector3 lastpos;
+
     protected virtual void Awake()
     {
         rigidBody2D = GetComponent<Rigidbody2D>();
         m_Agent = GetComponent<Agent>();
 
+        //Time.timeScale = 1f;
+        //lastpos = transform.position;
         VirtualAcademy.Instance.m_ResetParameters.LoadEnvParams(this, m_Agent.m_BrainName);
     }
 
@@ -109,6 +114,17 @@ public class Animal : MonoBehaviour
         nearMate = null;
         nearFood = null;
     }
+
+    //private void FixedUpdate()
+    //{
+    //    rigidBody2D.angularVelocity = maxTurnSpeed;
+    //    rigidBody2D.velocity = transform.up * maxMoveSpeed;
+    //    Debug.Log(Time.fixedDeltaTime);
+    //    float distance = Vector3.Distance(transform.position, lastpos);
+    //    lastpos = transform.position;
+
+    //    Debug.Log(distance);
+    //}
 
     //public bool steer = false;
     //private void FixedUpdate()

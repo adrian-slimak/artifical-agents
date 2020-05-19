@@ -13,10 +13,11 @@ environment_parameters = \
                         "predator_sound_value": 5,
                     },
 
-                "max_move_speed": 10,
-                "max_turn_speed": 150,
+                "max_move_speed": 0.5 * 50,  # 0.5
+                "max_turn_speed": 4 * 50,  # 4
 
                 "rest_after_eat": 0,
+                'distance_to_eat': 1,
 
                 "actions_vector_size": 2,
                 "fitness_vector_size": 1,
@@ -26,10 +27,10 @@ environment_parameters = \
                     {
                         "vision":
                             {
-                                "vector_size": 15 * 3,  # 3 x "vision_cell_number", one per plant, prey, predator
-                                "cell_number": 15,
-                                "angle": 240,
-                                "range": 40
+                                "vector_size": 13 * 3,  # 3 x "vision_cell_number", one per plant, prey, predator
+                                "cell_number": 13,
+                                "angle": 182,
+                                "range": 100
                             },
 
                         # "hearing":
@@ -45,14 +46,14 @@ environment_parameters = \
                 {
                     "": 100,
                     "gain_per_eat": 30,
-                    "drain_per_step": 0.15,
-                    "drain_per_speed": 0.1,
+                    "drain_per_step": 0,  # 0.15
+                    "drain_per_speed": 0,
                 },
             },
 
         "predator":
             {
-                "count": 8,
+                "count": 6,
 
                 "communication":  # If enabled, 'actions_vector_size' will automatically increase by one
                     {
@@ -60,10 +61,11 @@ environment_parameters = \
                         "sound_value": 3.5,
                     },
 
-                "max_move_speed": 20,
-                "max_turn_speed": 125,
+                "max_move_speed": 1.5 * 50,  # 1.5
+                "max_turn_speed": 3 * 50,  # 3
 
                 "rest_after_eat": 10,
+                'distance_to_eat': 1,
 
                 "actions_vector_size": 2,
                 "fitness_vector_size": 1,
@@ -72,17 +74,17 @@ environment_parameters = \
                 "confusion_effect":
                     {
                         "value": 1,  # enabled if > 0
-                        "distance": 3,
+                        "distance": 30,
                     },
 
                 "observations":
                     {
                         "vision":
                             {
-                                "vector_size": 12 * 3,
-                                "cell_number": 12,
-                                "angle": 180,
-                                "range": 50
+                                "vector_size": 13 * 3,
+                                "cell_number": 13,
+                                "angle": 182,
+                                "range": 100
                             },
 
                         # "hearing":
@@ -96,10 +98,10 @@ environment_parameters = \
 
                 "energy":
                 {
-                    "": 100,
+                    "": 125,
                     "gain_per_eat": 50,
-                    "drain_per_step": 0.1,
-                    "drain_per_speed": 0.05,
+                    "drain_per_step": 0,  # 0.1
+                    "drain_per_speed": 0,
                 },
             },
 
@@ -109,8 +111,8 @@ environment_parameters = \
                 "food":
                     {
                         "spawn_method": 1,   # 0 - Grid  1 - Random
-                        "spawn_per_step": 0.3,
-                        "spawn_amount_reset": 350,  # for Random Spawn
+                        "spawn_per_step": 0,  # 0.3
+                        "spawn_amount_reset": 0,  # for Random Spawn # 200
                         "spawn_grid_step": 4,  # for Grid Spawn
                     }
             }

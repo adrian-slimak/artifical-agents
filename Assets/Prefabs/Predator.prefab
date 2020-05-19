@@ -105,6 +105,9 @@ MonoBehaviour:
   maxMoveSpeed: 10
   maxTurnSpeed: 150
   energy: 100
+  energyGainPerEat: 50
+  energyDrainPerStep: 0.1
+  energyDrainPerSpeed: 0.1
   currentSound: 0
   collectedFood: 0
   confusionEffectEnabled: 0
@@ -130,6 +133,7 @@ MonoBehaviour:
   visionAngle: 160
   visionRange: 10
   visionCellNum: 15
+  nearbyDistance: 5
   drawGizmo: 0
 --- !u!114 &7992768183338048989
 MonoBehaviour:

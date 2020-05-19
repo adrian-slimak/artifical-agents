@@ -47,9 +47,12 @@ class NPCommunicator:
 
         win32file.WriteFile(self._pipe, message.SerializeToString())
 
+    def send_bytes(self, bytes_message):
+        win32file.WriteFile(self._pipe, bytes_message)
+
     def receive(self):
 
-        result, data = win32file.ReadFile(self._pipe, 100000, None)
+        result, data = win32file.ReadFile(self._pipe, 2056, None)
 
         message = UnityMessageProto()
         message.ParseFromString(data)

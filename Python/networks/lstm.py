@@ -2,10 +2,8 @@ import tensorflow as tf
 from networks.dense import DenseLayer
 
 
-class LSTMCell(tf.keras.layers.Layer):
+class LSTMCell:
     def __init__(self, input_dim, units, models, use_bias=False):
-        super(LSTMCell, self).__init__()
-
         self.input_dim = input_dim
         self.models = models
         self.units = units
@@ -18,25 +16,22 @@ class LSTMCell(tf.keras.layers.Layer):
     def build(self, kernel=None, recurrent_kernel=None, bias=None):
 
         if kernel is not None:
-            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units * 4),
-                                          name='kernel', initializer=tf.constant_initializer(kernel))
+            self.kernel = tf.Variable(kernel, shape=(self.models, self.input_dim, self.units * 4), dtype=tf.float32)
         else:
-            self.kernel = self.add_weight(shape=(self.models, self.input_dim, self.units * 4),
+            self.kernel = tf.Variable(shape=(self.models, self.input_dim, self.units * 4),
                                           name='kernel', initializer='random_normal')
 
         if recurrent_kernel is not None:
-            self.recurrent_kernel = self.add_weight(shape=(self.models, self.units, self.units * 4),
-                                          name='recurrent_kernel', initializer=tf.constant_initializer(recurrent_kernel))
+            self.recurrent_kernel = tf.Variable(recurrent_kernel, shape=(self.models, self.units, self.units * 4), dtype=tf.float32)
         else:
-            self.recurrent_kernel = self.add_weight(shape=(self.models, self.units, self.units * 4),
+            self.recurrent_kernel = tf.Variable(shape=(self.models, self.units, self.units * 4),
                                                     name='recurrent_kernel', initializer='random_normal')
 
         if bias is not None:
-            self.bias = self.add_weight(shape=(self.models, 1, self.units * 4),
-                                          name='bias', initializer=tf.constant_initializer(bias))
+            self.bias = tf.Variable(bias, shape=(self.models, 1, self.units * 4), dtype=tf.float32)
         else:
             if self.use_bias:
-                self.bias = self.add_weight(shape=(self.models, 1, self.units * 4),
+                self.bias = tf.Variable(shape=(self.models, 1, self.units * 4),
                                             name='bias', initializer='random_normal')
             else:
                 self.bias = None
@@ -72,11 +67,11 @@ class LSTMCell(tf.keras.layers.Layer):
 class LSTMModel:
     name = 'lstm'
 
-    def __init__(self, input_dim, lstm_units, dense_units, models, n_envs=1, use_bias=True):
+    def __init__(self, input_dim, lstm_units, dense_units, models, batch_size=1, use_bias=True):
         self.lstm_units = lstm_units
         self.input_dim = input_dim
         self.models = models
-        self.n_envs = n_envs
+        self.batch_size = batch_size
 
         self.lstm_cell = LSTMCell(input_dim, lstm_units, models, use_bias)
         self.cell_states = None
@@ -85,8 +80,8 @@ class LSTMModel:
     def build(self, model_weights=(None, None)):
         weights, biases = model_weights
 
-        self.cell_states = [tf.zeros((self.models, self.n_envs, self.lstm_units)),
-                            tf.zeros((self.models, self.n_envs, self.lstm_units))]
+        self.cell_states = [tf.zeros((self.models, self.batch_size, self.lstm_units)),
+                            tf.zeros((self.models, self.batch_size, self.lstm_units))]
 
         if weights is not None and biases is not None:
             self.lstm_cell.build(kernel=weights[0], recurrent_kernel=weights[1], bias=biases[0])
@@ -108,8 +103,11 @@ class LSTMModel:
         # if self.n_envs == 1:
         #     inputs = tf.reshape(inputs, (self.models, 1, self.input_dim))
         # else:
-        inputs = tf.reshape(inputs, (self.n_envs, self.models, self.input_dim))
-        inputs = tf.transpose(inputs, [1, 0, 2])
+        # HERE
+        inputs = tf.reshape(inputs, (self.models, self.batch_size, self.input_dim))
+        # inputs = tf.reshape(inputs, (self.batch_size, self.models, self.input_dim))
+        # inputs = tf.transpose(inputs, [1, 0, 2])
+
         (output, states) = self.lstm_cell.call(inputs, self.cell_states)
         self.cell_states = states
         output = self.output_layer.call(output)
