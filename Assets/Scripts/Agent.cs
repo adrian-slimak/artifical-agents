@@ -13,6 +13,9 @@ public class Agent : MonoBehaviour
     internal Vision m_Vision;
     internal Hearing m_Hearing;
 
+    public float dispersion = 0f;
+    public float density = 0f;
+
     void Awake()
     {
         AttachBrain();
@@ -38,6 +41,7 @@ public class Agent : MonoBehaviour
     public void Init()
     {
         m_FitnessArray = m_Brain.GetFitnessArray(m_ID);
+        m_FitnessArray.Zero();
 
         m_Animal.SetActionsVector(m_Brain.GetActionsArray(m_ID));
         m_Vision.SetObservationsVector(m_Brain.GetVisionObservationsArray(m_ID));
@@ -46,37 +50,27 @@ public class Agent : MonoBehaviour
 
     void UpdateObservations()
     {
-        m_Vision.UpdateObservations();
+        using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
+            m_Vision.UpdateObservations();
         m_Hearing?.UpdateObservations();
     }
 
     void UpdateFitness()
     {
         //float fitness = m_Animal.collectedFood;
-        float fitness = 0f;
-        if(m_Animal.m_Type == Animal.AnimalType.Prey)
-            fitness = m_Animal.collectedFood + VirtualAcademy.Instance.m_StepCount/15f;
+        if (m_Animal.m_Type == Animal.AnimalType.Prey)
+            m_FitnessArray[0] = m_Animal.collectedFood + VirtualAcademy.Instance.m_StepCount / 15f;
         else
-            fitness = m_Animal.collectedFood + ((Predator)m_Animal).numberOfAttacks;
-
-        m_FitnessArray[0] = fitness;
-
-        if(fitness > m_Brain.bestAgentFitness)
         {
-            m_Brain.bestAgentFitness = fitness;
+            m_FitnessArray[0] = m_FitnessArray[0] + m_Animal.collectedFood;// + ((Predator)m_Animal).numberOfAttacks;
+            Debug.Log(m_FitnessArray[0]);
+        }
+
+        if(m_FitnessArray[0] > m_Brain.bestAgentFitness)
+        {
+            m_Brain.bestAgentFitness = m_FitnessArray[0];
             m_Brain.bestAgent = this;
         }
-    }
-
-    public void UpdateStats()
-    {
-        int swarmDensity = m_Hearing.GetNearObjects(30f, this.gameObject.tag);
-        m_Brain.m_StatsVectorArray[0] += swarmDensity;
-        float swarmDispersion = m_Hearing.GetDistanceToClosest(this.gameObject.tag);
-        m_Brain.m_StatsVectorArray[1] += swarmDispersion;
-
-        if (m_Animal.m_Type == Animal.AnimalType.Predator)
-            m_Brain.m_StatsVectorArray[3] += ((Predator)m_Animal).numberOfAttacks;
     }
 
     void AgentStep()

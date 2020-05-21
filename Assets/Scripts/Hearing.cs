@@ -15,8 +15,12 @@ public class Hearing : Sensor
     float cellAngle;
 
     Collider2D[] hits = new Collider2D[50];
-    float[] hitDistances = new float[50];
     int hitsNum = 0;
+
+    float angle;
+    int cellNum;
+    float sound;
+    float distance;
 
     protected override void Awake()
     {
@@ -36,13 +40,10 @@ public class Hearing : Sensor
     void DetectVision()
     {
         hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, hearingRange, hits, layerMask: sensorLayerMask);
-        for (int j = 0; j < observationsVector.Length; j++)
-            observationsVector[j] = 0;
 
-        float angle;
-        int cellNum;
-        float normalizedDistance;
-        float sound;
+        for (int i = 0; i < observationsVector.Length; i++)
+            observationsVector[i] = hearingRange;
+
         for (int i = 0; i < hitsNum; i++)
         {
             if (hits[i].gameObject != this.gameObject)
@@ -50,47 +51,19 @@ public class Hearing : Sensor
                 angle = Vector2.SignedAngle(arcStart, hits[i].transform.position - transform.position);
                 if (angle < 0) angle += 360;
 
-                if (angle < hearingAngle)
-                {
-                    cellNum = (int)(angle / cellAngle);
-                    hitDistances[i] = Vector2.Distance(transform.position, hits[i].transform.position);
+                cellNum = (int)(angle / cellAngle);
+                distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
-                    normalizedDistance = 1f - hitDistances[i] / hearingRange;
+                distance = 1f - (distance / hearingRange);
 
-                    sound = hits[i].gameObject.GetComponent<Animal>().currentSound;
-                    if (sound == 0)
-                        sound = normalizedDistance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
+                sound = hits[i].gameObject.GetComponent<Animal>().currentSound;
+                if (sound == 0)
+                    sound = distance * hits[i].gameObject.GetComponent<Animal>().GetSpeed();
 
-                    if (observationsVector[cellNum] < sound)
-                        observationsVector[cellNum] = sound;
-                }
-            }
-            else
-            {
-                hitDistances[i] = float.MaxValue;
+                if (sound > observationsVector[cellNum])
+                    observationsVector[cellNum] = sound;
             }
         }
-    }
-
-    public int GetNearObjects(float minDistance, string objectTag)
-    {
-        int numOfObjects = -1;
-        for (int i = 0; i < hitsNum; i++)
-            if (hits[i].tag == objectTag && hitDistances[i] < minDistance)
-                numOfObjects++;
-
-        return numOfObjects;
-    }
-
-    public float GetDistanceToClosest(string objectTag)
-    {
-        float minDistance = float.MaxValue;
-
-        for (int i = 0; i < hitsNum; i++)
-            if (hits[i].tag == objectTag && hitDistances[i] < minDistance)
-                minDistance = hitDistances[i];
-
-        return minDistance;
     }
 
 #if UNITY_EDITOR

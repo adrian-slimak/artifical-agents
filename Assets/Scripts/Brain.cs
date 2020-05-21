@@ -89,6 +89,9 @@ public class Brain
 
     public void UpdateStats()
     {
+        if (m_StatsVectorArray == null)
+            return;
+
         m_StatsVectorArray.Zero();
 
         m_StatsVectorArray[0] = agentsAlive;
@@ -96,36 +99,33 @@ public class Brain
         foreach (Agent agent in m_Agents)
         {
             int swarmDensity = 0;
-            if (agent.m_Hearing != null)
-                swarmDensity = agent.m_Hearing.GetNearObjects(30f, agent.gameObject.tag);
-            else
-            {
-                foreach (Agent agent2 in m_Agents)
-                {
-                    if (agent != agent2)
-                    {
-                        float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
-                        if (distance < 30f)
-                            swarmDensity++;
-                    }
-                }
-            }
-            m_StatsVectorArray[1] += swarmDensity;
-
             float swarmDispersion = float.MaxValue;
-            if(agent.m_Hearing!=null)
-                swarmDispersion = agent.m_Hearing.GetDistanceToClosest(agent.gameObject.tag);
-            if (swarmDispersion == float.MaxValue)
-                foreach(Agent agent2 in m_Agents)
-                {
-                    if (agent != agent2)
-                    {
-                        float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
-                        if (distance < swarmDispersion)
-                            swarmDispersion = distance;
-                    }
-                }
+
+            //foreach (Agent agent2 in m_Agents)
+            //{
+            //    if (agent != agent2)
+            //    {
+            //        float distance = Vector2.Distance(agent.transform.position, agent2.transform.position);
+            //        if (distance < 30f)
+            //            swarmDensity++;
+            //        if (distance < swarmDispersion)
+            //            swarmDispersion = distance;
+            //    }
+            //}
+
+            for(int i=0; i<agent.m_Vision.hitsNum; i++)
+            {
+                if (agent.m_Vision.hitDistances[i] < 30f)
+                    swarmDensity++;
+                if (agent.m_Vision.hitDistances[i] < swarmDispersion)
+                    swarmDispersion = agent.m_Vision.hitDistances[i];
+            }
+
+            m_StatsVectorArray[1] += swarmDensity;
             m_StatsVectorArray[2] += swarmDispersion;
+
+            agent.density = swarmDensity;
+            agent.dispersion = swarmDispersion;
 
             m_StatsVectorArray[3] += agent.m_Animal.collectedFood;
         }

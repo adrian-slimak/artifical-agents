@@ -664,6 +664,7 @@ MonoBehaviour:
     totalFoodCollected: 0
   m_EpisodeCount: 0
   m_StepCount: 0
+  _predatorSpawnStep: 0
   PreyAgentInstance: {fileID: 6127257329547458512, guid: 0c186306311efe34f98d93da04e34833,
     type: 3}
   PreysHolder: {fileID: 582284023}

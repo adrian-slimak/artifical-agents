@@ -10,16 +10,19 @@ public class Vision : Sensor
     [Parameter("observations_vision_cell_number")]
     public int visionCellNum = 15;
     [Parameter("distance_to_eat")]
-    public float nearbyDistance = 5;
+    public float nearbyDistance = 5f;
 
     Animal m_Animal;
 
     Vector3 arcStart;
+    float angle;
+    int cellNum;
+    float distance;
     float cellAngle;
-    float nearTargetDistance;
 
     Collider2D[] hits = new Collider2D[100];
-    int hitsNum = 0;
+    public float[] hitDistances = new float[100];
+    public int hitsNum = 0;
 
     protected override void Awake()
     {
@@ -28,7 +31,6 @@ public class Vision : Sensor
         m_Animal = GetComponent<Animal>();
 
         cellAngle = visionAngle / visionCellNum;
-        nearTargetDistance = 1f - (nearbyDistance / visionRange);
     }
 
     public override void UpdateObservations()
@@ -36,54 +38,58 @@ public class Vision : Sensor
         arcStart = rotateByAngle(transform.right, (180f - visionAngle) / 2f);
 
         hitsNum = Physics2D.OverlapCircleNonAlloc(transform.position, visionRange, hits, layerMask: sensorLayerMask);
-        for (int j = 0; j < observationsVector.Length; j++)
-            observationsVector[j] = 0;
+
+        for (int i = 0; i < observationsVector.Length; i++)
+            observationsVector[i] = visionRange;
 
         m_Animal.ResetNearObject();
 
-        float angle;
-        int cellNum;
-        float distance;
         for (int i = 0; i < hitsNum; i++)
         {
+            hitDistances[i] = float.MaxValue;
             if (hits[i].gameObject != this.gameObject)
             {
                 angle = Vector2.SignedAngle(arcStart, hits[i].transform.position - transform.position);
                 if (angle < 0) angle += 360;
 
-                if (angle < visionAngle)
+                if (hits[i].tag == this.transform.tag)
+                    hitDistances[i] = Vector2.Distance(transform.position, hits[i].transform.position);
+
+                if (angle <= visionAngle)
                 {
                     cellNum = (int)(angle / cellAngle);
-                    distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
-
-                    distance = 1f - distance / visionRange;
+                    if (hits[i].tag == this.transform.tag)
+                        distance = hitDistances[i];
+                    else
+                        distance = Vector2.Distance(transform.position, hits[i].transform.position);
 
                     if (hits[i].tag == "Prey")
                         cellNum += visionCellNum;
                     else if (hits[i].tag == "Predator")
                         cellNum += visionCellNum * 2;
 
-
-                    if (observationsVector[cellNum] < distance)
+                    if (distance < observationsVector[cellNum])
                     {
-                        if (distance > nearTargetDistance) m_Animal.SetNearObject(hits[i].transform);
-
                         observationsVector[cellNum] = distance;
+                        if (distance <= nearbyDistance) m_Animal.SetNearObject(hits[i].transform);
                     }
                 }
                 else
-                    hits[i] = null;
+                    hits[i] = null; // For predator confusion effect
             }
         }
+
+        for (int j = 0; j < observationsVector.Length; j++)
+            observationsVector[j] = 1f - (observationsVector[j] / visionRange);
     }
 
-    public int GetNearTargetObjects(Transform targetObject, float minDistance, string objectTag) // Tutaj są wszystkie hity, nie tylko w obszarze wzroku!!!
+    public int GetNearTargetObjects(Transform targetObject, float minDistance, string objectTag)
     {
         int numOfObjects = 0;
         for (int i = 0; i < hitsNum; i++)
         {
-            if (hits[i] != null && hits[i].tag == objectTag)
+            if (hits[i] != null && hits[i].tag == objectTag) // if null then object is in sight field!
             {
                 if (Vector2.Distance(targetObject.position, hits[i].transform.position) < minDistance)
                     numOfObjects++;
@@ -119,13 +125,10 @@ public class Vision : Sensor
         if (!drawGizmo) return;
         if (Application.isEditor)
         {
-            //Awake();
+            Awake();
             UpdateObservations();
         }
 
-        //UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
-        //UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, arcStart,
-        //                                                    visionAngle, visionRange);
         UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.4f);
         UnityEditor.Handles.DrawWireArc(transform.position, transform.forward, arcStart,
                                                             visionAngle, visionRange);
@@ -140,10 +143,10 @@ public class Vision : Sensor
 
             UnityEditor.Handles.color = new Color(0f, 0f, 0f, 0.1f);
             if (observationsVector[i] > 0)
-                UnityEditor.Handles.color += new Color(0f, 1f, 0f, 0.15f);
-            if (observationsVector[i+visionCellNum] > 0)
+                UnityEditor.Handles.color = new Color(0f, 1f, 0f, 0.15f);
+            if (observationsVector[i + visionCellNum] > 0)
                 UnityEditor.Handles.color += new Color(0f, 0f, 1f, 0.15f);
-            if (observationsVector[i+visionCellNum*2] > 0)
+            if (observationsVector[i + visionCellNum * 2] > 0)
                 UnityEditor.Handles.color += new Color(1f, 0f, 0f, 0.15f);
 
             UnityEditor.Handles.DrawSolidArc(transform.position, transform.forward, rotateByAngle(arcStart, i * cellAngle),

@@ -19,10 +19,13 @@ def main():
     _brains = unity_environment.external_brains
     GAs = {}
     GAs['prey'] = GeneticAlgorithm(_brains['prey'].observations_vector_size, _lp.units, _brains['prey'].actions_vector_size, _brains['prey'].agents_count, model_name=_lp.NetworkModel.name, use_bias=_lp.use_bias)
-    GAs['prey'].initial_population()
     GAs['predator'] = GeneticAlgorithm(_brains['predator'].observations_vector_size, _lp.units, _brains['predator'].actions_vector_size, _brains['predator'].agents_count * _lp.number_of_environments, model_name=_lp.NetworkModel.name, use_bias=_lp.use_bias)
-    # GAs['predator'].initial_population()
-    GAs['predator'].load_population_from_file('genes_7.pkl')
+
+    GAs['prey'].initial_population()
+    GAs['predator'].initial_population()
+
+    # GAs['prey'].load_population_from_file('genes_9.pkl', 'prey')
+    # GAs['predator'].load_population_from_file('genes_9.pkl', 'predator')
 
     _lp.hotkey_listener.add('<ctrl>+<alt>+a', lambda: save_genes(GAs, _lp.save_ID))
 
@@ -51,7 +54,7 @@ def main():
                 live_plot.update({f'{brain_name}1': [avg, max, min], f'{brain_name}2': None})
 
         GAs['prey'].next_generation()
-        # GAs['predator'].next_generation()
+        GAs['predator'].next_generation()
 
     # unity_environment.close()
     if live_plot:

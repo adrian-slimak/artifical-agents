@@ -1,6 +1,7 @@
 from mlagents.communicator_objects.brain_parameters_pb2 import BrainParametersProto
 from mlagents.memory import Memory
-from tensorflow import reshape, transpose
+# from tensorflow import reshape, transpose
+import numpy as np
 
 
 class Brain:
@@ -44,7 +45,7 @@ class Brain:
 
     def get_stats(self):
         stats = self._memory.read_stats()
-        stats = reshape(stats, (self.n_envs, self.stats_vector_size)).numpy()
+        stats = np.reshape(stats, (self.n_envs, self.stats_vector_size))
         return stats
 
     def set_actions(self, agents_actions):
@@ -52,5 +53,5 @@ class Brain:
 
     def get_stacked_fitness(self):
         fitness = self._memory.read_fitness()
-        fitness = reshape(fitness, (self.n_envs, self.agents_count)).numpy()
+        fitness = np.reshape(fitness, (self.n_envs, self.agents_count))
         return fitness

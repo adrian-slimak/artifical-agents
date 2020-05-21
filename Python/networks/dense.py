@@ -1,5 +1,5 @@
-import tensorflow as tf
-
+# import tensorflow as tf
+import numpy as np
 
 class DenseLayer:
     def __init__(self, input_dim, units, models, use_bias=True):
@@ -14,30 +14,30 @@ class DenseLayer:
     def build(self, kernel=None, bias=None):
 
         if kernel is not None:
-            self.kernel = tf.Variable(kernel, shape=(self.models, self.input_dim, self.units), dtype=tf.float32)
-        else:
-            self.kernel = tf.Variable(shape=(self.models, self.input_dim, self.units), dtype=tf.float32,
-                                          name='kernel', initializer='random_normal')
+            self.kernel = kernel
+        # else:
+        #     self.kernel = tf.Variable(shape=(self.models, self.input_dim, self.units), dtype=tf.float32,
+        #                                   name='kernel', initializer='random_normal')
 
         if bias is not None:
-            self.bias = tf.Variable(bias, shape=(self.models, 1, self.units), dtype=tf.float32)
+            self.bias = bias
         else:
-            if self.use_bias:
-                self.bias = tf.Variable(shape=(self.models, 1, self.units), dtype=tf.float32,
-                                            name='bias', initializer='random_normal')
-            else:
+            # if self.use_bias:
+            #     self.bias = tf.Variable(shape=(self.models, 1, self.units), dtype=tf.float32,
+            #                                 name='bias', initializer='random_normal')
+            # else:
                 self.bias = None
 
         self.built = True
 
-    @tf.function
+    # @tf.function
     def call(self, inputs):
-        z = tf.matmul(inputs, self.kernel)
+        z = np.matmul(inputs, self.kernel, dtype=np.float32)
 
         if self.use_bias:
-            z = tf.add(z, self.bias)
+            z = np.add(z, self.bias, dtype=np.float32)
 
-        return tf.nn.tanh(z)
+        return np.tanh(z, dtype=np.float32)
 
 
 class MLPModel:
@@ -66,13 +66,13 @@ class MLPModel:
             self.output_layer.build()
 
     def __call__(self, inputs):
-        return self.call(inputs).numpy()
+        return self.call(inputs)
 
-    @tf.function
+    # @tf.function
     def call(self, inputs):
-        inputs = tf.reshape(inputs, (self.n_envs, self.models, self.input_dim))
-        inputs = tf.transpose(inputs, [1, 0, 2])
+        inputs = np.reshape(inputs, (self.n_envs, self.models, self.input_dim))
+        inputs = np.transpose(inputs, [1, 0, 2])
         output = self.input_layer.call(inputs)
         output = self.output_layer.call(output)
-        output = tf.transpose(output, (1, 0, 2))
+        output = np.transpose(output, (1, 0, 2))
         return output

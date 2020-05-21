@@ -1,5 +1,6 @@
 import mmap
-from tensorflow import io, float32
+# from tensorflow import io, float32
+import numpy as np
 
 OBSERVATIONS_SIZE = 100 * 1024
 ACTIONS_SIZE = 50 * 1024
@@ -47,17 +48,20 @@ class Memory:
     def read_observations(self):
         self._mmf.seek(self.mmf_offset_observations)
 
-        return io.decode_raw(self._mmf.read(self.mmf_size_observations), out_type=float32)
+        # return io.decode_raw(self._mmf.read(self.mmf_size_observations), out_type=float32)
+        return np.frombuffer(self._mmf.read(self.mmf_size_observations), dtype=np.float32)
 
     def read_fitness(self):
         self._mmf.seek(self.mmf_offset_fitness)
 
-        return io.decode_raw(self._mmf.read(self.mmf_size_fitness), out_type=float32)
+        # return io.decode_raw(self._mmf.read(self.mmf_size_fitness), out_type=float32)
+        return np.frombuffer(self._mmf.read(self.mmf_size_fitness), dtype=np.float32)
 
     def read_stats(self):
         self._mmf.seek(self.mmf_offset_stats)
 
-        return io.decode_raw(self._mmf.read(self.mmf_size_stats), out_type=float32)
+        # return io.decode_raw(self._mmf.read(self.mmf_size_stats), out_type=float32)
+        return np.frombuffer(self._mmf.read(self.mmf_size_stats), dtype=np.float32)
 
     def write_actions(self, agents_actions):
         self._mmf.seek(self.mmf_offset_actions)

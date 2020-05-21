@@ -6,7 +6,7 @@ public class Sensor : MonoBehaviour
 
     protected Agent m_Agent;
 
-    protected MMArray observationsVector;
+    public MMArray observationsVector;
     protected int observationsVectorSize;
 
     protected virtual void Awake()

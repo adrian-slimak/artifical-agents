@@ -32,10 +32,12 @@ public class VirtualAcademy : Academy
         WorldGround.transform.localScale = new Vector3(m_WorldSize, m_WorldSize, 1);
 
         PlantsSpawner.Instance.OnReset();
-        ResetAgents();
+
+        RemoveAgents();
+        SpawnPreys();
     }
 
-    public void ResetAgents()
+    public void RemoveAgents()
     {
         foreach (Transform oldAgent in PreysHolder.transform)
             Destroy(oldAgent.gameObject);
@@ -44,37 +46,46 @@ public class VirtualAcademy : Academy
 
         foreach (Brain brain in brains)
             brain.Reset();
+    }
 
-        List<Agent> agents = SpawnAgents();
+    void SpawnPreys()
+    {
+        int numberOfPreys = (int)(m_ResetParameters["prey_count"] ?? 0);
 
-        foreach (Brain brain in brains)
-            brain.Init();
+        List<Agent> preys = SpawnAgents(PreyAgentInstance, numberOfPreys, PreysHolder);
 
-        foreach (Agent agent in agents)
+        m_Brains["prey"].Init();
+
+        foreach (Agent agent in preys)
             agent.Init();
     }
 
-    List<Agent> SpawnAgents()
+    protected override void PredatorSpawnStep()
     {
-        int numberOfPreys = (int)(m_ResetParameters["prey_count"] ?? 0);
+        SpawnPredators();
+    }
+
+    void SpawnPredators()
+    {
         int numberOfPredators = (int)(m_ResetParameters["predator_count"] ?? 0);
 
+        List<Agent> predators = SpawnAgents(PredatorAgentInstance, numberOfPredators, PredatorsHolder);
 
-        List<Agent> agents = new List<Agent>(numberOfPreys + numberOfPredators);
+        m_Brains["predator"].Init();
 
-        for (int i = 0; i < numberOfPreys; i++)
+        foreach (Agent agent in predators)
+            agent.Init();
+    }
+
+    List<Agent> SpawnAgents(GameObject agentInstance, int count, GameObject holder)
+    {
+        List<Agent> agents = new List<Agent>(count);
+
+        for (int i = 0; i < count; i++)
         {
             Vector2 randomPosition = new Vector2((Random.value - 0.5f) * m_WorldSize, (Random.value - 0.5f) * m_WorldSize);
             Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-            GameObject agent = Instantiate(PreyAgentInstance, randomPosition, randomRotation, PreysHolder.transform);
-            agents.Add(agent.GetComponent<Agent>());
-        }
-
-        for (int i = 0; i < numberOfPredators; i++)
-        {
-            Vector2 randomPosition = new Vector2((Random.value - 0.5f) * 100f, (Random.value - 0.5f) * 100f);
-            Quaternion randomRotation = Quaternion.Euler(0f, 0f, Random.Range(0f, 360f));
-            GameObject agent = Instantiate(PredatorAgentInstance, randomPosition, randomRotation, PredatorsHolder.transform);
+            GameObject agent = Instantiate(agentInstance, randomPosition, randomRotation, holder.transform);
             agents.Add(agent.GetComponent<Agent>());
         }
 

@@ -23,39 +23,39 @@ show_plots = True
 # GENERAL
 NetworkModel = RNNModel
 
-units = 8
+units = 12
 use_bias = True
 
 number_of_generations = 500
 number_of_steps = 4000
 
 # MULTI
-number_of_environments = 4
+number_of_environments = 8
 
 # GENETIC ALGORITHM PARAMETERS
 # Population
 population_size = 60
 
 # Random Init
-init_min_genes = 0.50
+init_min_genes = 0.5
 init_max_genes = 0.75
 init_loc = 0.
-init_scale = 1.
+init_scale = 2.
 
 # Selection
-# selection_method = 'Roulette Wheel'
-selection_method = 'Fittest Half'
+selection_method = 'Roulette Wheel'
+# selection_method = 'Fittest Half'
+# selection_method = 'Tournament'
 
-# Mating
+# Crossover
 mating_method = 'Two Points Per Part'
 # mating_method = 'Two Points'
-max_percent_length = 0.6
+max_percent_length = 0.5
 
 # Pairing
 pairing_method = 'Fittest'
 
 # Mutation
-gen_mutation_chance = 0.03
-gen_remove_chance = 0.01
-gen_appear_chance = 0.03
-gen_mutation_scale = 0.3
+gen_mutation_chance = 0.02
+gen_deletion_chance = 0.02
+gen_duplication_chance = 0.05

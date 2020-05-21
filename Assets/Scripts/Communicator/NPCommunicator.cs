@@ -105,12 +105,12 @@ public class NPCommunicator
     {
         UnityInputProto unityInput;
 
-        using (TimerStack.Instance.Scoped("UnityPythonSend"))
+        //using (TimerStack.Instance.Scoped("UnityPythonSend"))
         {
             SendBytesMessage(_nullSendMessage);
         }
 
-        using (TimerStack.Instance.Scoped("UnityPythonReceive"))
+        //using (TimerStack.Instance.Scoped("UnityPythonReceive"))
         {
             unityInput = Receive();
         }

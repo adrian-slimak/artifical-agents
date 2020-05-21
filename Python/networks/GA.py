@@ -30,7 +30,8 @@ def get_shapes_lengths(input_dim, units, output_dim, model_name='lstm', use_bias
 class Genotype:
     def __init__(self, lengths):
         self.lengths = lengths
-        self.genotype = np.zeros((sum(self.lengths)), dtype='f')
+        self.genotype = np.zeros((sum(self.lengths)), dtype=np.float32)
+        self.length = len(self.genotype)
         self.fitness = None
 
     def copy(self):
@@ -40,9 +41,9 @@ class Genotype:
 
     def random_init(self, min=_lp.init_min_genes, max=_lp.init_max_genes, loc=_lp.init_loc, scale=_lp.init_scale):
         percentOfGenes = random.uniform(min, max)
-        numOfGenes = int(sum(self.lengths) * percentOfGenes)
-        genesIdx = random.sample(range(0, sum(self.lengths) - 1), numOfGenes)
-        genesVals = np.random.normal(loc=loc, scale=scale, size=(sum(self.lengths)))
+        numOfGenes = int(self.length * percentOfGenes)
+        genesIdx = random.sample(range(0, self.length - 1), numOfGenes)
+        genesVals = np.random.normal(loc=loc, scale=scale, size=self.length)
         for id in genesIdx:
             self.genotype[id] = genesVals[id]
 
@@ -122,6 +123,14 @@ class GeneticAlgorithm:
             selected_individuals = random.choices(population, weights=fitness, k=len(population)//2)
             return selected_individuals
 
+        elif method == 'Tournament':
+            selected_individuals = []
+            for i in range(len(population)//2):
+                selected = random.choices(population, k=int(len(population)//2))
+                selected = max(selected, key=lambda indi: indi.fitness)
+                selected_individuals.append(selected)
+            return selected_individuals
+
         else:
             raise Exception('Not such selection method found')
 
@@ -165,16 +174,28 @@ class GeneticAlgorithm:
         return offsprings
 
     @staticmethod
-    def mutation(individual, gen_mutation_chance=_lp.gen_mutation_chance, gen_remove_chance=_lp.gen_remove_chance, gen_appear_chance=_lp.gen_appear_chance, sigma=_lp.gen_mutation_scale):
-        for id in range(len(individual.genotype)):
-            if individual.genotype[id] == 0.:
-                if random.random() <= gen_appear_chance:
-                    individual.genotype[id] = random.gauss(mu=0., sigma=sigma)
-            else:
-                if random.random() <= gen_remove_chance:
-                    individual.genotype[id] = 0.
-                if random.random() <= gen_mutation_chance:
-                    individual.genotype[id] += random.gauss(mu=0., sigma=sigma)
+    def mutation(individual, gen_mutation_chance=_lp.gen_mutation_chance, gen_deletion_chance=_lp.gen_deletion_chance, gen_duplication_chance=_lp.gen_duplication_chance):
+        for gen_id in range(individual.length):
+            if random.random() <= gen_mutation_chance:
+                individual.genotype[gen_id] = random.gauss(mu=_lp.init_loc, sigma=_lp.init_scale)
+            # if individual.genotype[gen_id] == 0.:
+            #     if random.random() <= gen_duplication_chance:
+            #         individual.genotype[gen_id] = random.gauss(mu=0., sigma=sigma)
+            # else:
+            #     if random.random() <= gen_deletion_chance:
+            #         individual.genotype[gen_id] = 0.
+
+        if random.random() <= gen_duplication_chance:
+            i1 = random.randint(0, individual.length - 2)
+            i2 = random.randint(i1 + 1, individual.length - 1)
+            i0 = random.randint(0, individual.length - 1)
+            individual.genotype[i0:i0 + (i2-i1) + 1] = (individual.genotype[i1:i2 + 1])[0:individual.length - i0]
+
+        if random.random() <= gen_deletion_chance:
+            i1 = random.randint(0, individual.length - 2)
+            i2 = random.randint(i1 + 1, individual.length - 1)
+            individual.genotype[i1:i1+(individual.length-i2-1)] = individual.genotype[i2+1:]
+            individual.genotype[-(i2 - i1 + 1):] = np.random.normal(loc=_lp.init_loc, scale=_lp.init_scale, size=i2-i1+1)
 
     def to_model(self):
         weights = [[] for i in self.shapes[0]]

@@ -43,18 +43,24 @@ class UnityEnvironment:
         for current_step in range(number_of_steps):
             agent_observations = self.step_receive_observations()
             # t = clock()
-            stats = self.step_receive_stats()
 
-            if live_plot is not None:
-                for brain_name, brain_stats in stats.items():
-                    live_plot.update({f'{brain_name}2': [brain_stats[0][0], brain_stats[0][1], brain_stats[0][2], brain_stats[0][3]]})
+            # if live_plot is not None:
+            # stats = self.step_receive_stats()
+            #     for brain_name, brain_stats in stats.items():
+            #         live_plot.update({f'{brain_name}2': [brain_stats[0][0], brain_stats[0][1], brain_stats[0][2], brain_stats[0][3]]})
 
             for brain_name, brain_model in brain_models.items():
                 actions = brain_model(agent_observations[brain_name])
                 agent_actions[brain_name] = actions
 
             self.step_send_actions(agent_actions)
-            # print((clock() - t)*1000)
+            # print((clock() - t) * 1000)
+
+        if live_plot is not None:
+            stats = self.step_receive_stats()
+            for brain_name, brain_stats in stats.items():
+                brain_stats = np.mean(brain_stats, axis=0)
+                live_plot.update({f'{brain_name}3': [brain_stats[0], brain_stats[1], brain_stats[2], brain_stats[3], brain_stats[4]]})
 
         fitness = self.episode_completed()
         return fitness

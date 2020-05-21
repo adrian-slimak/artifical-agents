@@ -50,7 +50,6 @@ public class PlantsSpawner : MonoBehaviour
 
     void Spawn(int amount)
     {
-        Debug.Log(VirtualAcademy.Instance.m_WorldSize);
         for (int i = 0; i < amount; i++)
         {
             Vector2 randomPosition = new Vector2((Random.value - 0.5f) * VirtualAcademy.Instance.m_WorldSize, (Random.value - 0.5f) * VirtualAcademy.Instance.m_WorldSize);

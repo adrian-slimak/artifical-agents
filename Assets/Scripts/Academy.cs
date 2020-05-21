@@ -76,6 +76,9 @@ public class Academy : MonoBehaviour
     [HideInInspector]
     public int m_StepCount;
 
+    [Parameter("environment_predator_spawn_step")]
+    public int _predatorSpawnStep;
+
     void Awake()
     {
         if (Instance == null)
@@ -166,11 +169,14 @@ public class Academy : MonoBehaviour
     public virtual void AcademyStep()
     { }
 
+    protected virtual void PredatorSpawnStep()
+    { }
+
     void EnvironmentStep()
     {
         if (m_FirstAcademyReset)
         {
-            using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
+            //using (TimerStack.Instance.Scoped("AgentUpdateObservations"))
             {
                 AgentUpdateObservations?.Invoke();
 
@@ -179,19 +185,19 @@ public class Academy : MonoBehaviour
             }
         }
 
-        //var stopwatch = new Stopwatch();
-        //stopwatch.Start();
-        using (TimerStack.Instance.Scoped("CommunicateWithPython"))
+        //using (TimerStack.Instance.Scoped("CommunicateWithPython"))
         {
             m_Communicator?.CommunicateWithPython();
         }
-        //stopwatch.Stop();
-        //UnityEngine.Debug.Log(stopwatch.Elapsed.TotalMilliseconds);
     }
 
     void StepCommandReceived()
     {
         AgentUpdateMovement?.Invoke();
+        if (m_StepCount == _predatorSpawnStep)
+        {
+            PredatorSpawnStep();
+        }
 
         m_StepCount += 1;
     }
@@ -219,7 +225,7 @@ public class Academy : MonoBehaviour
     {
         m_FirstAcademyReset = false;
 
-        AgentUpdateFitness?.Invoke();
+        //AgentUpdateFitness?.Invoke();
         foreach (Brain brain in brains)
             brain.UpdateStatsLate();
     }

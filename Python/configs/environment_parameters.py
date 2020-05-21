@@ -13,8 +13,10 @@ environment_parameters = \
                         "predator_sound_value": 5,
                     },
 
-                "max_move_speed": 0.5 * 50,  # 0.5
-                "max_turn_speed": 4 * 50,  # 4
+                "max_move_speed": 0.5 * 50,
+                "max_turn_speed": 4 * 50,
+                # "max_move_speed": 1 * 50,
+                # "max_turn_speed": 8 * 50,
 
                 "rest_after_eat": 0,
                 'distance_to_eat': 1,
@@ -61,8 +63,10 @@ environment_parameters = \
                         "sound_value": 3.5,
                     },
 
-                "max_move_speed": 1.5 * 50,  # 1.5
-                "max_turn_speed": 3 * 50,  # 3
+                "max_move_speed": 1.5 * 50,
+                "max_turn_speed": 3 * 50,
+                # "max_move_speed": 3 * 50,
+                # "max_turn_speed": 6 * 50,
 
                 "rest_after_eat": 10,
                 'distance_to_eat': 1,
@@ -107,7 +111,8 @@ environment_parameters = \
 
         "environment":
             {
-                "world_size": 256,
+                "world_size": 512,
+                "predator_spawn_step": 500,
                 "food":
                     {
                         "spawn_method": 1,   # 0 - Grid  1 - Random

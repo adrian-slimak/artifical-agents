@@ -59,7 +59,7 @@ def main():
 
             avg, max, min = np.average(fitness), np.max(fitness), np.min(fitness)
             if live_plot:
-                live_plot.update({f'{brain_name}1': [avg, max, min], f'{brain_name}2': None})
+                live_plot.update({f'{brain_name}1': [avg, max, min]})
 
         GAs['prey'].next_generation()
         GAs['predator'].next_generation()
